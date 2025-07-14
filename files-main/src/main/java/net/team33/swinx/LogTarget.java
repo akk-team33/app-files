@@ -2,15 +2,15 @@ package net.team33.swinx;
 
 import net.team33.application.logging.Formatter;
 import net.team33.application.logging.Loggable;
-import net.team33.messaging.Listener;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.function.Consumer;
 
-public class LogTarget implements Listener<Loggable> {
+public class LogTarget implements Consumer<Loggable> {
     private final PrintWriter out = new PrintWriter(new WRITER());
     private JFrame frame = null;
     private JTextArea outputArea = null;
@@ -23,7 +23,7 @@ public class LogTarget implements Listener<Loggable> {
     }
 
     @Override
-    public final void pass(Loggable entry) {
+    public final void accept(Loggable entry) {
         this.fmt.format(entry, this.out);
         this.out.println();
         this.out.flush();

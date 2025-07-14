@@ -2,10 +2,10 @@ package net.team33.fscalc.ui;
 
 import net.team33.fscalc.ui.rsrc.Ico;
 import net.team33.fscalc.work.Context;
-import net.team33.messaging.Listener;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.Consumer;
 
 public abstract class PathPane extends JPanel {
     protected static final Insets GBC_INSETS = new Insets(2, 2, 2, 2);
@@ -85,10 +85,10 @@ public abstract class PathPane extends JPanel {
             PathPane.this.getContext().getRegister().add(new ADAPTER());
         }
 
-        private class ADAPTER implements Listener<Context.MsgChDir> {
+        private class ADAPTER implements Consumer<Context.MsgChDir> {
 
             @Override
-            public final void pass(Context.MsgChDir message) {
+            public final void accept(Context.MsgChDir message) {
                 TEXT.this.setText(message.getPath().getPath());
             }
         }

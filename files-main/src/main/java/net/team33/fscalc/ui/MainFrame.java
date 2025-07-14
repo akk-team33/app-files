@@ -1,8 +1,8 @@
 package net.team33.fscalc.ui;
 
+import de.team33.sphinx.alpha.visual.JFrames;
 import net.team33.fscalc.ui.rsrc.Ico;
 import net.team33.fscalc.work.Context;
-import net.team33.messaging.Listener;
 import net.team33.swinx.FSTree;
 
 import javax.swing.*;
@@ -11,6 +11,7 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
 import java.io.File;
+import java.util.function.Consumer;
 
 public abstract class MainFrame extends JFrame {
     private static final String TTL_SUFFIX = "FSCalc";
@@ -27,10 +28,21 @@ public abstract class MainFrame extends JFrame {
         this.getContext().getRegister().add(new ADAPTER());
     }
 
-    private class ADAPTER implements Listener<Context.MsgChDir> {
+    public static MainFrame by(final Context context) {
+        return JFrames.builder(() -> new MainFrame() {
+                          @Override
+                          protected Context getContext() {
+                              return context;
+                          }
+                      })
+                      .setTitle(TTL_SUFFIX)
+                      .build();
+    }
+
+    private class ADAPTER implements Consumer<Context.MsgChDir> {
 
         @Override
-        public final void pass(Context.MsgChDir message) {
+        public final void accept(Context.MsgChDir message) {
             MainFrame.this.setTitle(String.format("%s - FSCalc", message.getPath().getName()));
         }
     }
@@ -80,10 +92,10 @@ public abstract class MainFrame extends JFrame {
             this.addTreeSelectionListener(new SEL_ADAPTER());
         }
 
-        private class LSN_CHDIR implements Listener<Context.MsgChDir> {
+        private class LSN_CHDIR implements Consumer<Context.MsgChDir> {
 
             @Override
-            public final void pass(Context.MsgChDir message) {
+            public final void accept(Context.MsgChDir message) {
                 TreeView.this.setSelection(message.getPath());
             }
         }

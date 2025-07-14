@@ -5,7 +5,6 @@ import net.team33.fscalc.info.FileService;
 import net.team33.fscalc.ui.model.InfoTableModel;
 import net.team33.fscalc.work.Context;
 import net.team33.fscalc.work.Order;
-import net.team33.messaging.Listener;
 import net.team33.messaging.Message;
 import net.team33.messaging.multiplex.Originator;
 import net.team33.messaging.multiplex.Register;
@@ -18,6 +17,7 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.function.Consumer;
 
 public abstract class InfoTable extends JTable implements Originator<Message<InfoTable>> {
     private static final FileService FS = FileService.getInstance();
@@ -93,10 +93,10 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
         }
     }
 
-    private class LSTNR_UPDINFO implements Listener<FileService.MsgUpdate> {
+    private class LSTNR_UPDINFO implements Consumer<FileService.MsgUpdate> {
 
         @Override
-        public final void pass(FileService.MsgUpdate message) {
+        public final void accept(FileService.MsgUpdate message) {
             File path = message.getInfo().getPath();
             if (path.equals(InfoTable.this.getContext().getPath())) {
                 InfoTable.this.getTableHeader().repaint();

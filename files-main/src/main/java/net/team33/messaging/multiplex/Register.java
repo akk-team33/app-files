@@ -1,9 +1,9 @@
 package net.team33.messaging.multiplex;
 
-import net.team33.messaging.Listener;
+import java.util.function.Consumer;
 
 public interface Register<MSX> {
-    void add(Listener<? extends MSX> var1);
+    void add(Consumer<? extends MSX> var1);
 
-    void remove(Listener<? extends MSX> var1);
+    void remove(Consumer<? extends MSX> var1);
 }

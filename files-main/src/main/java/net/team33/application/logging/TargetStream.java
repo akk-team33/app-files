@@ -1,14 +1,14 @@
 package net.team33.application.logging;
 
-import net.team33.messaging.Listener;
 import net.team33.utils.FileUtil;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.function.Consumer;
 
-public class TargetStream implements Listener<Loggable> {
+public class TargetStream implements Consumer<Loggable> {
     private final PrintWriter out;
     private final Formatter fmt;
 
@@ -22,7 +22,7 @@ public class TargetStream implements Listener<Loggable> {
     }
 
     @Override
-    public final synchronized void pass(Loggable entry) {
+    public final synchronized void accept(Loggable entry) {
         this.fmt.format(entry, this.out);
         this.out.println();
         this.out.flush();

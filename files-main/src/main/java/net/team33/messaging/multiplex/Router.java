@@ -1,21 +1,21 @@
 package net.team33.messaging.multiplex;
 
-import net.team33.messaging.Listener;
 import net.team33.reflect.ClassUtil;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class Router<MSX> implements Relay<MSX> {
     private final Set<MSX> initials = new HashSet();
     private final REGISTRY registry = new REGISTRY();
 
-    private synchronized boolean add(Class<?> messageClass, Listener<?> listener) {
+    private synchronized boolean add(Class<?> messageClass, Consumer<?> listener) {
         return ((Set)this.registry.get(messageClass)).add(listener);
     }
 
     @Override
-    public final void add(Listener<? extends MSX> listener) {
-        Class<?> msgClass = ClassUtil.getActualClassArgument(Listener.class, listener.getClass());
+    public final void add(Consumer<? extends MSX> listener) {
+        Class<?> msgClass = ClassUtil.getActualClassArgument(Consumer.class, listener.getClass());
         this.include(msgClass);
         if (this.add(msgClass, listener)) {
             this.init(msgClass, listener);
@@ -38,24 +38,24 @@ public class Router<MSX> implements Relay<MSX> {
 
     }
 
-    private void init(Class messageClass, Listener lstnr) {
+    private void init(Class messageClass, Consumer lstnr) {
         Iterator var4 = this.tmpInitials().iterator();
 
         while(var4.hasNext()) {
             Object initial = var4.next();
             if (messageClass.isAssignableFrom(initial.getClass())) {
-                lstnr.pass(initial);
+                lstnr.accept(initial);
             }
         }
 
     }
 
-    private synchronized void remove(Class<?> messageClass, Listener<?> listener) {
+    private synchronized void remove(Class<?> messageClass, Consumer<?> listener) {
         ((Set)this.registry.get(messageClass)).remove(listener);
     }
 
     @Override
-    public final void remove(Listener<? extends MSX> lstnr) {
+    public final void remove(Consumer<? extends MSX> lstnr) {
         Iterator var3 = this.tmpMessageClasses().iterator();
 
         while(var3.hasNext()) {
@@ -82,8 +82,8 @@ public class Router<MSX> implements Relay<MSX> {
         Iterator var4 = this.tmpRegistry(messageClass).iterator();
 
         while(var4.hasNext()) {
-            Listener listener = (Listener)var4.next();
-            listener.pass(message);
+            Consumer listener = (Consumer) var4.next();
+            listener.accept(message);
         }
 
     }
@@ -96,10 +96,10 @@ public class Router<MSX> implements Relay<MSX> {
         return new HashSet((Collection)this.registry.keySet());
     }
 
-    private synchronized Set<Listener<?>> tmpRegistry(Class<?> messageClass) {
+    private synchronized Set<Consumer<?>> tmpRegistry(Class<?> messageClass) {
         return new HashSet((Collection)this.registry.get(messageClass));
     }
 
-    private static class REGISTRY extends HashMap<Class<?>, Set<Listener<?>>> {
+    private static class REGISTRY extends HashMap<Class<?>, Set<Consumer<?>>> {
     }
 }

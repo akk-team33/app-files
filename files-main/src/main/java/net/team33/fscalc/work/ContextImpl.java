@@ -6,7 +6,6 @@ import net.team33.fscalc.info.FileService;
 import net.team33.fscalc.task.Task;
 import net.team33.fscalc.task.impl.Calculator;
 import net.team33.fscalc.task.impl.Deletion;
-import net.team33.messaging.Listener;
 import net.team33.messaging.Message;
 import net.team33.messaging.multiplex.Sender;
 
@@ -15,6 +14,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.function.Consumer;
 
 public class ContextImpl extends Sender<Message<Context>> implements Context {
     private Order order;
@@ -112,19 +112,19 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         return task;
     }
 
-    private class LSN_CLOSURE implements Listener<Task.Closure> {
+    private class LSN_CLOSURE implements Consumer<Task.Closure> {
 
         @Override
-        public final void pass(Task.Closure message) {
+        public final void accept(Task.Closure message) {
             ((Task)message.getSender()).getRegister().remove(this);
             ContextImpl.this.startCalculation(ContextImpl.this.getPath());
         }
     }
 
-    private class LSN_CLS_CALC implements Listener<Task.Closure> {
+    private class LSN_CLS_CALC implements Consumer<Task.Closure> {
 
         @Override
-        public final void pass(Task.Closure message) {
+        public final void accept(Task.Closure message) {
             ((Task)message.getSender()).getRegister().remove(this);
             synchronized(ContextImpl.this.calculators) {
                 ContextImpl.this.calculators.remove(message.getSender());
@@ -169,10 +169,10 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
             return this.task;
         }
 
-        private class LSN_CLOSURE implements Listener<Task.Closure> {
+        private class LSN_CLOSURE implements Consumer<Task.Closure> {
 
             @Override
-            public final void pass(Task.Closure message) {
+            public final void accept(Task.Closure message) {
                 ((Task)message.getSender()).getRegister().remove(this);
                 ContextImpl.this.removeInitial(MSG_STARTING.this);
             }

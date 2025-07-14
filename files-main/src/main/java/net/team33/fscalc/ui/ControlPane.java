@@ -1,13 +1,13 @@
 package net.team33.fscalc.ui;
 
 import net.team33.fscalc.work.Context;
-import net.team33.messaging.Listener;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.function.Consumer;
 
 public abstract class ControlPane extends JPanel {
     protected abstract Context getContext();
@@ -19,7 +19,7 @@ public abstract class ControlPane extends JPanel {
         this.add(delButton);
     }
 
-    private abstract class ACTNBUTTON extends JButton implements Listener<InfoTable.UpdateSelection>, ActionListener {
+    private abstract class ACTNBUTTON extends JButton implements Consumer<InfoTable.UpdateSelection>, ActionListener {
         protected ACTNBUTTON(String text, InfoTable table) {
             super(text);
             this.addActionListener(this);
@@ -27,7 +27,7 @@ public abstract class ControlPane extends JPanel {
         }
 
         @Override
-        public final void pass(InfoTable.UpdateSelection message) {
+        public final void accept(InfoTable.UpdateSelection message) {
             this.setEnabled(((InfoTable)message.getSender()).getSelectedRowCount() > 0);
         }
     }
@@ -53,10 +53,10 @@ public abstract class ControlPane extends JPanel {
         }
     }
 
-    private class ITBL_LSTNR implements Listener<InfoTable.UpdateSelection> {
+    private class ITBL_LSTNR implements Consumer<InfoTable.UpdateSelection> {
 
         @Override
-        public void pass(InfoTable.UpdateSelection message) {
+        public void accept(InfoTable.UpdateSelection message) {
         }
     }
 }

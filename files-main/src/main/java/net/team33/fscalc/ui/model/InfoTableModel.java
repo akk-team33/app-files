@@ -4,13 +4,13 @@ import net.team33.fscalc.info.FileInfo;
 import net.team33.fscalc.info.FileService;
 import net.team33.fscalc.work.Context;
 import net.team33.fscalc.work.Order;
-import net.team33.messaging.Listener;
 
 import javax.swing.table.AbstractTableModel;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
+import java.util.function.Consumer;
 
 public class InfoTableModel extends AbstractTableModel {
     private static final FileService FS = FileService.getInstance();
@@ -77,26 +77,26 @@ public class InfoTableModel extends AbstractTableModel {
         return FileInfo.class;
     }
 
-    private class LSTNR_CHDIR implements Listener<Context.MsgChDir> {
+    private class LSTNR_CHDIR implements Consumer<Context.MsgChDir> {
 
         @Override
-        public final void pass(Context.MsgChDir message) {
+        public final void accept(Context.MsgChDir message) {
             InfoTableModel.this.setInfos(message.getPath().listFiles(), ((Context)message.getSender()).getOrder());
         }
     }
 
-    private class LSTNR_CHORD implements Listener<Context.MsgChOrder> {
+    private class LSTNR_CHORD implements Consumer<Context.MsgChOrder> {
 
         @Override
-        public final void pass(Context.MsgChOrder message) {
+        public final void accept(Context.MsgChOrder message) {
             InfoTableModel.this.setInfos(((Context)message.getSender()).getPath().listFiles(), message.getOrder());
         }
     }
 
-    private class LSTNR_INVAL implements Listener<FileService.MsgInvalid> {
+    private class LSTNR_INVAL implements Consumer<FileService.MsgInvalid> {
 
         @Override
-        public final void pass(FileService.MsgInvalid message) {
+        public final void accept(FileService.MsgInvalid message) {
             synchronized(InfoTableModel.this.fileInfos) {
                 int i = InfoTableModel.this.fileInfos.indexOf(message.getInfo());
                 if (i >= 0) {
@@ -114,10 +114,10 @@ public class InfoTableModel extends AbstractTableModel {
         }
     }
 
-    private class LSTNR_UPDT implements Listener<FileService.MsgUpdate> {
+    private class LSTNR_UPDT implements Consumer<FileService.MsgUpdate> {
 
         @Override
-        public final void pass(FileService.MsgUpdate message) {
+        public final void accept(FileService.MsgUpdate message) {
             synchronized(InfoTableModel.this.fileInfos) {
                 int i = InfoTableModel.this.fileInfos.indexOf(message.getInfo());
                 if (i >= 0) {

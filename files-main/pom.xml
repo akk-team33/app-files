@@ -25,6 +25,10 @@
             <groupId>de.team33.patterns</groupId>
             <artifactId>enums-pan</artifactId>
         </dependency>
+        <dependency>
+            <groupId>de.team33.sphinx</groupId>
+            <artifactId>sphinx-alpha</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>

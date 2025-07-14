@@ -1,16 +1,16 @@
 package net.team33.application;
 
 import net.team33.application.logging.*;
-import net.team33.messaging.Listener;
 import net.team33.messaging.multiplex.Router;
 
 import java.util.HashMap;
+import java.util.function.Consumer;
 
 public class Log {
     private static Formatter format = new PlainFormat();
     private static final Routing routing = new Routing();
 
-    public static void add(Listener<? extends Loggable> handler, Level... levels) {
+    public static void add(Consumer<? extends Loggable> handler, Level... levels) {
         Level[] var5 = levels;
         int var4 = levels.length;
 
@@ -25,7 +25,7 @@ public class Log {
 
     }
 
-    public static void remove(Listener<? extends Loggable> listener) {
+    public static void remove(Consumer<? extends Loggable> listener) {
         Level[] var4;
         int var3 = (var4 = Level.values()).length;
 
