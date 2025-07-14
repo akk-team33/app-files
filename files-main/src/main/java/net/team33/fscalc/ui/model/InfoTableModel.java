@@ -17,20 +17,20 @@ public class InfoTableModel extends AbstractTableModel {
     private static final FileInfo[] NOPATHS = new FileInfo[0];
     private List<FileInfo> fileInfos = new Vector();
 
-    private static List<FileInfo> sorted(FileInfo[] infos, Order order) {
-        List<FileInfo> ret = new Vector();
+    private static List<FileInfo> sorted(final FileInfo[] infos, final Order order) {
+        final List<FileInfo> ret = new Vector();
         Collections.addAll(ret, infos);
         Collections.sort(ret, order);
         return ret;
     }
 
-    private void setInfos(File[] files, Order order) {
-        FileInfo[] infos = FS.getInfos(files, NOPATHS);
+    private void setInfos(final File[] files, final Order order) {
+        final FileInfo[] infos = FS.getInfos(files, NOPATHS);
         this.fileInfos = sorted(infos, order);
-        this.fireTableDataChanged();
+        fireTableDataChanged();
     }
 
-    public InfoTableModel(Context context) {
+    public InfoTableModel(final Context context) {
         context.getRegister().add(new LSTNR_CHDIR());
         context.getRegister().add(new LSTNR_CHORD());
         FS.getRegister().add(new LSTNR_UPDT());
@@ -43,7 +43,7 @@ public class InfoTableModel extends AbstractTableModel {
     }
 
     @Override
-    public final String getColumnName(int col) {
+    public final String getColumnName(final int col) {
         switch (col) {
             case 0:
                 return "Name";
@@ -64,49 +64,49 @@ public class InfoTableModel extends AbstractTableModel {
 
     @Override
     public final int getRowCount() {
-        return this.fileInfos.size();
+        return fileInfos.size();
     }
 
     @Override
-    public final FileInfo getValueAt(int rowIndex, int columnIndex) {
-        return (FileInfo)this.fileInfos.get(rowIndex);
+    public final FileInfo getValueAt(final int rowIndex, final int columnIndex) {
+        return fileInfos.get(rowIndex);
     }
 
     @Override
-    public final Class<FileInfo> getColumnClass(int columnIndex) {
+    public final Class<FileInfo> getColumnClass(final int columnIndex) {
         return FileInfo.class;
     }
 
     private class LSTNR_CHDIR implements Consumer<Context.MsgChDir> {
 
         @Override
-        public final void accept(Context.MsgChDir message) {
-            InfoTableModel.this.setInfos(message.getPath().listFiles(), ((Context)message.getSender()).getOrder());
+        public final void accept(final Context.MsgChDir message) {
+            setInfos(message.getPath().listFiles(), message.getSender().getOrder());
         }
     }
 
     private class LSTNR_CHORD implements Consumer<Context.MsgChOrder> {
 
         @Override
-        public final void accept(Context.MsgChOrder message) {
-            InfoTableModel.this.setInfos(((Context)message.getSender()).getPath().listFiles(), message.getOrder());
+        public final void accept(final Context.MsgChOrder message) {
+            setInfos(message.getSender().getPath().listFiles(), message.getOrder());
         }
     }
 
     private class LSTNR_INVAL implements Consumer<FileService.MsgInvalid> {
 
         @Override
-        public final void accept(FileService.MsgInvalid message) {
-            synchronized(InfoTableModel.this.fileInfos) {
-                int i = InfoTableModel.this.fileInfos.indexOf(message.getInfo());
+        public final void accept(final FileService.MsgInvalid message) {
+            synchronized (fileInfos) {
+                final int i = fileInfos.indexOf(message.getInfo());
                 if (i >= 0) {
-                    File path = message.getInfo().getPath();
+                    final File path = message.getInfo().getPath();
                     if (path.exists()) {
-                        InfoTableModel.this.fileInfos.set(i, FileService.getInstance().getInfo(path));
-                        InfoTableModel.this.fireTableRowsUpdated(i, i);
+                        fileInfos.set(i, FileService.getInstance().getInfo(path));
+                        fireTableRowsUpdated(i, i);
                     } else {
-                        InfoTableModel.this.fileInfos.remove(i);
-                        InfoTableModel.this.fireTableRowsDeleted(i, i);
+                        fileInfos.remove(i);
+                        fireTableRowsDeleted(i, i);
                     }
                 }
 
@@ -117,11 +117,11 @@ public class InfoTableModel extends AbstractTableModel {
     private class LSTNR_UPDT implements Consumer<FileService.MsgUpdate> {
 
         @Override
-        public final void accept(FileService.MsgUpdate message) {
-            synchronized(InfoTableModel.this.fileInfos) {
-                int i = InfoTableModel.this.fileInfos.indexOf(message.getInfo());
+        public final void accept(final FileService.MsgUpdate message) {
+            synchronized (fileInfos) {
+                final int i = fileInfos.indexOf(message.getInfo());
                 if (i >= 0) {
-                    InfoTableModel.this.fireTableRowsUpdated(i, i);
+                    fireTableRowsUpdated(i, i);
                 }
 
             }

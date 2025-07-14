@@ -22,30 +22,30 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     private final List<Calculator> calculators = new Vector(2, 2);
     private static int tCount = 0;
 
-    public ContextImpl(File path, Order order) {
+    public ContextImpl(final File path, final Order order) {
         this.path = newFile(path);
         this.order = order;
-        this.addInitial(new MSG_CHDIR());
-        this.startCalculation(this.path);
+        addInitial(new MSG_CHDIR());
+        startCalculation(this.path);
     }
 
     @Override
     public final Order getOrder() {
-        return this.order;
+        return order;
     }
 
     @Override
-    public final void setOrder(Order ord) {
-        if (this.order != ord) {
+    public final void setOrder(final Order ord) {
+        if (order != ord) {
             this.order = ord;
-            this.fire(new MSG_CHORDER());
+            fire(new MSG_CHORDER());
         }
 
     }
 
     @Override
     public final File getPath() {
-        return this.path;
+        return path;
     }
 
     @Override
@@ -53,25 +53,25 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         path = newFile(path);
         if (!path.equals(this.path) && path.isDirectory()) {
             this.path = path;
-            this.fire(new MSG_CHDIR());
-            this.startCalculation(path);
+            fire(new MSG_CHDIR());
+            startCalculation(path);
         }
 
     }
 
     @Override
-    public final Calculator startCalculation(File path) {
-        return this.startCalculation(FileService.getInstance().getInfo(path));
+    public final Calculator startCalculation(final File path) {
+        return startCalculation(FileService.getInstance().getInfo(path));
     }
 
     @Override
-    public final Calculator startCalculation(FileInfo info) {
-        Vector calcopy;
-        synchronized(this.calculators) {
-            calcopy = new Vector(this.calculators);
+    public final Calculator startCalculation(final FileInfo info) {
+        final Vector calcopy;
+        synchronized (calculators) {
+            calcopy = new Vector(calculators);
         }
 
-        Iterator var4 = calcopy.iterator();
+        final Iterator var4 = calcopy.iterator();
 
         Calculator ret;
         while(var4.hasNext()) {
@@ -80,34 +80,34 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         }
 
         ret = new Calculator(info);
-        synchronized(this.calculators) {
-            this.calculators.add(ret);
-            Log.debug(this + ".calculators.size() = " + this.calculators.size());
+        synchronized (calculators) {
+            calculators.add(ret);
+            Log.debug(this + ".calculators.size() = " + calculators.size());
         }
 
-        ((Calculator)this.start(ret)).getRegister().add(new LSN_CLS_CALC());
+        start(ret).getRegister().add(new LSN_CLS_CALC());
         return ret;
     }
 
     @Override
-    public final Deletion startDeletion(File[] paths) {
-        Deletion ret = (Deletion)this.start(new Deletion(paths));
+    public final Deletion startDeletion(final File[] paths) {
+        final Deletion ret = start(new Deletion(paths));
         ret.getRegister().add(new LSN_CLOSURE());
         return ret;
     }
 
-    private static File newFile(File path) {
+    private static File newFile(final File path) {
         try {
             return path.getCanonicalFile();
-        } catch (IOException var2) {
+        } catch (final IOException var2) {
             Log.warning(var2);
             return path.getAbsoluteFile();
         }
     }
 
-    private <T extends Task> T start(T task) {
-        this.fire(new MSG_STARTING(task));
-        Thread th = new Thread(task, task.getClass().getName() + "-" + ++tCount);
+    private <T extends Task> T start(final T task) {
+        fire(new MSG_STARTING(task));
+        final Thread th = new Thread(task, task.getClass().getName() + "-" + ++tCount);
         th.start();
         return task;
     }
@@ -115,19 +115,19 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     private class LSN_CLOSURE implements Consumer<Task.Closure> {
 
         @Override
-        public final void accept(Task.Closure message) {
-            ((Task)message.getSender()).getRegister().remove(this);
-            ContextImpl.this.startCalculation(ContextImpl.this.getPath());
+        public final void accept(final Task.Closure message) {
+            message.getSender().getRegister().remove(this);
+            startCalculation(getPath());
         }
     }
 
     private class LSN_CLS_CALC implements Consumer<Task.Closure> {
 
         @Override
-        public final void accept(Task.Closure message) {
-            ((Task)message.getSender()).getRegister().remove(this);
-            synchronized(ContextImpl.this.calculators) {
-                ContextImpl.this.calculators.remove(message.getSender());
+        public final void accept(final Task.Closure message) {
+            message.getSender().getRegister().remove(this);
+            synchronized (calculators) {
+                calculators.remove(message.getSender());
             }
         }
     }
@@ -159,22 +159,22 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     private class MSG_STARTING extends MSG_BASE implements Context.MsgStarting {
         private final Task task;
 
-        private MSG_STARTING(Task task) {
-            ContextImpl.this.addInitial(this);
+        private MSG_STARTING(final Task task) {
+            addInitial(this);
             (this.task = task).getRegister().add(new LSN_CLOSURE());
         }
 
         @Override
         public final Task getTask() {
-            return this.task;
+            return task;
         }
 
         private class LSN_CLOSURE implements Consumer<Task.Closure> {
 
             @Override
-            public final void accept(Task.Closure message) {
-                ((Task)message.getSender()).getRegister().remove(this);
-                ContextImpl.this.removeInitial(MSG_STARTING.this);
+            public final void accept(final Task.Closure message) {
+                message.getSender().getRegister().remove(this);
+                removeInitial(MSG_STARTING.this);
             }
         }
     }

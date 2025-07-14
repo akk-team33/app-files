@@ -12,22 +12,22 @@ public class FSTreeModel implements TreeModel {
     private static final NODE m_Root = new ROOTNODE();
     private static final FileFilter DIR_FILTER = new FileFilter() {
         @Override
-        public boolean accept(File f) {
+        public boolean accept(final File f) {
             return f.isDirectory();
         }
     };
     private static final Comparator<NODE> NODE_COMPARATOR = new Comparator<NODE>() {
         @Override
-        public int compare(NODE n1, NODE n2) {
+        public int compare(final NODE n1, final NODE n2) {
             return n1.toString().compareToIgnoreCase(n2.toString());
         }
     };
 
-    public final TreePath getTreePath(File f) {
-        return f == null ? new TreePath(m_Root) : this.getTreePath(f.getParentFile()).pathByAddingChild(getNode(f));
+    public final TreePath getTreePath(final File f) {
+        return f == null ? new TreePath(m_Root) : getTreePath(f.getParentFile()).pathByAddingChild(getNode(f));
     }
 
-    public final File getFile(TreePath selectionPath) {
+    public final File getFile(final TreePath selectionPath) {
         return selectionPath == null ? null : ((NODE)selectionPath.getLastPathComponent()).getFile();
     }
 
@@ -37,60 +37,60 @@ public class FSTreeModel implements TreeModel {
     }
 
     @Override
-    public final Object getChild(Object parent, int index) {
+    public final Object getChild(final Object parent, final int index) {
         return ((NODE)parent).getChildren().get(index);
     }
 
     @Override
-    public final int getChildCount(Object parent) {
+    public final int getChildCount(final Object parent) {
         return ((NODE)parent).getChildren().size();
     }
 
     @Override
-    public final int getIndexOfChild(Object parent, Object child) {
+    public final int getIndexOfChild(final Object parent, final Object child) {
         return ((NODE)parent).getChildren().indexOf(child);
     }
 
     @Override
-    public final boolean isLeaf(Object node) {
+    public final boolean isLeaf(final Object node) {
         return false;
     }
 
     @Override
-    public void valueForPathChanged(TreePath path, Object newValue) {
+    public void valueForPathChanged(final TreePath path, final Object newValue) {
     }
 
     @Override
-    public synchronized void addTreeModelListener(TreeModelListener l) {
+    public synchronized void addTreeModelListener(final TreeModelListener l) {
     }
 
     @Override
-    public synchronized void removeTreeModelListener(TreeModelListener l) {
+    public synchronized void removeTreeModelListener(final TreeModelListener l) {
     }
 
-    private static NODE getNode(File f) {
+    private static NODE getNode(final File f) {
         return f == null ? m_Root : getNode(f.getParentFile()).getChild(f);
     }
 
     private static class DIRNODE extends NODE {
         private final File m_File;
 
-        public DIRNODE(File f) {
+        public DIRNODE(final File f) {
             this.m_File = f;
         }
 
         public final String toString() {
-            return this.m_File.getParentFile() == null ? this.m_File.getAbsolutePath() : this.m_File.getName();
+            return m_File.getParentFile() == null ? m_File.getAbsolutePath() : m_File.getName();
         }
 
         @Override
         public final File getFile() {
-            return this.m_File;
+            return m_File;
         }
 
         @Override
         protected final File[] getChildFiles() {
-            return this.m_File.listFiles(FSTreeModel.DIR_FILTER);
+            return m_File.listFiles(FSTreeModel.DIR_FILTER);
         }
     }
 
@@ -104,24 +104,24 @@ public class FSTreeModel implements TreeModel {
         public final NODE getChild(File f) {
             try {
                 f = f.getCanonicalFile();
-                Iterator var3 = this.getChildren().iterator();
+                final Iterator var3 = getChildren().iterator();
 
                 while(var3.hasNext()) {
-                    NODE child = (NODE)var3.next();
+                    final NODE child = (NODE)var3.next();
                     if (child.getFile().equals(f)) {
                         return child;
                     }
                 }
-            } catch (IOException var4) {
+            } catch (final IOException var4) {
             }
 
             return this;
         }
 
         public final Vector<NODE> getChildren() {
-            if (this.m_Children == null) {
-                File[] f = this.getChildFiles();
-                Set<NODE> nodes = new TreeSet(FSTreeModel.NODE_COMPARATOR);
+            if (m_Children == null) {
+                final File[] f = getChildFiles();
+                final Set<NODE> nodes = new TreeSet(FSTreeModel.NODE_COMPARATOR);
                 if (f != null) {
                     for(int i = 0; i < f.length; ++i) {
                         nodes.add(new DIRNODE(f[i]));
@@ -131,7 +131,7 @@ public class FSTreeModel implements TreeModel {
                 this.m_Children = new Vector(nodes);
             }
 
-            return this.m_Children;
+            return m_Children;
         }
 
         public abstract File getFile();

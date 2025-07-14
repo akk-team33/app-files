@@ -4,12 +4,12 @@ import java.io.File;
 
 public class FileUtil {
 
-    public static File getAccessible(File path) {
-        File parent = path.getAbsoluteFile().getParentFile();
+    public static File getAccessible(final File path) {
+        final File parent = path.getAbsoluteFile().getParentFile();
         return !parent.isDirectory() && !parent.mkdirs() ? null : path;
     }
 
-    public static File getAccessible(String path) {
+    public static File getAccessible(final String path) {
         return getAccessible(new File(path));
     }
 }

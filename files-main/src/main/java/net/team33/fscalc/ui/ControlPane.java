@@ -12,51 +12,51 @@ import java.util.function.Consumer;
 public abstract class ControlPane extends JPanel {
     protected abstract Context getContext();
 
-    public ControlPane(InfoTable table) {
+    public ControlPane(final InfoTable table) {
         super(new GridLayout(1, 0, 2, 2));
         table.getRegister().add(new ITBL_LSTNR());
-        ACTNBUTTON delButton = new DELBUTTON(table);
-        this.add(delButton);
+        final ACTNBUTTON delButton = new DELBUTTON(table);
+        add(delButton);
     }
 
     private abstract class ACTNBUTTON extends JButton implements Consumer<InfoTable.UpdateSelection>, ActionListener {
-        protected ACTNBUTTON(String text, InfoTable table) {
+        protected ACTNBUTTON(final String text, final InfoTable table) {
             super(text);
-            this.addActionListener(this);
+            addActionListener(this);
             table.getRegister().add(this);
         }
 
         @Override
-        public final void accept(InfoTable.UpdateSelection message) {
-            this.setEnabled(((InfoTable)message.getSender()).getSelectedRowCount() > 0);
+        public final void accept(final InfoTable.UpdateSelection message) {
+            setEnabled(message.getSender().getSelectedRowCount() > 0);
         }
     }
 
     public class DELBUTTON extends ACTNBUTTON {
         private final InfoTable table;
 
-        protected DELBUTTON(InfoTable table) {
+        protected DELBUTTON(final InfoTable table) {
             super("Löschen", table);
             this.table = table;
         }
 
         @Override
-        public final void actionPerformed(ActionEvent e) {
-            int[] rows = this.table.getSelectedRows();
-            File[] paths = new File[rows.length];
+        public final void actionPerformed(final ActionEvent e) {
+            final int[] rows = table.getSelectedRows();
+            final File[] paths = new File[rows.length];
 
             for(int i = 0; i < rows.length; ++i) {
-                paths[i] = this.table.getModel().getValueAt(rows[i], 0).getPath();
+                paths[i] = table.getModel().getValueAt(rows[i], 0).getPath();
             }
 
-            ControlPane.this.getContext().startDeletion(paths);
+            getContext().startDeletion(paths);
         }
     }
 
     private class ITBL_LSTNR implements Consumer<InfoTable.UpdateSelection> {
 
         @Override
-        public void accept(InfoTable.UpdateSelection message) {
+        public void accept(final InfoTable.UpdateSelection message) {
         }
     }
 }

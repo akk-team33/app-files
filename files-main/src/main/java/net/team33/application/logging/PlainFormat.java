@@ -6,17 +6,17 @@ import java.util.Date;
 public class PlainFormat implements Formatter {
 
     @Override
-    public final void format(Loggable entry, PrintWriter out) {
-        Date date = entry.getDate();
-        String type = entry.getLevel().toString();
-        Thread thread = entry.getThread();
+    public final void format(final Loggable entry, final PrintWriter out) {
+        final Date date = entry.getDate();
+        final String type = entry.getLevel().toString();
+        final Thread thread = entry.getThread();
         out.println(String.format("[%2$s - thread#%3$d/\"%4$s\" - %1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS,%1$tL]", date, type, thread.getId(), thread.getName()));
-        String text = entry.getText();
+        final String text = entry.getText();
         if (text != null) {
             out.println(text);
         }
 
-        Throwable ex = entry.getException();
+        final Throwable ex = entry.getException();
         if (ex != null) {
             ex.printStackTrace(out);
         }

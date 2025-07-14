@@ -63,7 +63,7 @@ class Info implements Runnable {
 
         private final Predicate<BasicFileAttributes> filter;
 
-        FileType(Predicate<BasicFileAttributes> filter) {
+        FileType(final Predicate<BasicFileAttributes> filter) {
             this.filter = filter;
         }
     }
@@ -83,7 +83,7 @@ class Info implements Runnable {
                         attributes.lastAccessTime().toInstant(),
                         attributes.lastModifiedTime().toInstant(),
                         attributes.fileKey());
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 return new FileInfo(path, FileType.MISSING, 0, null, null, null, null);
             }
         }

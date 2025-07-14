@@ -10,7 +10,7 @@ public class Deletion extends TaskBase {
     private static final String PREFIX = "Lösche";
     private File[] paths = null;
 
-    public Deletion(File[] paths) {
+    public Deletion(final File[] paths) {
         this.paths = paths;
     }
 
@@ -21,20 +21,20 @@ public class Deletion extends TaskBase {
 
     @Override
     protected final void run_core() {
-        Controller ctrl = new CONTROLLER();
-        FileService.getInstance().delete(this.paths, ctrl.getSubController((long)this.paths.length));
+        final Controller ctrl = new CONTROLLER();
+        FileService.getInstance().delete(paths, ctrl.getSubController(paths.length));
     }
 
     private class CONTROLLER extends ControllerBasEx {
 
         @Override
-        protected final void setProgress(String subject, double rate) {
-            Deletion.this.fireProgress(subject, rate);
+        protected final void setProgress(final String subject, final double rate) {
+            fireProgress(subject, rate);
         }
 
         @Override
         public final boolean isQuitting() {
-            return Deletion.this.isQuit();
+            return isQuit();
         }
     }
 }

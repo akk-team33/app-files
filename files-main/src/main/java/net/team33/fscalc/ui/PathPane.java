@@ -31,12 +31,12 @@ public abstract class PathPane extends JPanel {
 
     public PathPane() {
         super(new GridBagLayout());
-        this.add(new NAVBCK(), GBC_NAVBCK);
-        this.add(new NAVFWD(), GBC_NAVFWD);
-        this.add(new NAVUP(), GBC_NAVUP);
-        this.add(new ICON(), GBC_ICON);
-        this.add(new TEXT(), GBC_TEXT);
-        this.add(new REFRESH(), GBC_REFRESH);
+        add(new NAVBCK(), GBC_NAVBCK);
+        add(new NAVFWD(), GBC_NAVFWD);
+        add(new NAVUP(), GBC_NAVUP);
+        add(new ICON(), GBC_ICON);
+        add(new TEXT(), GBC_TEXT);
+        add(new REFRESH(), GBC_REFRESH);
     }
 
     private class ICON extends JLabel {
@@ -80,16 +80,16 @@ public abstract class PathPane extends JPanel {
     private class TEXT extends JTextField {
         private TEXT() {
             super(16);
-            this.setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
-            this.setFont(new Font(this.getFont().getName(), 1, this.getFont().getSize()));
-            PathPane.this.getContext().getRegister().add(new ADAPTER());
+            setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
+            setFont(new Font(getFont().getName(), 1, getFont().getSize()));
+            getContext().getRegister().add(new ADAPTER());
         }
 
         private class ADAPTER implements Consumer<Context.MsgChDir> {
 
             @Override
-            public final void accept(Context.MsgChDir message) {
-                TEXT.this.setText(message.getPath().getPath());
+            public final void accept(final Context.MsgChDir message) {
+                setText(message.getPath().getPath());
             }
         }
     }

@@ -12,17 +12,17 @@ public abstract class ControllerBasEx extends ControllerBase {
     }
 
     @Override
-    public final void increment(String subject, long divisor) {
-        this.increment(subject, new BigInteger(String.valueOf(divisor)));
+    public final void increment(final String subject, final long divisor) {
+        increment(subject, new BigInteger(String.valueOf(divisor)));
     }
 
-    private void increment(String subject, BigInteger divisor) {
-        BigInteger x = this.divisor.add(this.dividend.multiply(divisor));
-        BigInteger y = divisor.multiply(this.divisor);
-        BigInteger d = y.gcd(x);
+    private void increment(final String subject, final BigInteger divisor) {
+        final BigInteger x = this.divisor.add(dividend.multiply(divisor));
+        final BigInteger y = divisor.multiply(this.divisor);
+        final BigInteger d = y.gcd(x);
         this.dividend = x.divide(d);
         this.divisor = y.divide(d);
-        this.setProgress(subject, this.dividend.doubleValue() / this.divisor.doubleValue());
+        setProgress(subject, dividend.doubleValue() / this.divisor.doubleValue());
     }
 
     protected abstract void setProgress(String var1, double var2);

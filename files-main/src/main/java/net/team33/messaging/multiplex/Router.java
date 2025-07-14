@@ -2,47 +2,48 @@ package net.team33.messaging.multiplex;
 
 import net.team33.reflect.ClassUtil;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class Router<MSX> implements Relay<MSX> {
-    private final Set<MSX> initials = new HashSet();
+    private final Set<MSX> initials = new HashSet<>(0);
     private final REGISTRY registry = new REGISTRY();
 
-    private synchronized boolean add(Class<?> messageClass, Consumer<?> listener) {
-        return ((Set)this.registry.get(messageClass)).add(listener);
+    private synchronized boolean add(final Class<?> messageClass, final Consumer<?> listener) {
+        return registry.get(messageClass).add(listener);
     }
 
     @Override
-    public final void add(Consumer<? extends MSX> listener) {
-        Class<?> msgClass = ClassUtil.getActualClassArgument(Consumer.class, listener.getClass());
-        this.include(msgClass);
-        if (this.add(msgClass, listener)) {
-            this.init(msgClass, listener);
+    public final void add(final Consumer<? extends MSX> listener) {
+        final Class<?> msgClass = ClassUtil.getActualClassArgument(Consumer.class, listener.getClass());
+        include(msgClass);
+        if (add(msgClass, listener)) {
+            init(msgClass, listener);
         }
 
     }
 
-    public final synchronized void addInitial(MSX initial) {
-        this.initials.add(initial);
+    public final synchronized void addInitial(final MSX initial) {
+        initials.add(initial);
     }
 
-    public final synchronized void removeInitial(MSX initial) {
-        this.initials.remove(initial);
+    public final synchronized void removeInitial(final MSX initial) {
+        initials.remove(initial);
     }
 
-    private synchronized void include(Class<?> messageClass) {
-        if (!this.registry.containsKey(messageClass)) {
-            this.registry.put(messageClass, new HashSet());
+    private synchronized void include(final Class<?> messageClass) {
+        if (!registry.containsKey(messageClass)) {
+            registry.put(messageClass, new HashSet<>(0));
         }
 
     }
 
-    private void init(Class messageClass, Consumer lstnr) {
-        Iterator var4 = this.tmpInitials().iterator();
+    @SuppressWarnings("rawtypes")
+    private void init(final Class<?> messageClass, final Consumer lstnr) {
 
-        while(var4.hasNext()) {
-            Object initial = var4.next();
+        for (final Object initial : tmpInitials()) {
             if (messageClass.isAssignableFrom(initial.getClass())) {
                 lstnr.accept(initial);
             }
@@ -50,54 +51,43 @@ public class Router<MSX> implements Relay<MSX> {
 
     }
 
-    private synchronized void remove(Class<?> messageClass, Consumer<?> listener) {
-        ((Set)this.registry.get(messageClass)).remove(listener);
+    private synchronized void remove(final Class<?> messageClass, final Consumer<?> listener) {
+        registry.get(messageClass).remove(listener);
     }
 
     @Override
-    public final void remove(Consumer<? extends MSX> lstnr) {
-        Iterator var3 = this.tmpMessageClasses().iterator();
-
-        while(var3.hasNext()) {
-            Class<?> msgClass = (Class)var3.next();
-            this.remove(msgClass, lstnr);
+    public final void remove(final Consumer<? extends MSX> lstnr) {
+        for (final Class<?> messageClass : tmpMessageClasses()) {
+            remove(messageClass, lstnr);
         }
-
     }
 
     @Override
-    public final void route(MSX message) {
-        Iterator var3 = this.tmpMessageClasses().iterator();
-
-        while(var3.hasNext()) {
-            Class<?> messageClass = (Class)var3.next();
+    public final void route(final MSX message) {
+        for (final Class<?> messageClass : tmpMessageClasses()) {
             if (messageClass.isAssignableFrom(message.getClass())) {
-                this.route(messageClass, message);
+                route(messageClass, message);
             }
         }
-
     }
 
-    private void route(Class<?> messageClass, Object message) {
-        Iterator var4 = this.tmpRegistry(messageClass).iterator();
-
-        while(var4.hasNext()) {
-            Consumer listener = (Consumer) var4.next();
-            listener.accept(message);
+    @SuppressWarnings("rawtypes")
+    private void route(final Class<?> messageClass, final Object message) {
+        for (final Consumer consumer : tmpRegistry(messageClass)) {
+            consumer.accept(message);
         }
-
     }
 
     private synchronized Set<Object> tmpInitials() {
-        return new HashSet(this.initials);
+        return new HashSet<>(initials);
     }
 
     private synchronized Set<Class<?>> tmpMessageClasses() {
-        return new HashSet((Collection)this.registry.keySet());
+        return new HashSet<>(registry.keySet());
     }
 
-    private synchronized Set<Consumer<?>> tmpRegistry(Class<?> messageClass) {
-        return new HashSet((Collection)this.registry.get(messageClass));
+    private synchronized Set<Consumer<?>> tmpRegistry(final Class<?> messageClass) {
+        return new HashSet<>(registry.get(messageClass));
     }
 
     private static class REGISTRY extends HashMap<Class<?>, Set<Consumer<?>>> {

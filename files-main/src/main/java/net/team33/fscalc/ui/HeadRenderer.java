@@ -17,18 +17,18 @@ public abstract class HeadRenderer extends JPanel implements TableCellRenderer {
 
     public HeadRenderer() {
         super(new GridLayout(0, 1, 1, 1));
-        this.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createRaisedBevelBorder(), BorderFactory.createEmptyBorder(0, 2, 0, 2)));
-        this.add(this.title);
-        this.add(this.info);
+        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createRaisedBevelBorder(), BorderFactory.createEmptyBorder(0, 2, 0, 2)));
+        add(title);
+        add(info);
     }
 
     @Override
-    public final Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+    public final Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, int column) {
         column = table.convertColumnIndexToModel(column);
-        this.title.setText(value.toString(), column);
-        File path = this.getContext().getPath();
-        FileInfo fi = FileService.getInstance().getInfo(path);
-        this.info.setFileInfo(fi, column);
+        title.setText(value.toString(), column);
+        final File path = getContext().getPath();
+        final FileInfo fi = FileService.getInstance().getInfo(path);
+        info.setFileInfo(fi, column);
         return this;
     }
 
@@ -42,14 +42,14 @@ public abstract class HeadRenderer extends JPanel implements TableCellRenderer {
         TITLE() {
         }
 
-        public final void setText(String text, int column) {
+        public final void setText(final String text, final int column) {
             if (column > 0) {
-                this.setHorizontalAlignment(4);
+                setHorizontalAlignment(4);
             } else {
-                this.setHorizontalAlignment(2);
+                setHorizontalAlignment(2);
             }
 
-            this.setText(text);
+            setText(text);
         }
     }
 }

@@ -6,95 +6,80 @@ import net.team33.messaging.multiplex.Router;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
-public class Log {
+public final class Log {
+
     private static Formatter format = new PlainFormat();
-    private static final Routing routing = new Routing();
+    private static final Routing ROUTING = new Routing();
 
-    public static void add(Consumer<? extends Loggable> handler, Level... levels) {
-        Level[] var5 = levels;
-        int var4 = levels.length;
+    private Log() {
+    }
 
-        for(int var3 = 0; var3 < var4; ++var3) {
-            Level level = var5[var3];
-            if (!routing.containsKey(level)) {
-                routing.put(level, new Router());
+    public static void add(final Consumer<? extends Loggable> handler, final Level... levels) {
+        for (final Level level : levels) {
+            if (!ROUTING.containsKey(level)) {
+                ROUTING.put(level, new Router<>());
             }
+            ROUTING.get(level).add(handler);
+        }
+    }
 
-            ((Router)routing.get(level)).add(handler);
+    public static void put(final Loggable entry) {
+        if (ROUTING.containsKey(entry.getLevel())) {
+            ROUTING.get(entry.getLevel()).route(entry);
         }
 
     }
 
-    public static void remove(Consumer<? extends Loggable> listener) {
-        Level[] var4;
-        int var3 = (var4 = Level.values()).length;
-
-        for(int var2 = 0; var2 < var3; ++var2) {
-            Level level = var4[var2];
-            if (routing.containsKey(level)) {
-                ((Router)routing.get(level)).remove(listener);
-            }
-        }
-
-    }
-
-    public static void put(Loggable entry) {
-        if (routing.containsKey(entry.getLevel())) {
-            ((Router)routing.get(entry.getLevel())).route(entry);
-        }
-
-    }
-
-    public static void put(Level level, String text, Throwable exception) {
+    public static void put(final Level level, final String text, final Throwable exception) {
         put(new Entry(level, Thread.currentThread(), text, exception));
     }
 
-    public static void debug(String text, Throwable exception) {
+    public static void debug(final String text, final Throwable exception) {
         put(Level.DEBUG, text, exception);
     }
 
-    public static void debug(String text) {
-        debug(text, (Throwable)null);
+    public static void debug(final String text) {
+        debug(text, null);
     }
 
-    public static void debug(Throwable exception) {
-        debug((String)null, exception);
+    public static void debug(final Throwable exception) {
+        debug(null, exception);
     }
 
-    public static void info(String text, Throwable exception) {
+    public static void info(final String text, final Throwable exception) {
         put(Level.INFO, text, exception);
     }
 
-    public static void info(String text) {
-        info(text, (Throwable)null);
+    public static void info(final String text) {
+        info(text, null);
     }
 
-    public static void info(Throwable exception) {
-        info((String)null, exception);
+    public static void info(final Throwable exception) {
+        info(null, exception);
     }
 
-    public static void warning(String text, Throwable exception) {
+    public static void warning(final String text, final Throwable exception) {
         put(Level.WARNING, text, exception);
     }
 
-    public static void warning(String text) {
-        warning(text, (Throwable)null);
+    public static void warning(final String text) {
+        warning(text, null);
     }
 
-    public static void warning(Throwable exception) {
-        warning((String)null, exception);
+    public static void warning(final Throwable exception) {
+        warning(null, exception);
     }
 
-    public static void error(String text, Throwable exception) {
+    public static void error(final String text, final Throwable exception) {
         put(Level.ERROR, text, exception);
     }
 
-    public static void error(String text) {
-        error(text, (Throwable)null);
+    public static void error(final String text) {
+        error(text, null);
     }
 
-    public static void error(Throwable exception) {
-        error((String)null, exception);
+    public static void error(final Throwable exception) {
+        error(null, exception);
     }
 
     public static void setDefaultUncaughtExceptionHandler() {
@@ -105,12 +90,12 @@ public class Log {
         return format;
     }
 
-    public static void setStdFormat(Formatter fmt) {
+    public static void setStdFormat(final Formatter fmt) {
         format = fmt;
     }
 
     private static class Entry extends LogEntry implements Loggable {
-        public Entry(Level level, Thread thread, String text, Throwable exception) {
+        public Entry(final Level level, final Thread thread, final String text, final Throwable exception) {
             super(level, thread, text, exception);
         }
     }
@@ -121,7 +106,7 @@ public class Log {
     private static class UncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
 
         @Override
-        public final void uncaughtException(Thread thread, Throwable exception) {
+        public final void uncaughtException(final Thread thread, final Throwable exception) {
             Log.put(new Entry(Level.FATAL, thread, "Unbehandelte Ausnahme", exception));
         }
     }

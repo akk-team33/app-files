@@ -7,7 +7,7 @@ public class Calculator extends TaskBase {
     private static final String PREFIX = "Ermittle";
     private FileInfo info = null;
 
-    public Calculator(FileInfo info) {
+    public Calculator(final FileInfo info) {
         this.info = info;
     }
 
@@ -18,19 +18,19 @@ public class Calculator extends TaskBase {
 
     @Override
     protected final void run_core() {
-        this.info.calculate(new CONTROLLER());
+        info.calculate(new CONTROLLER());
     }
 
     private class CONTROLLER extends ControllerBasEx {
 
         @Override
-        protected final void setProgress(String subject, double rate) {
-            Calculator.this.fireProgress(subject, rate);
+        protected final void setProgress(final String subject, final double rate) {
+            fireProgress(subject, rate);
         }
 
         @Override
         public final boolean isQuitting() {
-            return Calculator.this.isQuit();
+            return isQuit();
         }
     }
 }

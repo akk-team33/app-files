@@ -24,16 +24,16 @@ public abstract class BrowserPane extends JPanel {
 
     public BrowserPane() {
         super(new GridBagLayout());
-        InfoTable table = new TABLE();
-        ControlPane controls = new CONTROL(table);
-        this.add(new JScrollPane(table), GBC_TABLE);
-        this.add(new JPanel(), GBC_SPACE1);
-        this.add(controls, GBC_CONTROLS);
-        this.add(new JPanel(), GBC_SPACE2);
+        final InfoTable table = new TABLE();
+        final ControlPane controls = new CONTROL(table);
+        add(new JScrollPane(table), GBC_TABLE);
+        add(new JPanel(), GBC_SPACE1);
+        add(controls, GBC_CONTROLS);
+        add(new JPanel(), GBC_SPACE2);
     }
 
     private class CONTROL extends ControlPane {
-        public CONTROL(InfoTable table) {
+        public CONTROL(final InfoTable table) {
             super(table);
         }
 

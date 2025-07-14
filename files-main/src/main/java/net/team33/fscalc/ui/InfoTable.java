@@ -30,21 +30,21 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
 
     protected abstract Context getContext();
 
-    public InfoTable(InfoTableModel model) {
+    public InfoTable(final InfoTableModel model) {
         super(model);
-        this.getTableHeader().setDefaultRenderer(new HEADRENDERER());
-        CellRenderer cr = new CellRenderer();
+        getTableHeader().setDefaultRenderer(new HEADRENDERER());
+        final CellRenderer cr = new CellRenderer();
         cr.setFileInfo(FS.getInfo(new File("")), 0);
-        this.setRowHeight(cr.getPreferredSize().height + 3);
-        this.setDefaultRenderer(FileInfo.class, cr);
-        this.setShowGrid(false);
-        this.setRowSelectionAllowed(true);
-        this.setColumnSelectionAllowed(false);
-        this.getTableHeader().addMouseListener(new HEADER_MOUSE_LISTENER());
-        this.addMouseListener(new MOUSE_LISTENER());
-        this.getSelectionModel().addListSelectionListener(new SEL_LISTENER());
+        setRowHeight(cr.getPreferredSize().height + 3);
+        setDefaultRenderer(FileInfo.class, cr);
+        setShowGrid(false);
+        setRowSelectionAllowed(true);
+        setColumnSelectionAllowed(false);
+        getTableHeader().addMouseListener(new HEADER_MOUSE_LISTENER());
+        addMouseListener(new MOUSE_LISTENER());
+        getSelectionModel().addListSelectionListener(new SEL_LISTENER());
         FileService.getInstance().getRegister().add(new LSTNR_UPDINFO());
-        this.router.addInitial(new UPD_SEL(null));
+        router.addInitial(new UPD_SEL(null));
     }
 
     @Override
@@ -54,24 +54,24 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
 
     @Override
     public final Register<Message<InfoTable>> getRegister() {
-        return this.router;
+        return router;
     }
 
-    private void fire(Message<InfoTable> message) {
-        this.router.route(message);
+    private void fire(final Message<InfoTable> message) {
+        router.route(message);
     }
 
     private class HEADER_MOUSE_LISTENER extends MouseAdapter {
 
         @Override
-        public final void mouseClicked(MouseEvent e) {
-            int tcol = InfoTable.this.getTableHeader().columnAtPoint(e.getPoint());
-            int mcol = InfoTable.this.convertColumnIndexToModel(tcol);
-            Order ord0 = InfoTable.this.getContext().getOrder();
-            InfoTable.this.getContext().setOrder(this.getOrder(mcol, ord0));
+        public final void mouseClicked(final MouseEvent e) {
+            final int tcol = getTableHeader().columnAtPoint(e.getPoint());
+            final int mcol = convertColumnIndexToModel(tcol);
+            final Order ord0 = getContext().getOrder();
+            getContext().setOrder(getOrder(mcol, ord0));
         }
 
-        private Order getOrder(int colIndex, Order currOrder) {
+        private Order getOrder(final int colIndex, final Order currOrder) {
             Order ret = null;
             if (InfoTable.orders.length > colIndex) {
                 if (currOrder == InfoTable.orders[colIndex][0]) {
@@ -96,10 +96,10 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
     private class LSTNR_UPDINFO implements Consumer<FileService.MsgUpdate> {
 
         @Override
-        public final void accept(FileService.MsgUpdate message) {
-            File path = message.getInfo().getPath();
-            if (path.equals(InfoTable.this.getContext().getPath())) {
-                InfoTable.this.getTableHeader().repaint();
+        public final void accept(final FileService.MsgUpdate message) {
+            final File path = message.getInfo().getPath();
+            if (path.equals(getContext().getPath())) {
+                getTableHeader().repaint();
             }
 
         }
@@ -108,13 +108,13 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
     private class MOUSE_LISTENER extends MouseAdapter {
 
         @Override
-        public final void mouseClicked(MouseEvent e) {
+        public final void mouseClicked(final MouseEvent e) {
             if (e.getClickCount() == 2) {
-                int row = InfoTable.this.rowAtPoint(e.getPoint());
-                FileInfo it = (FileInfo)InfoTable.this.getValueAt(row, 0);
-                File path = it.getPath();
+                final int row = rowAtPoint(e.getPoint());
+                final FileInfo it = (FileInfo) getValueAt(row, 0);
+                final File path = it.getPath();
                 if (path.isDirectory()) {
-                    InfoTable.this.getContext().setPath(it.getPath());
+                    getContext().setPath(it.getPath());
                 }
             }
 
@@ -132,21 +132,21 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
     private class SEL_LISTENER implements ListSelectionListener {
 
         @Override
-        public final void valueChanged(ListSelectionEvent e) {
-            InfoTable.this.fire(InfoTable.this.new UPD_SEL(e));
+        public final void valueChanged(final ListSelectionEvent e) {
+            fire(InfoTable.this.new UPD_SEL(e));
         }
     }
 
     private class UPD_SEL extends MSG_BASE implements UpdateSelection {
         private final ListSelectionEvent evnt;
 
-        private UPD_SEL(ListSelectionEvent evnt) {
+        private UPD_SEL(final ListSelectionEvent evnt) {
             this.evnt = evnt;
         }
 
         @Override
         public final ListSelectionEvent getListSelectionEvent() {
-            return this.evnt;
+            return evnt;
         }
     }
 

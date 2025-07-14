@@ -9,12 +9,12 @@ public abstract class TaskBase extends Sender<Message<Task>> implements Task {
     private Thread thread = null;
     private boolean quit = false;
 
-    protected final void fireProgress(String subject, double ratio) {
-        this.fire(new PROGRESS(subject, ratio));
+    protected final void fireProgress(final String subject, final double ratio) {
+        fire(new PROGRESS(subject, ratio));
     }
 
     protected final boolean isQuit() {
-        return this.quit;
+        return quit;
     }
 
     protected abstract String getProgressPrefix();
@@ -23,22 +23,22 @@ public abstract class TaskBase extends Sender<Message<Task>> implements Task {
 
     @Override
     public final Thread getThread() {
-        return this.thread;
+        return thread;
     }
 
     @Override
     public final void run() {
-        if (this.thread == null) {
+        if (thread == null) {
             try {
                 this.thread = Thread.currentThread();
-                this.run_core();
-            } catch (Throwable var2) {
+                run_core();
+            } catch (final Throwable var2) {
                 Log.error(var2);
             }
 
-            Message<Task> msg = new CLOSURE();
-            this.addInitial(msg);
-            this.fire(msg);
+            final Message<Task> msg = new CLOSURE();
+            addInitial(msg);
+            fire(msg);
         } else {
             throw new RuntimeException("Es wurde versucht, die Task-Instanz '" + this + "' mehrmals auszuführen!");
         }
@@ -64,24 +64,24 @@ public abstract class TaskBase extends Sender<Message<Task>> implements Task {
         private final String subject;
         private final double ratio;
 
-        public PROGRESS(String subject, double ratio) {
+        public PROGRESS(final String subject, final double ratio) {
             this.subject = subject;
             this.ratio = ratio;
         }
 
         @Override
         public final String getPrefix() {
-            return TaskBase.this.getProgressPrefix();
+            return getProgressPrefix();
         }
 
         @Override
         public final double getRatio() {
-            return this.ratio;
+            return ratio;
         }
 
         @Override
         public final String getSubject() {
-            return this.subject;
+            return subject;
         }
     }
 }

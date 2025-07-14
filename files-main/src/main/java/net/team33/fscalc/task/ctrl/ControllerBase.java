@@ -5,7 +5,7 @@ import net.team33.fscalc.task.Controller;
 public abstract class ControllerBase implements Controller {
 
     @Override
-    public final Controller getSubController(long preDivisor) {
+    public final Controller getSubController(final long preDivisor) {
         return new SUB_CONTROLLER(this, preDivisor);
     }
 
@@ -13,19 +13,19 @@ public abstract class ControllerBase implements Controller {
         ControllerBase parent;
         long preDiv;
 
-        private SUB_CONTROLLER(ControllerBase parent, long preDiv) {
+        private SUB_CONTROLLER(final ControllerBase parent, final long preDiv) {
             this.parent = parent;
             this.preDiv = preDiv;
         }
 
         @Override
-        public final void increment(String subject, long divisor) {
-            this.parent.increment(subject, divisor * this.preDiv);
+        public final void increment(final String subject, final long divisor) {
+            parent.increment(subject, divisor * preDiv);
         }
 
         @Override
         public final boolean isQuitting() {
-            return this.parent.isQuitting();
+            return parent.isQuitting();
         }
     }
 }

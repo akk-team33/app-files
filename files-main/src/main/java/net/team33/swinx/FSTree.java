@@ -6,11 +6,11 @@ import java.io.File;
 public class FSTree extends JTree {
     public FSTree() {
         super(new FSTreeModel());
-        this.setRootVisible(false);
-        this.setShowsRootHandles(true);
-        this.setScrollsOnExpand(true);
-        this.setExpandsSelectedPaths(true);
-        this.getSelectionModel().setSelectionMode(1);
+        setRootVisible(false);
+        setShowsRootHandles(true);
+        setScrollsOnExpand(true);
+        setExpandsSelectedPaths(true);
+        getSelectionModel().setSelectionMode(1);
     }
 
     @Override
@@ -19,10 +19,10 @@ public class FSTree extends JTree {
     }
 
     public final File getSelection() {
-        return this.getModel().getFile(this.getSelectionPath());
+        return getModel().getFile(getSelectionPath());
     }
 
-    public final void setSelection(File f) {
-        this.setSelectionPath(this.getModel().getTreePath(f));
+    public final void setSelection(final File f) {
+        setSelectionPath(getModel().getTreePath(f));
     }
 }

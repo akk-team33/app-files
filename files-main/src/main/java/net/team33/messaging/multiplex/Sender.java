@@ -5,18 +5,18 @@ public class Sender<MSX> implements Originator<MSX> {
 
     @Override
     public final Register<MSX> getRegister() {
-        return this.router;
+        return router;
     }
 
-    protected final void addInitial(MSX initial) {
-        this.router.addInitial(initial);
+    protected final void addInitial(final MSX initial) {
+        router.addInitial(initial);
     }
 
-    protected final void removeInitial(MSX initial) {
-        this.router.removeInitial(initial);
+    protected final void removeInitial(final MSX initial) {
+        router.removeInitial(initial);
     }
 
-    protected final void fire(MSX message) {
-        this.router.route(message);
+    protected final void fire(final MSX message) {
+        router.route(message);
     }
 }

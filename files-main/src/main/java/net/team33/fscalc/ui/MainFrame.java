@@ -21,11 +21,11 @@ public abstract class MainFrame extends JFrame {
 
     protected MainFrame() {
         super("FSCalc");
-        this.setDefaultCloseOperation(2);
-        this.setContentPane(new ContentPane());
-        this.pack();
-        this.setLocationByPlatform(true);
-        this.getContext().getRegister().add(new ADAPTER());
+        setDefaultCloseOperation(2);
+        setContentPane(new ContentPane());
+        pack();
+        setLocationByPlatform(true);
+        getContext().getRegister().add(new ADAPTER());
     }
 
     public static MainFrame by(final Context context) {
@@ -42,24 +42,24 @@ public abstract class MainFrame extends JFrame {
     private class ADAPTER implements Consumer<Context.MsgChDir> {
 
         @Override
-        public final void accept(Context.MsgChDir message) {
-            MainFrame.this.setTitle(String.format("%s - FSCalc", message.getPath().getName()));
+        public final void accept(final Context.MsgChDir message) {
+            setTitle(String.format("%s - FSCalc", message.getPath().getName()));
         }
     }
 
     private class CenterPane extends JSplitPane {
         private CenterPane() {
-            this.setLeftComponent(MainFrame.this.new LeftCenterPane());
-            this.setRightComponent(MainFrame.this.new RghtCenterPane());
+            setLeftComponent(MainFrame.this.new LeftCenterPane());
+            setRightComponent(MainFrame.this.new RghtCenterPane());
         }
     }
 
     private class ContentPane extends JPanel {
         private ContentPane() {
             super(new BorderLayout());
-            this.add(MainFrame.this.new NorthPane(), "North");
-            this.add(MainFrame.this.new CenterPane(), "Center");
-            this.add(new ProgressPane(MainFrame.this.getContext()), "South");
+            add(MainFrame.this.new NorthPane(), "North");
+            add(MainFrame.this.new CenterPane(), "Center");
+            add(new ProgressPane(getContext()), "South");
         }
     }
 
@@ -87,16 +87,16 @@ public abstract class MainFrame extends JFrame {
 
     private class TreeView extends FSTree {
         private TreeView() {
-            this.setCellRenderer(new RENDERER());
-            MainFrame.this.getContext().getRegister().add(new LSN_CHDIR());
-            this.addTreeSelectionListener(new SEL_ADAPTER());
+            setCellRenderer(new RENDERER());
+            getContext().getRegister().add(new LSN_CHDIR());
+            addTreeSelectionListener(new SEL_ADAPTER());
         }
 
         private class LSN_CHDIR implements Consumer<Context.MsgChDir> {
 
             @Override
-            public final void accept(Context.MsgChDir message) {
-                TreeView.this.setSelection(message.getPath());
+            public final void accept(final Context.MsgChDir message) {
+                setSelection(message.getPath());
             }
         }
 
@@ -113,9 +113,9 @@ public abstract class MainFrame extends JFrame {
         private class SEL_ADAPTER implements TreeSelectionListener {
 
             @Override
-            public final void valueChanged(TreeSelectionEvent e) {
-                File f = TreeView.this.getModel().getFile(e.getPath());
-                MainFrame.this.getContext().setPath(f);
+            public final void valueChanged(final TreeSelectionEvent e) {
+                final File f = getModel().getFile(e.getPath());
+                getContext().setPath(f);
             }
         }
     }

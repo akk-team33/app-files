@@ -4,7 +4,6 @@ import net.team33.application.logging.Formatter;
 import net.team33.application.logging.Loggable;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -17,48 +16,48 @@ public class LogTarget implements Consumer<Loggable> {
     private final String title;
     private final Formatter fmt;
 
-    public LogTarget(String title, Formatter fmt) {
+    public LogTarget(final String title, final Formatter fmt) {
         this.title = title;
         this.fmt = fmt;
     }
 
     @Override
-    public final void accept(Loggable entry) {
-        this.fmt.format(entry, this.out);
-        this.out.println();
-        this.out.flush();
+    public final void accept(final Loggable entry) {
+        fmt.format(entry, out);
+        out.println();
+        out.flush();
     }
 
     public final JFrame getFrame() {
-        if (this.frame == null) {
-            this.frame = new JFrame(this.title);
-            this.frame.setDefaultCloseOperation(2);
-            this.frame.getContentPane().add(new JScrollPane(this.getOutputArea()), "Center");
-            this.frame.pack();
-            this.frame.setSize(400, 300);
-            this.frame.setLocationRelativeTo((Component)null);
+        if (frame == null) {
+            this.frame = new JFrame(title);
+            frame.setDefaultCloseOperation(2);
+            frame.getContentPane().add(new JScrollPane(getOutputArea()), "Center");
+            frame.pack();
+            frame.setSize(400, 300);
+            frame.setLocationRelativeTo(null);
         }
 
-        return this.frame;
+        return frame;
     }
 
     public final JTextArea getOutputArea() {
-        if (this.outputArea == null) {
+        if (outputArea == null) {
             this.outputArea = new JTextArea();
-            this.outputArea.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-            this.outputArea.setEditable(false);
+            outputArea.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+            outputArea.setEditable(false);
         }
 
-        return this.outputArea;
+        return outputArea;
     }
 
     private class Opening implements Runnable {
 
         @Override
         public final void run() {
-            LogTarget.this.getFrame().setVisible(true);
-            LogTarget.this.getFrame().toFront();
-            LogTarget.this.getOutputArea().setCaretPosition(LogTarget.this.getOutputArea().getText().length());
+            getFrame().setVisible(true);
+            getFrame().toFront();
+            getOutputArea().setCaretPosition(getOutputArea().getText().length());
         }
     }
 
@@ -74,8 +73,8 @@ public class LogTarget implements Consumer<Loggable> {
         }
 
         @Override
-        public final void write(char[] cbuf, int off, int len) throws IOException {
-            LogTarget.this.getOutputArea().append(new String(cbuf, off, len));
+        public final void write(final char[] cbuf, final int off, final int len) throws IOException {
+            getOutputArea().append(new String(cbuf, off, len));
         }
     }
 }

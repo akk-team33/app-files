@@ -9,7 +9,7 @@ public class LogEntry {
     private final Date date = new Date();
     private final Level level;
 
-    public LogEntry(Level level, Thread thread, String text, Throwable exception) {
+    public LogEntry(final Level level, final Thread thread, final String text, final Throwable exception) {
         this.level = level;
         this.thread = thread;
         this.text = text;
@@ -17,22 +17,22 @@ public class LogEntry {
     }
 
     public final Level getLevel() {
-        return this.level;
+        return level;
     }
 
     public final Date getDate() {
-        return this.date;
+        return date;
     }
 
     public final Throwable getException() {
-        return this.exception;
+        return exception;
     }
 
     public final String getText() {
-        return this.text;
+        return text;
     }
 
     public final Thread getThread() {
-        return this.thread;
+        return thread;
     }
 }
