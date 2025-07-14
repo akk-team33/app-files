@@ -1,8 +1,8 @@
-# cmd-mm-template
+# app-files
 
-    A template command-line multi-module project
+    A Swing based app to handle files
     
-    Version 1
+    Version 0
 
 ## Requires
 
