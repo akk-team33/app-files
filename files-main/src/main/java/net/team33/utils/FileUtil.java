@@ -1,15 +1,8 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.utils;
 
 import java.io.File;
 
 public class FileUtil {
-    public FileUtil() {
-    }
 
     public static File getAccessible(File path) {
         File parent = path.getAbsoluteFile().getParentFile();

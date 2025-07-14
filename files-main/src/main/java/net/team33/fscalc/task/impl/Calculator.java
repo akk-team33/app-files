@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.task.impl;
 
 import net.team33.fscalc.info.FileInfo;
@@ -16,23 +11,25 @@ public class Calculator extends TaskBase {
         this.info = info;
     }
 
-    protected String getProgressPrefix() {
+    @Override
+    protected final String getProgressPrefix() {
         return "Ermittle";
     }
 
-    protected void run_core() {
+    @Override
+    protected final void run_core() {
         this.info.calculate(new CONTROLLER());
     }
 
     private class CONTROLLER extends ControllerBasEx {
-        private CONTROLLER() {
-        }
 
-        protected void setProgress(String subject, double rate) {
+        @Override
+        protected final void setProgress(String subject, double rate) {
             Calculator.this.fireProgress(subject, rate);
         }
 
-        public boolean isQuitting() {
+        @Override
+        public final boolean isQuitting() {
             return Calculator.this.isQuit();
         }
     }

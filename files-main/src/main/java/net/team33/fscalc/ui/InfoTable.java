@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui;
 
 import net.team33.fscalc.info.FileInfo;
@@ -27,7 +22,7 @@ import java.io.File;
 public abstract class InfoTable extends JTable implements Originator<Message<InfoTable>> {
     private static final FileService FS = FileService.getInstance();
     private static final Order[][] orders;
-    private Router<Message<InfoTable>> router = new Router();
+    private final Router<Message<InfoTable>> router = new Router();
 
     static {
         orders = new Order[][]{{Order.DEFAULT_ASC, Order.DEFAULT_DSC}, {Order.TTLSIZE_DSC, Order.TTLSIZE_ASC}, {Order.AVGSIZE_DSC, Order.AVGSIZE_ASC}, {Order.FILECNT_DSC, Order.FILECNT_ASC}, {Order.DIRCNT_DSC, Order.DIRCNT_ASC}, {Order.ERRCNT_DSC, Order.ERRCNT_ASC}};
@@ -52,11 +47,13 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
         this.router.addInitial(new UPD_SEL(null));
     }
 
-    public InfoTableModel getModel() {
+    @Override
+    public final InfoTableModel getModel() {
         return (InfoTableModel)super.getModel();
     }
 
-    public Register<Message<InfoTable>> getRegister() {
+    @Override
+    public final Register<Message<InfoTable>> getRegister() {
         return this.router;
     }
 
@@ -65,10 +62,9 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
     }
 
     private class HEADER_MOUSE_LISTENER extends MouseAdapter {
-        private HEADER_MOUSE_LISTENER() {
-        }
 
-        public void mouseClicked(MouseEvent e) {
+        @Override
+        public final void mouseClicked(MouseEvent e) {
             int tcol = InfoTable.this.getTableHeader().columnAtPoint(e.getPoint());
             int mcol = InfoTable.this.convertColumnIndexToModel(tcol);
             Order ord0 = InfoTable.this.getContext().getOrder();
@@ -90,19 +86,17 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
     }
 
     private class HEADRENDERER extends HeadRenderer implements TableCellRenderer {
-        private HEADRENDERER() {
-        }
 
-        protected Context getContext() {
+        @Override
+        protected final Context getContext() {
             return InfoTable.this.getContext();
         }
     }
 
     private class LSTNR_UPDINFO implements Listener<FileService.MsgUpdate> {
-        private LSTNR_UPDINFO() {
-        }
 
-        public void pass(FileService.MsgUpdate message) {
+        @Override
+        public final void pass(FileService.MsgUpdate message) {
             File path = message.getInfo().getPath();
             if (path.equals(InfoTable.this.getContext().getPath())) {
                 InfoTable.this.getTableHeader().repaint();
@@ -112,10 +106,9 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
     }
 
     private class MOUSE_LISTENER extends MouseAdapter {
-        private MOUSE_LISTENER() {
-        }
 
-        public void mouseClicked(MouseEvent e) {
+        @Override
+        public final void mouseClicked(MouseEvent e) {
             if (e.getClickCount() == 2) {
                 int row = InfoTable.this.rowAtPoint(e.getPoint());
                 FileInfo it = (FileInfo)InfoTable.this.getValueAt(row, 0);
@@ -129,31 +122,30 @@ public abstract class InfoTable extends JTable implements Originator<Message<Inf
     }
 
     private class MSG_BASE implements Message<InfoTable> {
-        private MSG_BASE() {
-        }
 
-        public InfoTable getSender() {
+        @Override
+        public final InfoTable getSender() {
             return InfoTable.this;
         }
     }
 
     private class SEL_LISTENER implements ListSelectionListener {
-        private SEL_LISTENER() {
-        }
 
-        public void valueChanged(ListSelectionEvent e) {
+        @Override
+        public final void valueChanged(ListSelectionEvent e) {
             InfoTable.this.fire(InfoTable.this.new UPD_SEL(e));
         }
     }
 
     private class UPD_SEL extends MSG_BASE implements UpdateSelection {
-        private ListSelectionEvent evnt;
+        private final ListSelectionEvent evnt;
 
         private UPD_SEL(ListSelectionEvent evnt) {
             this.evnt = evnt;
         }
 
-        public ListSelectionEvent getListSelectionEvent() {
+        @Override
+        public final ListSelectionEvent getListSelectionEvent() {
             return this.evnt;
         }
     }

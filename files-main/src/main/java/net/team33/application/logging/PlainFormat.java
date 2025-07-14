@@ -1,18 +1,12 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.application.logging;
 
 import java.io.PrintWriter;
 import java.util.Date;
 
 public class PlainFormat implements Formatter {
-    public PlainFormat() {
-    }
 
-    public void format(Loggable entry, PrintWriter out) {
+    @Override
+    public final void format(Loggable entry, PrintWriter out) {
         Date date = entry.getDate();
         String type = entry.getLevel().toString();
         Thread thread = entry.getThread();

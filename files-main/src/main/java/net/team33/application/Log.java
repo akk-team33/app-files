@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.application;
 
 import net.team33.application.logging.*;
@@ -13,10 +8,7 @@ import java.util.HashMap;
 
 public class Log {
     private static Formatter format = new PlainFormat();
-    private static Routing routing = new Routing();
-
-    public Log() {
-    }
+    private static final Routing routing = new Routing();
 
     public static void add(Listener<? extends Loggable> handler, Level... levels) {
         Level[] var5 = levels;
@@ -124,15 +116,12 @@ public class Log {
     }
 
     private static class Routing extends HashMap<Level, Router<Loggable>> {
-        private Routing() {
-        }
     }
 
     private static class UncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
-        private UncaughtExceptionHandler() {
-        }
 
-        public void uncaughtException(Thread thread, Throwable exception) {
+        @Override
+        public final void uncaughtException(Thread thread, Throwable exception) {
             Log.put(new Entry(Level.FATAL, thread, "Unbehandelte Ausnahme", exception));
         }
     }

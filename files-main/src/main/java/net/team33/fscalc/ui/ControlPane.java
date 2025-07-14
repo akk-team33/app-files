@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui;
 
 import net.team33.fscalc.work.Context;
@@ -31,20 +26,22 @@ public abstract class ControlPane extends JPanel {
             table.getRegister().add(this);
         }
 
-        public void pass(InfoTable.UpdateSelection message) {
+        @Override
+        public final void pass(InfoTable.UpdateSelection message) {
             this.setEnabled(((InfoTable)message.getSender()).getSelectedRowCount() > 0);
         }
     }
 
     public class DELBUTTON extends ACTNBUTTON {
-        private InfoTable table;
+        private final InfoTable table;
 
         protected DELBUTTON(InfoTable table) {
             super("Löschen", table);
             this.table = table;
         }
 
-        public void actionPerformed(ActionEvent e) {
+        @Override
+        public final void actionPerformed(ActionEvent e) {
             int[] rows = this.table.getSelectedRows();
             File[] paths = new File[rows.length];
 
@@ -57,9 +54,8 @@ public abstract class ControlPane extends JPanel {
     }
 
     private class ITBL_LSTNR implements Listener<InfoTable.UpdateSelection> {
-        private ITBL_LSTNR() {
-        }
 
+        @Override
         public void pass(InfoTable.UpdateSelection message) {
         }
     }

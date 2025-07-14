@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui.rsrc;
 
 import javax.swing.*;
@@ -20,6 +15,4 @@ public class Ico {
     public static final Icon RELOAD = new ImageIcon(Ico.class.getResource("refresh-24.png"));
     public static final int HEIGHT = 18;
 
-    public Ico() {
-    }
 }

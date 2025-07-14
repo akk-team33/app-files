@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.work;
 
 import net.team33.fscalc.info.FileInfo;
@@ -11,68 +6,77 @@ import java.util.Comparator;
 
 public enum Order implements Comparator<FileInfo> {
     DEFAULT_ASC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareDefault(fileInfo1, fileInfo2);
         }
     },
     DEFAULT_DSC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareDefault(fileInfo2, fileInfo1);
         }
     },
     TTLSIZE_ASC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareTtlSize(fileInfo1, fileInfo2);
         }
     },
     TTLSIZE_DSC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareTtlSize(fileInfo2, fileInfo1);
         }
     },
     AVGSIZE_ASC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareAvgSize(fileInfo1, fileInfo2);
         }
     },
     AVGSIZE_DSC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareAvgSize(fileInfo2, fileInfo1);
         }
     },
     FILECNT_ASC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareFileCnt(fileInfo1, fileInfo2);
         }
     },
     FILECNT_DSC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareFileCnt(fileInfo2, fileInfo1);
         }
     },
     DIRCNT_ASC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareDirCnt(fileInfo1, fileInfo2);
         }
     },
     DIRCNT_DSC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareDirCnt(fileInfo2, fileInfo1);
         }
     },
     ERRCNT_ASC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareErrCnt(fileInfo1, fileInfo2);
         }
     },
     ERRCNT_DSC {
+        @Override
         public int compare(FileInfo fileInfo1, FileInfo fileInfo2) {
             return Order.compareErrCnt(fileInfo2, fileInfo1);
         }
     };
-
-    private Order() {
-    }
 
     private static int compareDefault(FileInfo fileInfo1, FileInfo fileInfo2) {
         int ret = 0;

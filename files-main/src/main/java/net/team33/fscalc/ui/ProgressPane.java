@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui;
 
 import net.team33.fscalc.task.Task;
@@ -15,9 +10,9 @@ import java.awt.*;
 public class ProgressPane extends JPanel {
     private static final Insets GBC_INSETS = new Insets(2, 2, 2, 2);
     private int visibility = 0;
-    private JLabel lblPrfx;
-    private JLabel pathInfo;
-    private JLabel progInfo;
+    private final JLabel lblPrfx;
+    private final JLabel pathInfo;
+    private final JLabel progInfo;
 
     public ProgressPane(Context context) {
         super(new GridBagLayout());
@@ -41,17 +36,17 @@ public class ProgressPane extends JPanel {
             task.getRegister().add(new LSN_CLOSE());
         }
 
-        public void pass(Task.Progress message) {
+        @Override
+        public final void pass(Task.Progress message) {
             ProgressPane.this.lblPrfx.setText(message.getPrefix());
             ProgressPane.this.pathInfo.setText(message.getSubject());
             ProgressPane.this.progInfo.setText(String.format("%7.3f%%", 100.0 * message.getRatio()));
         }
 
         private class LSN_CLOSE implements Listener<Task.Closure> {
-            private LSN_CLOSE() {
-            }
 
-            public void pass(Task.Closure message) {
+            @Override
+            public final void pass(Task.Closure message) {
                 ((Task)message.getSender()).getRegister().remove(this);
                 ((Task)message.getSender()).getRegister().remove(LSN_PROGRESS.this);
                 ProgressPane.this.incVisibility(-1);
@@ -60,10 +55,9 @@ public class ProgressPane extends JPanel {
     }
 
     private class LSN_START implements Listener<Context.MsgStarting> {
-        private LSN_START() {
-        }
 
-        public void pass(Context.MsgStarting message) {
+        @Override
+        public final void pass(Context.MsgStarting message) {
             message.getTask().getRegister().add(ProgressPane.this.new LSN_PROGRESS(message.getTask()));
             ProgressPane.this.incVisibility(1);
         }

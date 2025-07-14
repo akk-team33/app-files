@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc;
 
 import net.team33.application.Log;
@@ -17,22 +12,23 @@ import net.team33.swinx.LogTarget;
 import javax.swing.*;
 import java.io.File;
 
-public class FsCalc implements Runnable {
-    private ContextImpl context;
+@SuppressWarnings({"UseOfSystemOutOrSystemErr", "HardCodedStringLiteral", "ClassNamePrefixedWithPackageName"})
+public final class FsCalc implements Runnable {
+    private final ContextImpl context;
 
     static {
-        Log.add(new TargetStream(System.out, Log.getStdFormat()), new Level[]{Level.DEBUG, Level.INFO});
-        Log.add(new TargetStream(System.err, Log.getStdFormat()), new Level[]{Level.WARNING, Level.ERROR, Level.FATAL});
-        Log.add(new LogTarget("Fehler Controller - FSCalc", Log.getStdFormat()), new Level[]{Level.WARNING, Level.ERROR, Level.FATAL});
+        Log.add(new TargetStream(System.out, Log.getStdFormat()), Level.DEBUG, Level.INFO);
+        Log.add(new TargetStream(System.err, Log.getStdFormat()), Level.WARNING, Level.ERROR, Level.FATAL);
+        Log.add(new LogTarget("Fehler Controller - FSCalc", Log.getStdFormat()), Level.WARNING, Level.ERROR, Level.FATAL);
         Log.setDefaultUncaughtExceptionHandler();
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         SwingUtilities.invokeLater(new FsCalc(args));
     }
 
-    public FsCalc(String[] args) {
-        if (args.length > 0) {
+    private FsCalc(final String[] args) {
+        if (0 < args.length) {
             this.context = new ContextImpl(new File(args[0]), Order.DEFAULT_ASC);
         } else {
             this.context = new ContextImpl(new File("."), Order.DEFAULT_ASC);
@@ -40,17 +36,17 @@ public class FsCalc implements Runnable {
 
     }
 
-    public void run() {
-        MainFrame frame = new FRAME();
+    @Override
+    public final void run() {
+        final MainFrame frame = new FRAME();
         frame.setVisible(true);
     }
 
     private class FRAME extends MainFrame {
-        private FRAME() {
-        }
 
-        protected Context getContext() {
-            return FsCalc.this.context;
+        @Override
+        protected final Context getContext() {
+            return context;
         }
     }
 }

@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui.model;
 
 import net.team33.fscalc.info.FileInfo;
@@ -42,11 +37,13 @@ public class InfoTableModel extends AbstractTableModel {
         FS.getRegister().add(new LSTNR_INVAL());
     }
 
-    public int getColumnCount() {
+    @Override
+    public final int getColumnCount() {
         return 6;
     }
 
-    public String getColumnName(int col) {
+    @Override
+    public final String getColumnName(int col) {
         switch (col) {
             case 0:
                 return "Name";
@@ -65,39 +62,41 @@ public class InfoTableModel extends AbstractTableModel {
         }
     }
 
-    public int getRowCount() {
+    @Override
+    public final int getRowCount() {
         return this.fileInfos.size();
     }
 
-    public FileInfo getValueAt(int rowIndex, int columnIndex) {
+    @Override
+    public final FileInfo getValueAt(int rowIndex, int columnIndex) {
         return (FileInfo)this.fileInfos.get(rowIndex);
     }
 
-    public Class<FileInfo> getColumnClass(int columnIndex) {
+    @Override
+    public final Class<FileInfo> getColumnClass(int columnIndex) {
         return FileInfo.class;
     }
 
     private class LSTNR_CHDIR implements Listener<Context.MsgChDir> {
 
-        public void pass(Context.MsgChDir message) {
+        @Override
+        public final void pass(Context.MsgChDir message) {
             InfoTableModel.this.setInfos(message.getPath().listFiles(), ((Context)message.getSender()).getOrder());
         }
     }
 
     private class LSTNR_CHORD implements Listener<Context.MsgChOrder> {
-        private LSTNR_CHORD() {
-        }
 
-        public void pass(Context.MsgChOrder message) {
+        @Override
+        public final void pass(Context.MsgChOrder message) {
             InfoTableModel.this.setInfos(((Context)message.getSender()).getPath().listFiles(), message.getOrder());
         }
     }
 
     private class LSTNR_INVAL implements Listener<FileService.MsgInvalid> {
-        private LSTNR_INVAL() {
-        }
 
-        public void pass(FileService.MsgInvalid message) {
+        @Override
+        public final void pass(FileService.MsgInvalid message) {
             synchronized(InfoTableModel.this.fileInfos) {
                 int i = InfoTableModel.this.fileInfos.indexOf(message.getInfo());
                 if (i >= 0) {
@@ -116,10 +115,9 @@ public class InfoTableModel extends AbstractTableModel {
     }
 
     private class LSTNR_UPDT implements Listener<FileService.MsgUpdate> {
-        private LSTNR_UPDT() {
-        }
 
-        public void pass(FileService.MsgUpdate message) {
+        @Override
+        public final void pass(FileService.MsgUpdate message) {
             synchronized(InfoTableModel.this.fileInfos) {
                 int i = InfoTableModel.this.fileInfos.indexOf(message.getInfo());
                 if (i >= 0) {

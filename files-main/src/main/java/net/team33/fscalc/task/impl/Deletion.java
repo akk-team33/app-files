@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.task.impl;
 
 import net.team33.fscalc.info.FileService;
@@ -19,24 +14,26 @@ public class Deletion extends TaskBase {
         this.paths = paths;
     }
 
-    protected String getProgressPrefix() {
+    @Override
+    protected final String getProgressPrefix() {
         return "Lösche";
     }
 
-    protected void run_core() {
+    @Override
+    protected final void run_core() {
         Controller ctrl = new CONTROLLER();
         FileService.getInstance().delete(this.paths, ctrl.getSubController((long)this.paths.length));
     }
 
     private class CONTROLLER extends ControllerBasEx {
-        private CONTROLLER() {
-        }
 
-        protected void setProgress(String subject, double rate) {
+        @Override
+        protected final void setProgress(String subject, double rate) {
             Deletion.this.fireProgress(subject, rate);
         }
 
-        public boolean isQuitting() {
+        @Override
+        public final boolean isQuitting() {
             return Deletion.this.isQuit();
         }
     }

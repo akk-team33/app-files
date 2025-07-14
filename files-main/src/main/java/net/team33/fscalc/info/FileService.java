@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.info;
 
 import net.team33.application.Log;
@@ -20,7 +15,7 @@ public class FileService extends Sender<Message<FileService>> {
     private static final String PRFX_FILE = "Die Datei";
     private static final String PRFX_DIR = "Das Verzeichnis";
     private static final String FMT_UNDELETABLE = "%s '%s' konnte nicht gelöscht werden";
-    private static Map<File, DIR_INFO> cache = new HashMap();
+    private static final Map<File, DIR_INFO> cache = new HashMap();
 
     public static FileService getInstance() {
         return SINGLETON;
@@ -29,7 +24,7 @@ public class FileService extends Sender<Message<FileService>> {
     private FileService() {
     }
 
-    public FileInfo getInfo(File path) {
+    public final FileInfo getInfo(File path) {
         try {
             path = path.getCanonicalFile();
         } catch (IOException var3) {
@@ -48,7 +43,7 @@ public class FileService extends Sender<Message<FileService>> {
         }
     }
 
-    public FileInfo[] getInfos(File[] paths, FileInfo[] fallback) {
+    public final FileInfo[] getInfos(File[] paths, FileInfo[] fallback) {
         if (paths == null) {
             return fallback;
         } else {
@@ -62,7 +57,7 @@ public class FileService extends Sender<Message<FileService>> {
         }
     }
 
-    public void delete(File[] paths, Controller ctrl) {
+    public final void delete(File[] paths, Controller ctrl) {
         this.delete((File[])paths, ctrl, 0);
     }
 
@@ -119,20 +114,23 @@ public class FileService extends Sender<Message<FileService>> {
     }
 
     private abstract class BASE_INFO implements FileInfo {
-        private File path;
+        private final File path;
 
         private BASE_INFO(File path) {
             this.path = path;
         }
 
-        public long getAverageSize() {
+        @Override
+        public final long getAverageSize() {
             return this.getFileCount() > 0L ? this.getTotalSize() / this.getFileCount() : 0L;
         }
 
-        public File getPath() {
+        @Override
+        public final File getPath() {
             return this.path;
         }
 
+        @Override
         public final void reset() {
             this.resetLocal();
             File parent = this.getPath().getParentFile();
@@ -144,7 +142,7 @@ public class FileService extends Sender<Message<FileService>> {
 
         protected abstract void resetLocal();
 
-        public boolean equals(Object obj) {
+        public final boolean equals(Object obj) {
             if (obj != null && obj instanceof FileInfo) {
                 FileInfo fi = (FileInfo)obj;
                 return fi.getPath().equals(this.path);
@@ -153,7 +151,7 @@ public class FileService extends Sender<Message<FileService>> {
             }
         }
 
-        public int hashCode() {
+        public final int hashCode() {
             return this.path.hashCode();
         }
     }
@@ -182,12 +180,14 @@ public class FileService extends Sender<Message<FileService>> {
             this.dir_data = new DIR_DATA();
         }
 
-        protected void resetLocal() {
+        @Override
+        protected final void resetLocal() {
             this.dir_data = new DIR_DATA();
             FileService.this.fire(new MSG_UPDATE());
         }
 
-        public void calculate(Controller ctrl) {
+        @Override
+        public final void calculate(Controller ctrl) {
             if (!this.isDefinite()) {
                 DIR_DATA dta = new DIR_DATA();
                 FileInfo[] children = FileService.this.getInfos(this.getPath().listFiles(), (FileInfo[])null);
@@ -224,32 +224,35 @@ public class FileService extends Sender<Message<FileService>> {
             ctrl.increment(this.getPath().getPath(), 1L);
         }
 
-        public long getDirCount() {
+        @Override
+        public final long getDirCount() {
             return this.dir_data.dirCount;
         }
 
-        public long getErrorCount() {
+        @Override
+        public final long getErrorCount() {
             return this.dir_data.errCount;
         }
 
-        public long getFileCount() {
+        @Override
+        public final long getFileCount() {
             return this.dir_data.fileCount;
         }
 
-        public long getTotalSize() {
+        @Override
+        public final long getTotalSize() {
             return this.dir_data.totalSize;
         }
 
-        public boolean isDefinite() {
+        @Override
+        public final boolean isDefinite() {
             return this.dir_data.definite;
         }
 
         private class MSG_UPDATE extends MSG_BASE implements MsgUpdate {
-            private MSG_UPDATE() {
-                super();
-            }
 
-            public FileInfo getInfo() {
+            @Override
+            public final FileInfo getInfo() {
                 return DIR_INFO.this;
             }
         }
@@ -260,51 +263,58 @@ public class FileService extends Sender<Message<FileService>> {
             super(path);
         }
 
+        @Override
         protected void resetLocal() {
         }
 
-        public void calculate(Controller ctrl) {
+        @Override
+        public final void calculate(Controller ctrl) {
             ctrl.increment(this.getPath().getPath(), 1L);
         }
 
-        public long getDirCount() {
+        @Override
+        public final long getDirCount() {
             return 0L;
         }
 
-        public long getErrorCount() {
+        @Override
+        public final long getErrorCount() {
             return 0L;
         }
 
-        public long getFileCount() {
+        @Override
+        public final long getFileCount() {
             return 1L;
         }
 
-        public long getTotalSize() {
+        @Override
+        public final long getTotalSize() {
             return this.getPath().length();
         }
 
-        public boolean isDefinite() {
+        @Override
+        public final boolean isDefinite() {
             return true;
         }
     }
 
     private class MSG_BASE implements Message<FileService> {
-        private MSG_BASE() {
-        }
 
-        public FileService getSender() {
+        @Override
+        public final FileService getSender() {
             return FileService.this;
         }
     }
 
     private class MSG_INVALID extends MSG_BASE implements MsgInvalid {
-        private FileInfo info;
+        private final FileInfo info;
 
         private MSG_INVALID(FileInfo info) {
             this.info = info;
         }
 
-        public FileInfo getInfo() {
+        @Override
+        public final FileInfo getInfo() {
             return this.info;
         }
     }

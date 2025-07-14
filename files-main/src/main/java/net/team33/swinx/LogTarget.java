@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.swinx;
 
 import net.team33.application.logging.Formatter;
@@ -16,24 +11,25 @@ import java.io.PrintWriter;
 import java.io.Writer;
 
 public class LogTarget implements Listener<Loggable> {
-    private PrintWriter out = new PrintWriter(new WRITER());
+    private final PrintWriter out = new PrintWriter(new WRITER());
     private JFrame frame = null;
     private JTextArea outputArea = null;
-    private String title;
-    private Formatter fmt;
+    private final String title;
+    private final Formatter fmt;
 
     public LogTarget(String title, Formatter fmt) {
         this.title = title;
         this.fmt = fmt;
     }
 
-    public void pass(Loggable entry) {
+    @Override
+    public final void pass(Loggable entry) {
         this.fmt.format(entry, this.out);
         this.out.println();
         this.out.flush();
     }
 
-    public JFrame getFrame() {
+    public final JFrame getFrame() {
         if (this.frame == null) {
             this.frame = new JFrame(this.title);
             this.frame.setDefaultCloseOperation(2);
@@ -46,7 +42,7 @@ public class LogTarget implements Listener<Loggable> {
         return this.frame;
     }
 
-    public JTextArea getOutputArea() {
+    public final JTextArea getOutputArea() {
         if (this.outputArea == null) {
             this.outputArea = new JTextArea();
             this.outputArea.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
@@ -57,10 +53,9 @@ public class LogTarget implements Listener<Loggable> {
     }
 
     private class Opening implements Runnable {
-        private Opening() {
-        }
 
-        public void run() {
+        @Override
+        public final void run() {
             LogTarget.this.getFrame().setVisible(true);
             LogTarget.this.getFrame().toFront();
             LogTarget.this.getOutputArea().setCaretPosition(LogTarget.this.getOutputArea().getText().length());
@@ -68,17 +63,18 @@ public class LogTarget implements Listener<Loggable> {
     }
 
     private class WRITER extends Writer {
-        private WRITER() {
-        }
 
+        @Override
         public void close() throws IOException {
         }
 
-        public void flush() throws IOException {
+        @Override
+        public final void flush() throws IOException {
             SwingUtilities.invokeLater(LogTarget.this.new Opening());
         }
 
-        public void write(char[] cbuf, int off, int len) throws IOException {
+        @Override
+        public final void write(char[] cbuf, int off, int len) throws IOException {
             LogTarget.this.getOutputArea().append(new String(cbuf, off, len));
         }
     }

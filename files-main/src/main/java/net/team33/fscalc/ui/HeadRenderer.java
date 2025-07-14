@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui;
 
 import net.team33.fscalc.info.FileInfo;
@@ -15,8 +10,8 @@ import java.awt.*;
 import java.io.File;
 
 public abstract class HeadRenderer extends JPanel implements TableCellRenderer {
-    private TITLE title = new TITLE();
-    private CellRenderer info = new INFO();
+    private final TITLE title = new TITLE();
+    private final CellRenderer info = new INFO();
 
     protected abstract Context getContext();
 
@@ -27,7 +22,8 @@ public abstract class HeadRenderer extends JPanel implements TableCellRenderer {
         this.add(this.info);
     }
 
-    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+    @Override
+    public final Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         column = table.convertColumnIndexToModel(column);
         this.title.setText(value.toString(), column);
         File path = this.getContext().getPath();
@@ -46,7 +42,7 @@ public abstract class HeadRenderer extends JPanel implements TableCellRenderer {
         TITLE() {
         }
 
-        public void setText(String text, int column) {
+        public final void setText(String text, int column) {
             if (column > 0) {
                 this.setHorizontalAlignment(4);
             } else {

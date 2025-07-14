@@ -1,18 +1,13 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.application.logging;
 
 import java.util.Date;
 
 public class LogEntry {
-    private Thread thread;
-    private String text;
-    private Throwable exception;
-    private Date date = new Date();
-    private Level level;
+    private final Thread thread;
+    private final String text;
+    private final Throwable exception;
+    private final Date date = new Date();
+    private final Level level;
 
     public LogEntry(Level level, Thread thread, String text, Throwable exception) {
         this.level = level;
@@ -21,23 +16,23 @@ public class LogEntry {
         this.exception = exception;
     }
 
-    public Level getLevel() {
+    public final Level getLevel() {
         return this.level;
     }
 
-    public Date getDate() {
+    public final Date getDate() {
         return this.date;
     }
 
-    public Throwable getException() {
+    public final Throwable getException() {
         return this.exception;
     }
 
-    public String getText() {
+    public final String getText() {
         return this.text;
     }
 
-    public Thread getThread() {
+    public final Thread getThread() {
         return this.thread;
     }
 }

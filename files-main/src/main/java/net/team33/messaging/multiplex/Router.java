@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.messaging.multiplex;
 
 import net.team33.messaging.Listener;
@@ -11,17 +6,15 @@ import net.team33.reflect.ClassUtil;
 import java.util.*;
 
 public class Router<MSX> implements Relay<MSX> {
-    private Set<MSX> initials = new HashSet();
-    private REGISTRY registry = new REGISTRY();
-
-    public Router() {
-    }
+    private final Set<MSX> initials = new HashSet();
+    private final REGISTRY registry = new REGISTRY();
 
     private synchronized boolean add(Class<?> messageClass, Listener<?> listener) {
         return ((Set)this.registry.get(messageClass)).add(listener);
     }
 
-    public void add(Listener<? extends MSX> listener) {
+    @Override
+    public final void add(Listener<? extends MSX> listener) {
         Class<?> msgClass = ClassUtil.getActualClassArgument(Listener.class, listener.getClass());
         this.include(msgClass);
         if (this.add(msgClass, listener)) {
@@ -30,11 +23,11 @@ public class Router<MSX> implements Relay<MSX> {
 
     }
 
-    public synchronized void addInitial(MSX initial) {
+    public final synchronized void addInitial(MSX initial) {
         this.initials.add(initial);
     }
 
-    public synchronized void removeInitial(MSX initial) {
+    public final synchronized void removeInitial(MSX initial) {
         this.initials.remove(initial);
     }
 
@@ -61,7 +54,8 @@ public class Router<MSX> implements Relay<MSX> {
         ((Set)this.registry.get(messageClass)).remove(listener);
     }
 
-    public void remove(Listener<? extends MSX> lstnr) {
+    @Override
+    public final void remove(Listener<? extends MSX> lstnr) {
         Iterator var3 = this.tmpMessageClasses().iterator();
 
         while(var3.hasNext()) {
@@ -71,7 +65,8 @@ public class Router<MSX> implements Relay<MSX> {
 
     }
 
-    public void route(MSX message) {
+    @Override
+    public final void route(MSX message) {
         Iterator var3 = this.tmpMessageClasses().iterator();
 
         while(var3.hasNext()) {
@@ -106,7 +101,5 @@ public class Router<MSX> implements Relay<MSX> {
     }
 
     private static class REGISTRY extends HashMap<Class<?>, Set<Listener<?>>> {
-        private REGISTRY() {
-        }
     }
 }

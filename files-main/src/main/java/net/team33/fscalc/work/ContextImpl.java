@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.work;
 
 import net.team33.application.Log;
@@ -24,7 +19,7 @@ import java.util.Vector;
 public class ContextImpl extends Sender<Message<Context>> implements Context {
     private Order order;
     private File path;
-    private List<Calculator> calculators = new Vector(2, 2);
+    private final List<Calculator> calculators = new Vector(2, 2);
     private static int tCount = 0;
 
     public ContextImpl(File path, Order order) {
@@ -34,15 +29,13 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         this.startCalculation(this.path);
     }
 
-    public Order getOrder() {
+    @Override
+    public final Order getOrder() {
         return this.order;
     }
 
-    public File getPath() {
-        return this.path;
-    }
-
-    public void setOrder(Order ord) {
+    @Override
+    public final void setOrder(Order ord) {
         if (this.order != ord) {
             this.order = ord;
             this.fire(new MSG_CHORDER());
@@ -50,7 +43,13 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
 
     }
 
-    public void setPath(File path) {
+    @Override
+    public final File getPath() {
+        return this.path;
+    }
+
+    @Override
+    public final void setPath(File path) {
         path = newFile(path);
         if (!path.equals(this.path) && path.isDirectory()) {
             this.path = path;
@@ -60,11 +59,13 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
 
     }
 
-    public Calculator startCalculation(File path) {
+    @Override
+    public final Calculator startCalculation(File path) {
         return this.startCalculation(FileService.getInstance().getInfo(path));
     }
 
-    public Calculator startCalculation(FileInfo info) {
+    @Override
+    public final Calculator startCalculation(FileInfo info) {
         Vector calcopy;
         synchronized(this.calculators) {
             calcopy = new Vector(this.calculators);
@@ -88,7 +89,8 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         return ret;
     }
 
-    public Deletion startDeletion(File[] paths) {
+    @Override
+    public final Deletion startDeletion(File[] paths) {
         Deletion ret = (Deletion)this.start(new Deletion(paths));
         ret.getRegister().add(new LSN_CLOSURE());
         return ret;
@@ -111,20 +113,18 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     }
 
     private class LSN_CLOSURE implements Listener<Task.Closure> {
-        private LSN_CLOSURE() {
-        }
 
-        public void pass(Task.Closure message) {
+        @Override
+        public final void pass(Task.Closure message) {
             ((Task)message.getSender()).getRegister().remove(this);
             ContextImpl.this.startCalculation(ContextImpl.this.getPath());
         }
     }
 
     private class LSN_CLS_CALC implements Listener<Task.Closure> {
-        private LSN_CLS_CALC() {
-        }
 
-        public void pass(Task.Closure message) {
+        @Override
+        public final void pass(Task.Closure message) {
             ((Task)message.getSender()).getRegister().remove(this);
             synchronized(ContextImpl.this.calculators) {
                 ContextImpl.this.calculators.remove(message.getSender());
@@ -133,45 +133,46 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     }
 
     private class MSG_BASE implements Message<Context> {
-        private MSG_BASE() {
-        }
 
-        public Context getSender() {
+        @Override
+        public final Context getSender() {
             return ContextImpl.this;
         }
     }
 
     private class MSG_CHDIR extends MSG_BASE implements Context.MsgChDir {
 
-        public File getPath() {
+        @Override
+        public final File getPath() {
             return ContextImpl.this.getPath();
         }
     }
 
     private class MSG_CHORDER extends MSG_BASE implements Context.MsgChOrder {
 
-        public Order getOrder() {
+        @Override
+        public final Order getOrder() {
             return ContextImpl.this.getOrder();
         }
     }
 
     private class MSG_STARTING extends MSG_BASE implements Context.MsgStarting {
-        private Task task;
+        private final Task task;
 
         private MSG_STARTING(Task task) {
             ContextImpl.this.addInitial(this);
             (this.task = task).getRegister().add(new LSN_CLOSURE());
         }
 
-        public Task getTask() {
+        @Override
+        public final Task getTask() {
             return this.task;
         }
 
         private class LSN_CLOSURE implements Listener<Task.Closure> {
-            private LSN_CLOSURE() {
-            }
 
-            public void pass(Task.Closure message) {
+            @Override
+            public final void pass(Task.Closure message) {
                 ((Task)message.getSender()).getRegister().remove(this);
                 ContextImpl.this.removeInitial(MSG_STARTING.this);
             }

@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui;
 
 import net.team33.fscalc.info.FileInfo;
@@ -27,7 +22,8 @@ public class CellRenderer extends JLabel implements TableCellRenderer {
         this(false);
     }
 
-    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+    @Override
+    public final Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         this.setForeground(table.getSelectionForeground());
         this.setBackground(table.getSelectionBackground());
         this.setOpaque(isSelected);
@@ -35,7 +31,7 @@ public class CellRenderer extends JLabel implements TableCellRenderer {
         return this;
     }
 
-    public void setFileInfo(FileInfo value, int column) {
+    public final void setFileInfo(FileInfo value, int column) {
         if (column > 0) {
             this.setHorizontalAlignment(4);
         } else {

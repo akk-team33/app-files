@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.swinx;
 
 import javax.swing.event.TreeModelListener;
@@ -14,55 +9,62 @@ import java.io.IOException;
 import java.util.*;
 
 public class FSTreeModel implements TreeModel {
-    private static NODE m_Root = new ROOTNODE();
+    private static final NODE m_Root = new ROOTNODE();
     private static final FileFilter DIR_FILTER = new FileFilter() {
+        @Override
         public boolean accept(File f) {
             return f.isDirectory();
         }
     };
     private static final Comparator<NODE> NODE_COMPARATOR = new Comparator<NODE>() {
+        @Override
         public int compare(NODE n1, NODE n2) {
             return n1.toString().compareToIgnoreCase(n2.toString());
         }
     };
 
-    public FSTreeModel() {
-    }
-
-    public TreePath getTreePath(File f) {
+    public final TreePath getTreePath(File f) {
         return f == null ? new TreePath(m_Root) : this.getTreePath(f.getParentFile()).pathByAddingChild(getNode(f));
     }
 
-    public File getFile(TreePath selectionPath) {
+    public final File getFile(TreePath selectionPath) {
         return selectionPath == null ? null : ((NODE)selectionPath.getLastPathComponent()).getFile();
     }
 
-    public Object getRoot() {
+    @Override
+    public final Object getRoot() {
         return m_Root;
     }
 
-    public Object getChild(Object parent, int index) {
+    @Override
+    public final Object getChild(Object parent, int index) {
         return ((NODE)parent).getChildren().get(index);
     }
 
-    public int getChildCount(Object parent) {
+    @Override
+    public final int getChildCount(Object parent) {
         return ((NODE)parent).getChildren().size();
     }
 
-    public int getIndexOfChild(Object parent, Object child) {
+    @Override
+    public final int getIndexOfChild(Object parent, Object child) {
         return ((NODE)parent).getChildren().indexOf(child);
     }
 
-    public boolean isLeaf(Object node) {
+    @Override
+    public final boolean isLeaf(Object node) {
         return false;
     }
 
+    @Override
     public void valueForPathChanged(TreePath path, Object newValue) {
     }
 
+    @Override
     public synchronized void addTreeModelListener(TreeModelListener l) {
     }
 
+    @Override
     public synchronized void removeTreeModelListener(TreeModelListener l) {
     }
 
@@ -71,21 +73,23 @@ public class FSTreeModel implements TreeModel {
     }
 
     private static class DIRNODE extends NODE {
-        private File m_File;
+        private final File m_File;
 
         public DIRNODE(File f) {
             this.m_File = f;
         }
 
-        public String toString() {
+        public final String toString() {
             return this.m_File.getParentFile() == null ? this.m_File.getAbsolutePath() : this.m_File.getName();
         }
 
-        public File getFile() {
+        @Override
+        public final File getFile() {
             return this.m_File;
         }
 
-        protected File[] getChildFiles() {
+        @Override
+        protected final File[] getChildFiles() {
             return this.m_File.listFiles(FSTreeModel.DIR_FILTER);
         }
     }
@@ -97,7 +101,7 @@ public class FSTreeModel implements TreeModel {
             this.m_Children = null;
         }
 
-        public NODE getChild(File f) {
+        public final NODE getChild(File f) {
             try {
                 f = f.getCanonicalFile();
                 Iterator var3 = this.getChildren().iterator();
@@ -114,7 +118,7 @@ public class FSTreeModel implements TreeModel {
             return this;
         }
 
-        public Vector<NODE> getChildren() {
+        public final Vector<NODE> getChildren() {
             if (this.m_Children == null) {
                 File[] f = this.getChildFiles();
                 Set<NODE> nodes = new TreeSet(FSTreeModel.NODE_COMPARATOR);
@@ -137,15 +141,17 @@ public class FSTreeModel implements TreeModel {
 
     private static class ROOTNODE extends NODE {
 
-        public String toString() {
+        public final String toString() {
             return "Filesystem";
         }
 
-        public File getFile() {
+        @Override
+        public final File getFile() {
             return null;
         }
 
-        protected File[] getChildFiles() {
+        @Override
+        protected final File[] getChildFiles() {
             return File.listRoots();
         }
     }

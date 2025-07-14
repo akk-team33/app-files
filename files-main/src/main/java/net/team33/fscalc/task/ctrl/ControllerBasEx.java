@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.task.ctrl;
 
 import java.math.BigInteger;
@@ -16,6 +11,7 @@ public abstract class ControllerBasEx extends ControllerBase {
         this.divisor = BigInteger.ONE;
     }
 
+    @Override
     public final void increment(String subject, long divisor) {
         this.increment(subject, new BigInteger(String.valueOf(divisor)));
     }

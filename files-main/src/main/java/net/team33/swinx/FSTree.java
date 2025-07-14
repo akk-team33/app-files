@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.swinx;
 
 import javax.swing.*;
@@ -18,15 +13,16 @@ public class FSTree extends JTree {
         this.getSelectionModel().setSelectionMode(1);
     }
 
-    public FSTreeModel getModel() {
+    @Override
+    public final FSTreeModel getModel() {
         return (FSTreeModel)super.getModel();
     }
 
-    public void setSelection(File f) {
-        this.setSelectionPath(this.getModel().getTreePath(f));
+    public final File getSelection() {
+        return this.getModel().getFile(this.getSelectionPath());
     }
 
-    public File getSelection() {
-        return this.getModel().getFile(this.getSelectionPath());
+    public final void setSelection(File f) {
+        this.setSelectionPath(this.getModel().getTreePath(f));
     }
 }

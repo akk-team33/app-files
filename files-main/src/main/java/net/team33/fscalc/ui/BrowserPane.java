@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui;
 
 import net.team33.fscalc.ui.model.InfoTableModel;
@@ -42,7 +37,8 @@ public abstract class BrowserPane extends JPanel {
             super(table);
         }
 
-        protected Context getContext() {
+        @Override
+        protected final Context getContext() {
             return BrowserPane.this.getContext();
         }
     }
@@ -52,7 +48,8 @@ public abstract class BrowserPane extends JPanel {
             super(new InfoTableModel(BrowserPane.this.getContext()));
         }
 
-        protected Context getContext() {
+        @Override
+        protected final Context getContext() {
             return BrowserPane.this.getContext();
         }
     }

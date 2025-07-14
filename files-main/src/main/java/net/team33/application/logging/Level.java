@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.application.logging;
 
 public enum Level {
@@ -12,6 +7,4 @@ public enum Level {
     ERROR,
     FATAL;
 
-    private Level() {
-    }
 }

@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui;
 
 import net.team33.fscalc.ui.rsrc.Ico;
@@ -92,7 +87,8 @@ public abstract class PathPane extends JPanel {
 
         private class ADAPTER implements Listener<Context.MsgChDir> {
 
-            public void pass(Context.MsgChDir message) {
+            @Override
+            public final void pass(Context.MsgChDir message) {
                 TEXT.this.setText(message.getPath().getPath());
             }
         }

@@ -1,16 +1,9 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.reflect;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public class ClassUtil {
-    public ClassUtil() {
-    }
 
     private static Type[] getActualTypeArguments(Class<?> genClass, Type impGeneric) {
         if (impGeneric instanceof ParameterizedType) {

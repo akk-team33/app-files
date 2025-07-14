@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui;
 
 import net.team33.fscalc.ui.rsrc.Ico;
@@ -33,10 +28,9 @@ public abstract class MainFrame extends JFrame {
     }
 
     private class ADAPTER implements Listener<Context.MsgChDir> {
-        private ADAPTER() {
-        }
 
-        public void pass(Context.MsgChDir message) {
+        @Override
+        public final void pass(Context.MsgChDir message) {
             MainFrame.this.setTitle(String.format("%s - FSCalc", message.getPath().getName()));
         }
     }
@@ -64,19 +58,17 @@ public abstract class MainFrame extends JFrame {
     }
 
     private class NorthPane extends PathPane {
-        private NorthPane() {
-        }
 
-        protected Context getContext() {
+        @Override
+        protected final Context getContext() {
             return MainFrame.this.getContext();
         }
     }
 
     private class RghtCenterPane extends BrowserPane {
-        private RghtCenterPane() {
-        }
 
-        protected Context getContext() {
+        @Override
+        protected final Context getContext() {
             return MainFrame.this.getContext();
         }
     }
@@ -89,10 +81,9 @@ public abstract class MainFrame extends JFrame {
         }
 
         private class LSN_CHDIR implements Listener<Context.MsgChDir> {
-            private LSN_CHDIR() {
-            }
 
-            public void pass(Context.MsgChDir message) {
+            @Override
+            public final void pass(Context.MsgChDir message) {
                 TreeView.this.setSelection(message.getPath());
             }
         }
@@ -108,10 +99,9 @@ public abstract class MainFrame extends JFrame {
         }
 
         private class SEL_ADAPTER implements TreeSelectionListener {
-            private SEL_ADAPTER() {
-            }
 
-            public void valueChanged(TreeSelectionEvent e) {
+            @Override
+            public final void valueChanged(TreeSelectionEvent e) {
                 File f = TreeView.this.getModel().getFile(e.getPath());
                 MainFrame.this.getContext().setPath(f);
             }

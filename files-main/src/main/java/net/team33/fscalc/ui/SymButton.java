@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.fscalc.ui;
 
 import javax.swing.*;
@@ -18,7 +13,8 @@ public abstract class SymButton extends JToggleButton implements ActionListener 
         this.addActionListener(this);
     }
 
-    public void actionPerformed(ActionEvent e) {
+    @Override
+    public final void actionPerformed(ActionEvent e) {
         this.setSelected(!this.isSelected());
     }
 }

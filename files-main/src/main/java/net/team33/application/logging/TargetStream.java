@@ -1,8 +1,3 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
 package net.team33.application.logging;
 
 import net.team33.messaging.Listener;
@@ -14,8 +9,8 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 
 public class TargetStream implements Listener<Loggable> {
-    private PrintWriter out;
-    private Formatter fmt;
+    private final PrintWriter out;
+    private final Formatter fmt;
 
     public TargetStream(OutputStream out, Formatter fmt) {
         this.out = new PrintWriter(out);
@@ -26,7 +21,8 @@ public class TargetStream implements Listener<Loggable> {
         this((OutputStream)(new FileOutputStream(FileUtil.getAccessible(filePath), false)), fmt);
     }
 
-    public synchronized void pass(Loggable entry) {
+    @Override
+    public final synchronized void pass(Loggable entry) {
         this.fmt.format(entry, this.out);
         this.out.println();
         this.out.flush();
