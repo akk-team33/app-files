@@ -31,7 +31,7 @@ public class InfoTable extends JTable implements Originator<Message<InfoTable>> 
 
     public InfoTable(final InfoTableModel model, final Context context) {
         super(model);
-        getTableHeader().setDefaultRenderer(new HEADRENDERER(context));
+        getTableHeader().setDefaultRenderer(headRenderer(context));
         final CellRenderer cr = new CellRenderer();
         cr.setFileInfo(FS.getInfo(new File("")), 0);
         setRowHeight(cr.getPreferredSize().height + 3);
@@ -90,19 +90,8 @@ public class InfoTable extends JTable implements Originator<Message<InfoTable>> 
         }
     }
 
-    private class HEADRENDERER extends HeadRenderer {
-
-        private final Context context;
-
-        private HEADRENDERER(final Context context) {
-            super(context);
-            this.context = context;
-        }
-
-        @Override
-        protected final Context getContext() {
-            return context;
-        }
+    private static HeadRenderer headRenderer(final Context context) {
+        return new HeadRenderer(context);
     }
 
     private class LSTNR_UPDINFO implements Consumer<FileService.MsgUpdate> {
