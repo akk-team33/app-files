@@ -9,14 +9,14 @@ import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.io.File;
 
-public abstract class HeadRenderer extends JPanel implements TableCellRenderer {
+public class HeadRenderer extends JPanel implements TableCellRenderer {
     private final TITLE title = new TITLE();
     private final CellRenderer info = new INFO();
+    private final Context context;
 
-    protected abstract Context getContext();
-
-    public HeadRenderer() {
+    public HeadRenderer(final Context context) {
         super(new GridLayout(0, 1, 1, 1));
+        this.context = context;
         setBorder(BorderFactory.createCompoundBorder(BorderFactory.createRaisedBevelBorder(), BorderFactory.createEmptyBorder(0, 2, 0, 2)));
         add(title);
         add(info);
@@ -26,7 +26,7 @@ public abstract class HeadRenderer extends JPanel implements TableCellRenderer {
     public final Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, int column) {
         column = table.convertColumnIndexToModel(column);
         title.setText(value.toString(), column);
-        final File path = getContext().getPath();
+        final File path = context.getPath();
         final FileInfo fi = FileService.getInstance().getInfo(path);
         info.setFileInfo(fi, column);
         return this;

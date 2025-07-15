@@ -9,13 +9,12 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.function.Consumer;
 
-public abstract class ControlPane extends JPanel {
-    protected abstract Context getContext();
+public class ControlPane extends JPanel {
 
-    public ControlPane(final InfoTable table) {
+    public ControlPane(final InfoTable table, final Context context) {
         super(new GridLayout(1, 0, 2, 2));
         table.getRegister().add(new ITBL_LSTNR());
-        final ACTNBUTTON delButton = new DELBUTTON(table);
+        final ACTNBUTTON delButton = new DELBUTTON(table, context);
         add(delButton);
     }
 
@@ -34,10 +33,12 @@ public abstract class ControlPane extends JPanel {
 
     public class DELBUTTON extends ACTNBUTTON {
         private final InfoTable table;
+        private final Context context;
 
-        protected DELBUTTON(final InfoTable table) {
+        protected DELBUTTON(final InfoTable table, final Context context) {
             super("Löschen", table);
             this.table = table;
+            this.context = context;
         }
 
         @Override
@@ -48,8 +49,7 @@ public abstract class ControlPane extends JPanel {
             for(int i = 0; i < rows.length; ++i) {
                 paths[i] = table.getModel().getValueAt(rows[i], 0).getPath();
             }
-
-            getContext().startDeletion(paths);
+            context.startDeletion(paths);
         }
     }
 

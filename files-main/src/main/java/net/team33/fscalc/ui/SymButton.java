@@ -1,20 +1,21 @@
 package net.team33.fscalc.ui;
 
+import de.team33.sphinx.alpha.visual.JButtons;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-public abstract class SymButton extends JToggleButton implements ActionListener {
-    public SymButton(final Icon icon, final String toolTip) {
-        super(icon);
-        setMargin(new Insets(0, 0, 0, 0));
-        setToolTipText(toolTip);
-        addActionListener(this);
+final class SymButton {
+
+    private static final Insets INSETS = new Insets(0, 0, 0, 0);
+
+    private SymButton() {
     }
 
-    @Override
-    public final void actionPerformed(final ActionEvent e) {
-        setSelected(!isSelected());
+    static JButtons.Builder<JButton> builder(final Icon icon, final String toolTip) {
+        return JButtons.builder()
+                       .setMargin(INSETS)
+                       .setIcon(icon)
+                       .setToolTipText(toolTip);
     }
 }

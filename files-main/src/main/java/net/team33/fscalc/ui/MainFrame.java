@@ -6,35 +6,27 @@ import net.team33.fscalc.work.Context;
 import net.team33.swinx.FSTree;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
 import java.io.File;
 import java.util.function.Consumer;
 
-public abstract class MainFrame extends JFrame {
+public class MainFrame extends JFrame {
     private static final String TTL_SUFFIX = "FSCalc";
     private static final String TTL_FORMAT = "%s - FSCalc";
 
-    protected abstract Context getContext();
-
-    protected MainFrame() {
+    public MainFrame(final Context context) {
         super("FSCalc");
-        setDefaultCloseOperation(2);
-        setContentPane(new ContentPane());
-        pack();
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setContentPane(new ContentPane(context));
         setLocationByPlatform(true);
-        getContext().getRegister().add(new ADAPTER());
+        pack();
+        context.getRegister().add(new ADAPTER());
     }
 
     public static MainFrame by(final Context context) {
-        return JFrames.builder(() -> new MainFrame() {
-                          @Override
-                          protected Context getContext() {
-                              return context;
-                          }
-                      })
+        return JFrames.builder(() -> new MainFrame(context))
                       .setTitle(TTL_SUFFIX)
                       .build();
     }
@@ -47,49 +39,40 @@ public abstract class MainFrame extends JFrame {
         }
     }
 
-    private class CenterPane extends JSplitPane {
-        private CenterPane() {
-            setLeftComponent(MainFrame.this.new LeftCenterPane());
-            setRightComponent(MainFrame.this.new RghtCenterPane());
+    private static JScrollPane leftCenterPane(final Context context) {
+        return new JScrollPane(new TreeView(context));
+    }
+
+    private static PathPane northPane(final Context context) {
+        return new PathPane(context);
+    }
+
+    private static BrowserPane rightCenterPane(final Context context) {
+        return new BrowserPane(context);
+    }
+
+    private static class CenterPane extends JSplitPane {
+        private CenterPane(final Context context) {
+            setLeftComponent(leftCenterPane(context));
+            setRightComponent(rightCenterPane(context));
         }
     }
 
-    private class ContentPane extends JPanel {
-        private ContentPane() {
+    private static class ContentPane extends JPanel {
+        private ContentPane(final Context context) {
             super(new BorderLayout());
-            add(MainFrame.this.new NorthPane(), "North");
-            add(MainFrame.this.new CenterPane(), "Center");
-            add(new ProgressPane(getContext()), "South");
+            add(northPane(context), BorderLayout.NORTH);
+            add(new CenterPane(context), BorderLayout.CENTER);
+            add(new ProgressPane(context), BorderLayout.SOUTH);
         }
     }
 
-    private class LeftCenterPane extends JScrollPane {
-        private LeftCenterPane() {
-            super(MainFrame.this.new TreeView());
-        }
-    }
+    private static class TreeView extends FSTree {
 
-    private class NorthPane extends PathPane {
-
-        @Override
-        protected final Context getContext() {
-            return MainFrame.this.getContext();
-        }
-    }
-
-    private class RghtCenterPane extends BrowserPane {
-
-        @Override
-        protected final Context getContext() {
-            return MainFrame.this.getContext();
-        }
-    }
-
-    private class TreeView extends FSTree {
-        private TreeView() {
+        private TreeView(final Context context) {
             setCellRenderer(new RENDERER());
-            getContext().getRegister().add(new LSN_CHDIR());
-            addTreeSelectionListener(new SEL_ADAPTER());
+            context.getRegister().add(new LSN_CHDIR());
+            addTreeSelectionListener(selAdapter(context));
         }
 
         private class LSN_CHDIR implements Consumer<Context.MsgChDir> {
@@ -110,13 +93,11 @@ public abstract class MainFrame extends JFrame {
             }
         }
 
-        private class SEL_ADAPTER implements TreeSelectionListener {
-
-            @Override
-            public final void valueChanged(final TreeSelectionEvent e) {
+        private TreeSelectionListener selAdapter(final Context context) {
+            return e -> {
                 final File f = getModel().getFile(e.getPath());
-                getContext().setPath(f);
-            }
+                context.setPath(f);
+            };
         }
     }
 }

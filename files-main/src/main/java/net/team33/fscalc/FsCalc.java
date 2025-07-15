@@ -4,7 +4,6 @@ import net.team33.application.Log;
 import net.team33.application.logging.Level;
 import net.team33.application.logging.TargetStream;
 import net.team33.fscalc.ui.MainFrame;
-import net.team33.fscalc.work.Context;
 import net.team33.fscalc.work.ContextImpl;
 import net.team33.fscalc.work.Order;
 import net.team33.swinx.LogTarget;
@@ -38,15 +37,6 @@ public final class FsCalc implements Runnable {
 
     @Override
     public final void run() {
-        final MainFrame frame = new FRAME();
-        frame.setVisible(true);
-    }
-
-    private class FRAME extends MainFrame {
-
-        @Override
-        protected final Context getContext() {
-            return context;
-        }
+        new MainFrame(context).setVisible(true);
     }
 }

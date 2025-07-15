@@ -7,7 +7,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Consumer;
 
-public abstract class PathPane extends JPanel {
+public class PathPane extends JPanel {
+
     protected static final Insets GBC_INSETS = new Insets(2, 2, 2, 2);
     protected static final int GBC_ANCHOR = 10;
     protected static final int GBC_FILL = 2;
@@ -27,16 +28,14 @@ public abstract class PathPane extends JPanel {
         GBC_REFRESH = new GridBagConstraints(5, 0, 1, 1, 0.0, 0.0, 10, 2, GBC_INSETS, 0, 0);
     }
 
-    protected abstract Context getContext();
-
-    public PathPane() {
+    public PathPane(final Context context) {
         super(new GridBagLayout());
-        add(new NAVBCK(), GBC_NAVBCK);
-        add(new NAVFWD(), GBC_NAVFWD);
-        add(new NAVUP(), GBC_NAVUP);
+        add(navBack(), GBC_NAVBCK);
+        add(navForward(), GBC_NAVFWD);
+        add(navUp(), GBC_NAVUP);
         add(new ICON(), GBC_ICON);
-        add(new TEXT(), GBC_TEXT);
-        add(new REFRESH(), GBC_REFRESH);
+        add(new TEXT(context), GBC_TEXT);
+        add(refresh(), GBC_REFRESH);
     }
 
     private class ICON extends JLabel {
@@ -45,44 +44,33 @@ public abstract class PathPane extends JPanel {
         }
     }
 
-    private class NAVBCK extends SymButton {
-        private static final long serialVersionUID = -7984022565970896881L;
-
-        private NAVBCK() {
-            super(Ico.PRED, "Zurück");
-        }
+    private static JButton navBack() {
+        return SymButton.builder(Ico.PRED, "Navigate back")
+                        .build();
     }
 
-    private class NAVFWD extends SymButton {
-        private static final long serialVersionUID = 1682308769397587228L;
-
-        private NAVFWD() {
-            super(Ico.SUCC, "Vor");
-        }
+    private static JButton navForward() {
+        return SymButton.builder(Ico.SUCC, "Navigate forward")
+                        .build();
     }
 
-    private class NAVUP extends SymButton {
-        private static final long serialVersionUID = -228761213609241105L;
-
-        private NAVUP() {
-            super(Ico.UPDIR, "Zum übergeordneten Verzeichnis");
-        }
+    private static JButton navUp() {
+        return SymButton.builder(Ico.UPDIR, "Navigate to upper directory")
+                        .build();
     }
 
-    private class REFRESH extends SymButton {
-        private static final long serialVersionUID = 1666955799426456527L;
-
-        private REFRESH() {
-            super(Ico.RELOAD, "Aktualisieren");
-        }
+    private static JButton refresh() {
+        return SymButton.builder(Ico.RELOAD, "Refresh view")
+                        .build();
     }
 
-    private class TEXT extends JTextField {
-        private TEXT() {
+    private static class TEXT extends JTextField {
+
+        private TEXT(final Context context) {
             super(16);
             setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
             setFont(new Font(getFont().getName(), 1, getFont().getSize()));
-            getContext().getRegister().add(new ADAPTER());
+            context.getRegister().add(new ADAPTER());
         }
 
         private class ADAPTER implements Consumer<Context.MsgChDir> {
