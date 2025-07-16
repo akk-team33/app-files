@@ -58,8 +58,8 @@ public class MainFrame extends JFrame {
         }
     }
 
-    public static class ContentPane extends JPanel {
-        public ContentPane(final Context context) {
+    private static class ContentPane extends JPanel {
+        private ContentPane(final Context context) {
             super(new BorderLayout());
             add(northPane(context), BorderLayout.NORTH);
             add(new CenterPane(context), BorderLayout.CENTER);
