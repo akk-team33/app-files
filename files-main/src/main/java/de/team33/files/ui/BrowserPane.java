@@ -1,7 +1,5 @@
 package de.team33.files.ui;
 
-import net.team33.fscalc.ui.InfoTable;
-import net.team33.fscalc.ui.model.InfoTableModel;
 import net.team33.fscalc.work.Context;
 
 import javax.swing.*;
@@ -36,11 +34,6 @@ public class BrowserPane extends JPanel {
     }
 
     private static InfoTable infoTable(final Context context) {
-        return new InfoTable(new InfoTableModel(context)) {
-            @Override
-            protected Context getContext() {
-                return context;
-            }
-        };
+        return InfoTable.by(context);
     }
 }

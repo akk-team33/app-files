@@ -3,7 +3,6 @@ package de.team33.files.ui;
 import de.team33.sphinx.alpha.activity.Event;
 import de.team33.sphinx.alpha.visual.JButtons;
 import de.team33.sphinx.alpha.visual.JPanels;
-import net.team33.fscalc.ui.InfoTable;
 import net.team33.fscalc.work.Context;
 
 import javax.swing.*;
@@ -27,8 +26,7 @@ final class ControlPane extends JPanel {
         return JButtons.builder()
                        .setText("Delete")
                        .on(Event.ACTION_PERFORMED, message -> onDelButtonPressed(table, context))
-                       .setup(button -> table.getRegister()
-                                             .add(new UpdateSelectionListener(button)))
+                       .setup(button -> table.add(new UpdateSelectionListener(button)))
                        .build();
     }
 
@@ -41,11 +39,11 @@ final class ControlPane extends JPanel {
         context.startDeletion(paths);
     }
 
-    private record UpdateSelectionListener(JButton button) implements Consumer<InfoTable.UpdateSelection> {
+    private record UpdateSelectionListener(JButton button) implements Consumer<InfoTable.SelectionMessage> {
 
         @Override
-        public final void accept(final InfoTable.UpdateSelection message) {
-            button.setEnabled(0 < message.getSender().getSelectedRowCount());
+        public final void accept(final InfoTable.SelectionMessage message) {
+            button.setEnabled(0 < message.table().getSelectedRowCount());
         }
     }
 }
