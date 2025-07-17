@@ -4,7 +4,6 @@ import de.team33.sphinx.alpha.activity.Event;
 import de.team33.sphinx.alpha.visual.JPanels;
 import de.team33.sphinx.alpha.visual.JSplitPanes;
 import de.team33.sphinx.alpha.visual.JTrees;
-import net.team33.fscalc.ui.BrowserPane;
 import net.team33.fscalc.ui.PathPane;
 import net.team33.fscalc.ui.ProgressPane;
 import net.team33.fscalc.work.Context;
@@ -36,7 +35,7 @@ public class MainFrame extends JFrame implements Consumer<Context.MsgChDir> {
     private static JSplitPane centerPane(final Context context) {
         return JSplitPanes.builder()
                           .setLeftComponent(leftCenterPane(context))
-                          .setRightComponent(rightCenterPane(context))
+                          .setRightComponent(BrowserPane.by(context))
                           .build();
     }
 
@@ -56,15 +55,6 @@ public class MainFrame extends JFrame implements Consumer<Context.MsgChDir> {
 
     private static PathPane northPane(final Context context) {
         return new PathPane() {
-            @Override
-            protected Context getContext() {
-                return context;
-            }
-        };
-    }
-
-    private static BrowserPane rightCenterPane(final Context context) {
-        return new BrowserPane() {
             @Override
             protected Context getContext() {
                 return context;

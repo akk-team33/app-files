@@ -1,12 +1,15 @@
-package net.team33.fscalc.ui;
+package de.team33.files.ui;
 
+import net.team33.fscalc.ui.ControlPane;
+import net.team33.fscalc.ui.InfoTable;
 import net.team33.fscalc.ui.model.InfoTableModel;
 import net.team33.fscalc.work.Context;
 
 import javax.swing.*;
 import java.awt.*;
 
-public abstract class BrowserPane extends JPanel {
+public class BrowserPane extends JPanel {
+
     private static final Insets GBC_INSETS = new Insets(0, 0, 0, 0);
     private static final GridBagConstraints GBC_TABLE;
     private static final GridBagConstraints GBC_CONTROLS;
@@ -20,37 +23,35 @@ public abstract class BrowserPane extends JPanel {
         GBC_SPACE2 = new GridBagConstraints(2, 1, 1, 1, 0.5, 0.0, 10, 2, GBC_INSETS, 0, 0);
     }
 
-    protected abstract Context getContext();
-
-    public BrowserPane() {
+    private BrowserPane(final Context context) {
         super(new GridBagLayout());
-        final InfoTable table = new TABLE();
-        final ControlPane controls = new CONTROL(table);
-        add(new JScrollPane(table), GBC_TABLE);
+        final InfoTable table = infoTable(context);
+        final ControlPane controls = controlPane(table, context);
+        add(new JScrollPane(infoTable(context)), GBC_TABLE);
         add(new JPanel(), GBC_SPACE1);
         add(controls, GBC_CONTROLS);
         add(new JPanel(), GBC_SPACE2);
     }
 
-    private class CONTROL extends ControlPane {
-        public CONTROL(final InfoTable table) {
-            super(table);
-        }
-
-        @Override
-        protected final Context getContext() {
-            return BrowserPane.this.getContext();
-        }
+    public static BrowserPane by(final Context context) {
+        return new BrowserPane(context);
     }
 
-    private class TABLE extends InfoTable {
-        private TABLE() {
-            super(new InfoTableModel(BrowserPane.this.getContext()));
-        }
+    private static ControlPane controlPane(final InfoTable table, final Context context) {
+        return new ControlPane(table) {
+            @Override
+            protected Context getContext() {
+                return context;
+            }
+        };
+    }
 
-        @Override
-        protected final Context getContext() {
-            return BrowserPane.this.getContext();
-        }
+    private static InfoTable infoTable(final Context context) {
+        return new InfoTable(new InfoTableModel(context)) {
+            @Override
+            protected Context getContext() {
+                return context;
+            }
+        };
     }
 }
