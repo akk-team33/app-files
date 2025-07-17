@@ -1,6 +1,5 @@
 package de.team33.files.ui;
 
-import net.team33.fscalc.ui.ControlPane;
 import net.team33.fscalc.ui.InfoTable;
 import net.team33.fscalc.ui.model.InfoTableModel;
 import net.team33.fscalc.work.Context;
@@ -26,24 +25,14 @@ public class BrowserPane extends JPanel {
     private BrowserPane(final Context context) {
         super(new GridBagLayout());
         final InfoTable table = infoTable(context);
-        final ControlPane controls = controlPane(table, context);
         add(new JScrollPane(infoTable(context)), GBC_TABLE);
         add(new JPanel(), GBC_SPACE1);
-        add(controls, GBC_CONTROLS);
+        add(ControlPane.by(table, context), GBC_CONTROLS);
         add(new JPanel(), GBC_SPACE2);
     }
 
     public static BrowserPane by(final Context context) {
         return new BrowserPane(context);
-    }
-
-    private static ControlPane controlPane(final InfoTable table, final Context context) {
-        return new ControlPane(table) {
-            @Override
-            protected Context getContext() {
-                return context;
-            }
-        };
     }
 
     private static InfoTable infoTable(final Context context) {
