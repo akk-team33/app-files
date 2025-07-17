@@ -1,6 +1,9 @@
-package net.team33.fscalc.ui;
+package de.team33.files.ui;
 
 import de.team33.sphinx.alpha.visual.JFrames;
+import net.team33.fscalc.ui.BrowserPane;
+import net.team33.fscalc.ui.PathPane;
+import net.team33.fscalc.ui.ProgressPane;
 import net.team33.fscalc.ui.rsrc.Ico;
 import net.team33.fscalc.work.Context;
 import net.team33.swinx.FSTree;
