@@ -1,9 +1,12 @@
 package net.team33.swinx;
 
+import net.team33.fscalc.work.Context;
+
 import javax.swing.*;
 import java.io.File;
+import java.util.function.Consumer;
 
-public class FSTree extends JTree {
+public class FSTree extends JTree implements Consumer<Context.MsgChDir> {
     public FSTree() {
         super(new FSTreeModel());
         setRootVisible(false);
@@ -24,5 +27,10 @@ public class FSTree extends JTree {
 
     public final void setSelection(final File f) {
         setSelectionPath(getModel().getTreePath(f));
+    }
+
+    @Override
+    public final void accept(final Context.MsgChDir message) {
+        setSelection(message.getPath());
     }
 }

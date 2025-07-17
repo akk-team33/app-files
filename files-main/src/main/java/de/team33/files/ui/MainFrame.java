@@ -1,125 +1,101 @@
 package de.team33.files.ui;
 
-import de.team33.sphinx.alpha.visual.JFrames;
+import de.team33.sphinx.alpha.activity.Event;
+import de.team33.sphinx.alpha.visual.JPanels;
+import de.team33.sphinx.alpha.visual.JSplitPanes;
+import de.team33.sphinx.alpha.visual.JTrees;
 import net.team33.fscalc.ui.BrowserPane;
 import net.team33.fscalc.ui.PathPane;
 import net.team33.fscalc.ui.ProgressPane;
-import net.team33.fscalc.ui.rsrc.Ico;
 import net.team33.fscalc.work.Context;
 import net.team33.swinx.FSTree;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
-import java.io.File;
+import java.util.Optional;
 import java.util.function.Consumer;
 
-public abstract class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements Consumer<Context.MsgChDir> {
     private static final String TTL_SUFFIX = "FSCalc";
     private static final String TTL_FORMAT = "%s - FSCalc";
 
-    protected abstract Context getContext();
-
-    protected MainFrame() {
-        super("FSCalc");
-        setDefaultCloseOperation(2);
-        setContentPane(new ContentPane());
-        pack();
+    private MainFrame(final Context context) {
+        super(TTL_SUFFIX);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setContentPane(contentPane(context));
         setLocationByPlatform(true);
-        getContext().getRegister().add(new ADAPTER());
+        pack();
+        context.getRegister().add(this);
     }
 
     public static MainFrame by(final Context context) {
-        return JFrames.builder(() -> new MainFrame() {
-                          @Override
-                          protected Context getContext() {
-                              return context;
-                          }
-                      })
-                      .setTitle(TTL_SUFFIX)
+        return new MainFrame(context);
+    }
+
+    private static JSplitPane centerPane(final Context context) {
+        return JSplitPanes.builder()
+                          .setLeftComponent(leftCenterPane(context))
+                          .setRightComponent(rightCenterPane(context))
+                          .build();
+    }
+
+    private static JPanel contentPane(final Context context) {
+        //noinspection AbsoluteAlignmentInUserInterface
+        return JPanels.builder()
+                      .setLayout(new BorderLayout())
+                      .add(northPane(context), BorderLayout.NORTH)
+                      .add(centerPane(context), BorderLayout.CENTER)
+                      .add(new ProgressPane(context), BorderLayout.SOUTH)
                       .build();
     }
 
-    private class ADAPTER implements Consumer<Context.MsgChDir> {
-
-        @Override
-        public final void accept(final Context.MsgChDir message) {
-            setTitle(String.format("%s - FSCalc", message.getPath().getName()));
-        }
+    private static JScrollPane leftCenterPane(final Context context) {
+        return new JScrollPane(treeView(context));
     }
 
-    private class CenterPane extends JSplitPane {
-        private CenterPane() {
-            setLeftComponent(MainFrame.this.new LeftCenterPane());
-            setRightComponent(MainFrame.this.new RghtCenterPane());
-        }
-    }
-
-    private class ContentPane extends JPanel {
-        private ContentPane() {
-            super(new BorderLayout());
-            add(MainFrame.this.new NorthPane(), "North");
-            add(MainFrame.this.new CenterPane(), "Center");
-            add(new ProgressPane(getContext()), "South");
-        }
-    }
-
-    private class LeftCenterPane extends JScrollPane {
-        private LeftCenterPane() {
-            super(MainFrame.this.new TreeView());
-        }
-    }
-
-    private class NorthPane extends PathPane {
-
-        @Override
-        protected final Context getContext() {
-            return MainFrame.this.getContext();
-        }
-    }
-
-    private class RghtCenterPane extends BrowserPane {
-
-        @Override
-        protected final Context getContext() {
-            return MainFrame.this.getContext();
-        }
-    }
-
-    private class TreeView extends FSTree {
-        private TreeView() {
-            setCellRenderer(new RENDERER());
-            getContext().getRegister().add(new LSN_CHDIR());
-            addTreeSelectionListener(new SEL_ADAPTER());
-        }
-
-        private class LSN_CHDIR implements Consumer<Context.MsgChDir> {
-
+    private static PathPane northPane(final Context context) {
+        return new PathPane() {
             @Override
-            public final void accept(final Context.MsgChDir message) {
-                setSelection(message.getPath());
+            protected Context getContext() {
+                return context;
             }
-        }
+        };
+    }
 
-        private class RENDERER extends DefaultTreeCellRenderer {
-            private static final long serialVersionUID = 1220062910464484785L;
-
-            private RENDERER() {
-                this.closedIcon = Ico.CLSDIR;
-                this.openIcon = Ico.OPNDIR;
-                this.leafIcon = Ico.FILE;
-            }
-        }
-
-        private class SEL_ADAPTER implements TreeSelectionListener {
-
+    private static BrowserPane rightCenterPane(final Context context) {
+        return new BrowserPane() {
             @Override
-            public final void valueChanged(final TreeSelectionEvent e) {
-                final File f = getModel().getFile(e.getPath());
-                getContext().setPath(f);
+            protected Context getContext() {
+                return context;
             }
+        };
+    }
+
+    private static FSTree treeView(final Context context) {
+        return JTrees.builder(FSTree::new)
+                     .setCellRenderer(Basics.treeCellRenderer())
+                     .setup(fsTree -> context.getRegister().add(fsTree))
+                     .on(Event.TREE_VALUE_CHANGED, event -> onTreeValueChanged(event, context))
+                     .build();
+    }
+
+    private static void onTreeValueChanged(final TreeSelectionEvent event, final Context context) {
+        if (event.getSource() instanceof final FSTree fsTree) {
+            context.setPath(fsTree.getModel().getFile(event.getPath()));
+        } else {
+            final String sourceType = Optional.ofNullable(event.getSource())
+                                              .map(Object::getClass)
+                                              .map(Class::getCanonicalName)
+                                              .orElse("<null>");
+            throw new IllegalStateException("event source is expected to be an <FSTree> - but was <" +
+                                            sourceType +
+                                            ">");
         }
+    }
+
+    @Override
+    public final void accept(final Context.MsgChDir message) {
+        setTitle(TTL_FORMAT.formatted(message.getPath().getName()));
     }
 }
