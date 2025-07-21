@@ -26,7 +26,7 @@ public abstract class HeadRenderer extends JPanel implements TableCellRenderer {
     public final Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected, final boolean hasFocus, final int row, int column) {
         column = table.convertColumnIndexToModel(column);
         title.setText(value.toString(), column);
-        final File path = getContext().getPath();
+        final File path = getContext().path().get().toFile();
         final FileInfo fi = FileService.getInstance().getInfo(path);
         info.setFileInfo(fi, column);
         return this;

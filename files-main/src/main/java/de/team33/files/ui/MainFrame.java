@@ -13,11 +13,10 @@ import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import java.awt.*;
 import java.util.Optional;
-import java.util.function.Consumer;
 
-public class MainFrame extends JFrame implements Consumer<Context.MsgChDir> {
-    private static final String TTL_SUFFIX = "FSCalc";
-    private static final String TTL_FORMAT = "%s - FSCalc";
+public class MainFrame extends JFrame {
+    private static final String TTL_SUFFIX = "Files";
+    private static final String TTL_FORMAT = "%s - " + TTL_SUFFIX;
 
     private MainFrame(final Context context) {
         super(TTL_SUFFIX);
@@ -25,7 +24,7 @@ public class MainFrame extends JFrame implements Consumer<Context.MsgChDir> {
         setContentPane(contentPane(context));
         setLocationByPlatform(true);
         pack();
-        context.getRegister().add(this);
+        context.path().retrieve(path -> setTitle(TTL_FORMAT.formatted(path.getFileName())));
     }
 
     public static MainFrame by(final Context context) {
@@ -65,14 +64,14 @@ public class MainFrame extends JFrame implements Consumer<Context.MsgChDir> {
     private static FSTree treeView(final Context context) {
         return JTrees.builder(FSTree::new)
                      .setCellRenderer(Basics.treeCellRenderer())
-                     .setup(fsTree -> context.getRegister().add(fsTree))
+                     .setup(tree -> context.path().retrieve(tree::setPath))
                      .on(Event.TREE_VALUE_CHANGED, event -> onTreeValueChanged(event, context))
                      .build();
     }
 
     private static void onTreeValueChanged(final TreeSelectionEvent event, final Context context) {
         if (event.getSource() instanceof final FSTree fsTree) {
-            context.setPath(fsTree.getModel().getFile(event.getPath()));
+            context.path().set(fsTree.getModel().getFile(event.getPath()).toPath());
         } else {
             final String sourceType = Optional.ofNullable(event.getSource())
                                               .map(Object::getClass)
@@ -82,10 +81,5 @@ public class MainFrame extends JFrame implements Consumer<Context.MsgChDir> {
                                             sourceType +
                                             ">");
         }
-    }
-
-    @Override
-    public final void accept(final Context.MsgChDir message) {
-        setTitle(TTL_FORMAT.formatted(message.getPath().getName()));
     }
 }

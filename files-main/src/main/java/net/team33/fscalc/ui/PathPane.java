@@ -5,7 +5,6 @@ import net.team33.fscalc.work.Context;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.function.Consumer;
 
 public abstract class PathPane extends JPanel {
     protected static final Insets GBC_INSETS = new Insets(2, 2, 2, 2);
@@ -82,15 +81,7 @@ public abstract class PathPane extends JPanel {
             super(16);
             setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
             setFont(new Font(getFont().getName(), 1, getFont().getSize()));
-            getContext().getRegister().add(new ADAPTER());
-        }
-
-        private class ADAPTER implements Consumer<Context.MsgChDir> {
-
-            @Override
-            public final void accept(final Context.MsgChDir message) {
-                setText(message.getPath().getPath());
-            }
+            getContext().path().retrieve(path -> setText(path.toString()));
         }
     }
 }

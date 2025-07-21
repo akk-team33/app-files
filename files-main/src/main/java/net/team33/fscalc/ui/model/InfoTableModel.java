@@ -31,7 +31,7 @@ public class InfoTableModel extends AbstractTableModel {
     }
 
     public InfoTableModel(final Context context) {
-        context.getRegister().add(new LSTNR_CHDIR());
+        context.path().retrieve(path -> setInfos(path.toFile().listFiles(), context.getOrder()));
         context.getRegister().add(new LSTNR_CHORD());
         FS.getRegister().add(new LSTNR_UPDT());
         FS.getRegister().add(new LSTNR_INVAL());
@@ -77,19 +77,11 @@ public class InfoTableModel extends AbstractTableModel {
         return FileInfo.class;
     }
 
-    private class LSTNR_CHDIR implements Consumer<Context.MsgChDir> {
-
-        @Override
-        public final void accept(final Context.MsgChDir message) {
-            setInfos(message.getPath().listFiles(), message.getSender().getOrder());
-        }
-    }
-
     private class LSTNR_CHORD implements Consumer<Context.MsgChOrder> {
 
         @Override
         public final void accept(final Context.MsgChOrder message) {
-            setInfos(message.getSender().getPath().listFiles(), message.getOrder());
+            setInfos(message.getSender().path().get().toFile().listFiles(), message.getOrder());
         }
     }
 

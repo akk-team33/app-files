@@ -1,5 +1,7 @@
 package net.team33.fscalc.work;
 
+import de.team33.patterns.serving.alpha.Component;
+import de.team33.patterns.serving.alpha.Variable;
 import net.team33.application.Log;
 import net.team33.fscalc.info.FileInfo;
 import net.team33.fscalc.info.FileService;
@@ -11,22 +13,31 @@ import net.team33.messaging.multiplex.Sender;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 public class ContextImpl extends Sender<Message<Context>> implements Context {
+    private static final UnaryOperator<Path> NORMAL_PATH = path -> path.toAbsolutePath().normalize();
+
     private Order order;
-    private File path;
-    private final List<Calculator> calculators = new Vector(2, 2);
+    private final Component<Path> path;
+    private final List<Calculator> calculators = new Vector<>(2, 2);
     private static int tCount = 0;
 
     public ContextImpl(final File path, final Order order) {
-        this.path = newFile(path);
+        this.path = new Component<>(NORMAL_PATH, path.toPath());
         this.order = order;
-        addInitial(new MSG_CHDIR());
-        startCalculation(this.path);
+
+        this.path.retrieve(p -> startCalculation(p.toFile()));
+    }
+
+    @Override
+    public final Variable<Path> path() {
+        return path;
     }
 
     @Override
@@ -39,22 +50,6 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         if (order != ord) {
             this.order = ord;
             fire(new MSG_CHORDER());
-        }
-
-    }
-
-    @Override
-    public final File getPath() {
-        return path;
-    }
-
-    @Override
-    public final void setPath(File path) {
-        path = newFile(path);
-        if (!path.equals(this.path) && path.isDirectory()) {
-            this.path = path;
-            fire(new MSG_CHDIR());
-            startCalculation(path);
         }
 
     }
@@ -117,7 +112,7 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         @Override
         public final void accept(final Task.Closure message) {
             message.getSender().getRegister().remove(this);
-            startCalculation(getPath());
+            startCalculation(path.get().toFile());
         }
     }
 
@@ -137,14 +132,6 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         @Override
         public final Context getSender() {
             return ContextImpl.this;
-        }
-    }
-
-    private class MSG_CHDIR extends MSG_BASE implements Context.MsgChDir {
-
-        @Override
-        public final File getPath() {
-            return ContextImpl.this.getPath();
         }
     }
 
