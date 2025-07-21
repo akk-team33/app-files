@@ -31,8 +31,8 @@ public class InfoTableModel extends AbstractTableModel {
     }
 
     public InfoTableModel(final Context context) {
-        context.path().retrieve(path -> setInfos(path.toFile().listFiles(), context.getOrder()));
-        context.getRegister().add(new LSTNR_CHORD());
+        context.path().retrieve(path -> setInfos(path.toFile().listFiles(), context.order().get()));
+        context.order().retrieve(order -> setInfos(context.path().get().toFile().listFiles(), order));
         FS.getRegister().add(new LSTNR_UPDT());
         FS.getRegister().add(new LSTNR_INVAL());
     }
@@ -75,14 +75,6 @@ public class InfoTableModel extends AbstractTableModel {
     @Override
     public final Class<FileInfo> getColumnClass(final int columnIndex) {
         return FileInfo.class;
-    }
-
-    private class LSTNR_CHORD implements Consumer<Context.MsgChOrder> {
-
-        @Override
-        public final void accept(final Context.MsgChOrder message) {
-            setInfos(message.getSender().path().get().toFile().listFiles(), message.getOrder());
-        }
     }
 
     private class LSTNR_INVAL implements Consumer<FileService.MsgInvalid> {

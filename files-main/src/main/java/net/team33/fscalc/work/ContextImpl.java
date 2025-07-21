@@ -12,7 +12,6 @@ import net.team33.messaging.Message;
 import net.team33.messaging.multiplex.Sender;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
@@ -21,18 +20,20 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 public class ContextImpl extends Sender<Message<Context>> implements Context {
+
     private static final UnaryOperator<Path> NORMAL_PATH = path -> path.toAbsolutePath().normalize();
 
-    private Order order;
+    private final Component<Order> order;
     private final Component<Path> path;
     private final List<Calculator> calculators = new Vector<>(2, 2);
     private static int tCount = 0;
 
     public ContextImpl(final File path, final Order order) {
         this.path = new Component<>(NORMAL_PATH, path.toPath());
-        this.order = order;
+        this.order = new Component<>(order);
 
         this.path.retrieve(p -> startCalculation(p.toFile()));
+        //this.order.subscribe(o -> new MSG_CHORDER());
     }
 
     @Override
@@ -41,17 +42,8 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     }
 
     @Override
-    public final Order getOrder() {
+    public Variable<Order> order() {
         return order;
-    }
-
-    @Override
-    public final void setOrder(final Order ord) {
-        if (order != ord) {
-            this.order = ord;
-            fire(new MSG_CHORDER());
-        }
-
     }
 
     @Override
@@ -91,15 +83,6 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         return ret;
     }
 
-    private static File newFile(final File path) {
-        try {
-            return path.getCanonicalFile();
-        } catch (final IOException var2) {
-            Log.warning(var2);
-            return path.getAbsoluteFile();
-        }
-    }
-
     private <T extends Task> T start(final T task) {
         fire(new MSG_STARTING(task));
         final Thread th = new Thread(task, task.getClass().getName() + "-" + ++tCount);
@@ -132,14 +115,6 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         @Override
         public final Context getSender() {
             return ContextImpl.this;
-        }
-    }
-
-    private class MSG_CHORDER extends MSG_BASE implements Context.MsgChOrder {
-
-        @Override
-        public final Order getOrder() {
-            return ContextImpl.this.getOrder();
         }
     }
 

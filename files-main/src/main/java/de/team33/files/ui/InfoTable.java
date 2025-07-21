@@ -99,8 +99,8 @@ public final class InfoTable extends JTable {
         public final void mouseClicked(final MouseEvent e) {
             final int tcol = table.getTableHeader().columnAtPoint(e.getPoint());
             final int mcol = table.convertColumnIndexToModel(tcol);
-            final Order ord0 = context.getOrder();
-            context.setOrder(getOrder(mcol, ord0));
+            final Order ord0 = context.order().get();
+            context.order().set(getOrder(mcol, ord0));
         }
 
         private Order getOrder(final int colIndex, final Order currOrder) {

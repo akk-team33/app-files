@@ -15,19 +15,13 @@ public interface Context extends Originator<Message<Context>> {
 
     Variable<Path> path();
 
-    Order getOrder();
-
-    void setOrder(Order var1);
+    Variable<Order> order();
 
     Calculator startCalculation(File var1);
 
     Calculator startCalculation(FileInfo var1);
 
     Deletion startDeletion(File[] var1);
-
-    public interface MsgChOrder extends Message<Context> {
-        Order getOrder();
-    }
 
     public interface MsgStarting extends Message<Context> {
         Task getTask();
