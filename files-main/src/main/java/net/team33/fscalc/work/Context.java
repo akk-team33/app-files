@@ -1,5 +1,6 @@
 package net.team33.fscalc.work;
 
+import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.patterns.serving.alpha.Variable;
 import net.team33.fscalc.info.FileInfo;
 import net.team33.fscalc.task.Task;
@@ -10,12 +11,15 @@ import net.team33.messaging.multiplex.Originator;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.List;
 
 public interface Context extends Originator<Message<Context>> {
 
     Variable<Path> path();
 
     Variable<Order> order();
+
+    Retrievable<List<Task>> tasks();
 
     Calculator startCalculation(File var1);
 

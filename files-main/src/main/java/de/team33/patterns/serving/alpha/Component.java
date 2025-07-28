@@ -1,6 +1,7 @@
 package de.team33.patterns.serving.alpha;
 
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 public class Component<C> extends Audience<C> implements Variable<C> {
@@ -28,16 +29,25 @@ public class Component<C> extends Audience<C> implements Variable<C> {
 
     @Override
     public final C get() {
-        return content;
+        return atomic(() -> content);
     }
 
     @Override
     public final void set(final C content) {
-        fire(setNormal(normalizer.apply(content)));
+        fire(atomic(() -> setNormal(content)));
     }
 
-    private C setNormal(final C normalContent) {
-        this.content = normalContent;
-        return normalContent;
+    @SuppressWarnings("ParameterHidesMemberVariable")
+    private C setNormal(final C content) {
+        this.content = normalizer.apply(content);
+        return this.content;
+    }
+
+    public final void compute(final UnaryOperator<C> method) {
+        fire(atomic(() -> setNormal(method.apply(content))));
+    }
+
+    private synchronized <R> R atomic(final Supplier<R> supplier) {
+        return supplier.get();
     }
 }

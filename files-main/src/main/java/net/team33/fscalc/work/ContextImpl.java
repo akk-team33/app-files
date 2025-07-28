@@ -1,6 +1,7 @@
 package net.team33.fscalc.work;
 
 import de.team33.patterns.serving.alpha.Component;
+import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.patterns.serving.alpha.Variable;
 import net.team33.application.Log;
 import net.team33.fscalc.info.FileInfo;
@@ -25,15 +26,16 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
 
     private final Component<Order> order;
     private final Component<Path> path;
+    private final Component<List<Task>> tasks;
     private final List<Calculator> calculators = new Vector<>(2, 2);
     private static int tCount = 0;
 
     public ContextImpl(final File path, final Order order) {
         this.path = new Component<>(NORMAL_PATH, path.toPath());
         this.order = new Component<>(order);
+        this.tasks = new Component<>(List.of());
 
         this.path.retrieve(p -> startCalculation(p.toFile()));
-        //this.order.subscribe(o -> new MSG_CHORDER());
     }
 
     @Override
@@ -42,8 +44,13 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     }
 
     @Override
-    public Variable<Order> order() {
+    public final Variable<Order> order() {
         return order;
+    }
+
+    @Override
+    public final Retrievable<List<Task>> tasks() {
+        return tasks;
     }
 
     @Override
