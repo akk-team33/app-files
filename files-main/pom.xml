@@ -23,6 +23,10 @@
         </dependency>
         <dependency>
             <groupId>de.team33.patterns</groupId>
+            <artifactId>io-phobos</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.team33.patterns</groupId>
             <artifactId>enums-pan</artifactId>
         </dependency>
         <dependency>
@@ -36,6 +40,10 @@
         <dependency>
             <groupId>de.team33.patterns</groupId>
             <artifactId>notes-eris</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.team33.patterns</groupId>
+            <artifactId>expiry-tethys</artifactId>
         </dependency>
 
         <dependency>
