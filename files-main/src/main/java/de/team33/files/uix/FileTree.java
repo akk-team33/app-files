@@ -1,7 +1,7 @@
 package de.team33.files.uix;
 
+import de.team33.patterns.expiry.tethys.Recent;
 import de.team33.patterns.io.phobos.FileEntry;
-import de.team33.patterns.lazy.narvi.Lazy;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.alpha.activity.Event;
 import de.team33.sphinx.alpha.visual.JTrees;
@@ -126,13 +126,11 @@ public final class FileTree {
         @Override
         public final void addTreeModelListener(final TreeModelListener listener) {
             // TODO?
-            // throw new UnsupportedOperationException("not yet implemented");
         }
 
         @Override
         public final void removeTreeModelListener(final TreeModelListener listener) {
             // TODO?
-            // throw new UnsupportedOperationException("not yet implemented");
         }
     }
 
@@ -144,10 +142,10 @@ public final class FileTree {
                                    .map(Node::file)
                                    .toList();
 
-        private final Lazy<List<Node>> children;
+        private final Recent<List<Node>> children;
 
         private Node(final Supplier<List<Node>> supplier) {
-            this.children = Lazy.init(supplier);
+            this.children = new Recent<>(supplier, 25, 250);
         }
 
         static Node root() {
@@ -213,6 +211,7 @@ public final class FileTree {
 
             private File(final FileEntry entry) {
                 super(() -> entry.entries()
+                                 .filter(FileEntry::isDirectory)
                                  .map(Node.File::new)
                                  .map(Node.class::cast)
                                  .toList());
