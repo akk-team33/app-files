@@ -5,11 +5,11 @@ import de.team33.sphinx.alpha.visual.JFrames;
 import javax.swing.*;
 import java.awt.*;
 
-class SwingTrial extends JFrame implements Runnable {
+public class SwingTrial extends JFrame implements Runnable {
 
     private final Container contentPane;
 
-    SwingTrial(final Container contentPane) {
+    protected SwingTrial(final Container contentPane) {
         this.contentPane = contentPane;
         setTitle(null);
     }
