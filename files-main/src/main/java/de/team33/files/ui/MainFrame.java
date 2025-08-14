@@ -1,18 +1,14 @@
 package de.team33.files.ui;
 
-import de.team33.sphinx.alpha.activity.Event;
+import de.team33.files.uix.FileTree;
 import de.team33.sphinx.alpha.visual.JPanels;
 import de.team33.sphinx.alpha.visual.JSplitPanes;
-import de.team33.sphinx.alpha.visual.JTrees;
 import net.team33.fscalc.ui.PathPane;
 import net.team33.fscalc.ui.ProgressPane;
 import net.team33.fscalc.work.Context;
-import net.team33.swinx.FSTree;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
 import java.awt.*;
-import java.util.Optional;
 
 public class MainFrame extends JFrame {
     private static final String TTL_SUFFIX = "Files";
@@ -48,8 +44,9 @@ public class MainFrame extends JFrame {
                       .build();
     }
 
-    private static JScrollPane leftCenterPane(final Context context) {
-        return new JScrollPane(treeView(context));
+    private static Component leftCenterPane(final Context context) {
+        return FileTree.serving(context.path())
+                       .component();
     }
 
     private static PathPane northPane(final Context context) {
@@ -59,27 +56,5 @@ public class MainFrame extends JFrame {
                 return context;
             }
         };
-    }
-
-    private static FSTree treeView(final Context context) {
-        return JTrees.builder(FSTree::new)
-                     .setCellRenderer(Basics.treeCellRenderer())
-                     .setup(tree -> context.path().retrieve(tree::setPath))
-                     .on(Event.TREE_VALUE_CHANGED, event -> onTreeValueChanged(event, context))
-                     .build();
-    }
-
-    private static void onTreeValueChanged(final TreeSelectionEvent event, final Context context) {
-        if (event.getSource() instanceof final FSTree fsTree) {
-            context.path().set(fsTree.getModel().getFile(event.getPath()).toPath());
-        } else {
-            final String sourceType = Optional.ofNullable(event.getSource())
-                                              .map(Object::getClass)
-                                              .map(Class::getCanonicalName)
-                                              .orElse("<null>");
-            throw new IllegalStateException("event source is expected to be an <FSTree> - but was <" +
-                                            sourceType +
-                                            ">");
-        }
     }
 }
