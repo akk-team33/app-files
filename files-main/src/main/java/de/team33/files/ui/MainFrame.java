@@ -1,6 +1,5 @@
 package de.team33.files.ui;
 
-import de.team33.files.uix.FileTree;
 import de.team33.sphinx.alpha.visual.JPanels;
 import de.team33.sphinx.alpha.visual.JSplitPanes;
 import net.team33.fscalc.ui.PathPane;

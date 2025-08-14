@@ -1,6 +1,5 @@
-package de.team33.files.uix;
+package de.team33.files.ui;
 
-import de.team33.files.ui.SwingTrial;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.alpha.visual.JSplitPanes;

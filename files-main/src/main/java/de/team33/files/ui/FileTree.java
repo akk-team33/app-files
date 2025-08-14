@@ -1,4 +1,4 @@
-package de.team33.files.uix;
+package de.team33.files.ui;
 
 import de.team33.patterns.expiry.tethys.Recent;
 import de.team33.patterns.io.phobos.FileEntry;
@@ -149,15 +149,6 @@ public final class FileTree {
         }
 
         abstract boolean isLeaf();
-
-        @Override
-        public abstract boolean equals(final Object obj);
-
-        @Override
-        public abstract int hashCode();
-
-        @Override
-        public abstract String toString();
 
         abstract Path path();
     }
