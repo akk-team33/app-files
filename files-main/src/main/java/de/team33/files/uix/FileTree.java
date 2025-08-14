@@ -23,6 +23,8 @@ import java.util.stream.StreamSupport;
 
 public final class FileTree {
 
+    private static final Node ROOT_NODE = new RootNode();
+
     private final Variable<Path> path;
     private final JTree tree;
     private final JScrollPane pane;
@@ -54,8 +56,8 @@ public final class FileTree {
     }
 
     private static TreePath map(final Path path) {
-        return (null == path) ? new TreePath(Node.root())
-                              : map(path.getParent()).pathByAddingChild(Node.file(path));
+        return (null == path) ? new TreePath(ROOT_NODE)
+                              : map(path.getParent()).pathByAddingChild(new FileNode(path));
     }
 
     public static FileTree serving(final Variable<Path> path) {
@@ -92,7 +94,7 @@ public final class FileTree {
 
         @Override
         public final Node getRoot() {
-            return Node.root();
+            return ROOT_NODE;
         }
 
         @Override
@@ -114,7 +116,7 @@ public final class FileTree {
 
         @Override
         public final void valueForPathChanged(final TreePath path, final Object newValue) {
-            throw new UnsupportedOperationException("not yet implemented");
+            throw new UnsupportedOperationException("unsupported operation");
         }
 
         @Override
@@ -136,24 +138,10 @@ public final class FileTree {
 
     private abstract static class Node {
 
-        private static final Supplier<List<Node>> INIT_ROOT =
-                () -> StreamSupport.stream(FileSystems.getDefault().getRootDirectories().spliterator(), false)
-                                   .sorted(Comparator.comparing(Path::toString))
-                                   .map(Node::file)
-                                   .toList();
-
         private final Recent<List<Node>> children;
 
         private Node(final Supplier<List<Node>> supplier) {
             this.children = new Recent<>(supplier, 25, 250);
-        }
-
-        static Node root() {
-            return new Node.Root();
-        }
-
-        static Node file(final Path path) {
-            return new Node.File(FileEntry.of(path).resolved());
         }
 
         final List<Node> children() {
@@ -172,77 +160,87 @@ public final class FileTree {
         public abstract String toString();
 
         abstract Path path();
+    }
 
-        private static final class Root extends Node {
+    private static final class RootNode extends Node {
 
-            private Root() {
-                super(INIT_ROOT);
-            }
-
-            @Override
-            final boolean isLeaf() {
-                return false;
-            }
-
-            @Override
-            public final boolean equals(final Object obj) {
-                return getClass() == obj.getClass();
-            }
-
-            @Override
-            public final int hashCode() {
-                return getClass().hashCode();
-            }
-
-            @Override
-            public final String toString() {
-                return getClass().getCanonicalName();
-            }
-
-            @Override
-            final Path path() {
-                throw new UnsupportedOperationException("not yet implemented");
-            }
+        private RootNode() {
+            super(() -> StreamSupport.stream(FileSystems.getDefault()
+                                                        .getRootDirectories()
+                                                        .spliterator(), false)
+                                     .sorted(Comparator.comparing(Path::toString))
+                                     .map(FileNode::new)
+                                     .map(Node.class::cast)
+                                     .toList());
         }
 
-        private static final class File extends Node {
+        @Override
+        final boolean isLeaf() {
+            return false;
+        }
 
-            private final FileEntry entry;
+        @Override
+        final Path path() {
+            throw new UnsupportedOperationException("unsupported operation");
+        }
 
-            private File(final FileEntry entry) {
-                super(() -> entry.entries()
-                                 .filter(FileEntry::isDirectory)
-                                 .map(Node.File::new)
-                                 .map(Node.class::cast)
-                                 .toList());
-                this.entry = entry;
-            }
+        @Override
+        public final boolean equals(final Object obj) {
+            return (this == obj) || (getClass() == obj.getClass());
+        }
 
-            @Override
-            final boolean isLeaf() {
-                return !entry.isDirectory();
-            }
+        @Override
+        public final int hashCode() {
+            return getClass().hashCode();
+        }
 
-            @Override
-            public final boolean equals(final Object obj) {
-                return (this == obj) || ((obj instanceof final Node.File file) && entry.path()
-                                                                                       .equals(file.entry.path()));
-            }
+        @Override
+        public final String toString() {
+            return getClass().getCanonicalName();
+        }
+    }
 
-            @Override
-            public final int hashCode() {
-                return entry.path().hashCode();
-            }
+    private static final class FileNode extends Node {
 
-            @Override
-            public final String toString() {
-                return entry.name();
-            }
+        private final FileEntry entry;
 
-            @Override
-            final Path path() {
-                return entry.path();
-            }
+        private FileNode(final Path path) {
+            this(FileEntry.of(path).resolved());
+        }
+
+        private FileNode(final FileEntry entry) {
+            super(() -> entry.entries()
+                             .filter(FileEntry::isDirectory)
+                             .map(FileNode::new)
+                             .map(Node.class::cast)
+                             .toList());
+            this.entry = entry;
+        }
+
+        @Override
+        final boolean isLeaf() {
+            return !entry.isDirectory();
+        }
+
+        @Override
+        final Path path() {
+            return entry.path();
+        }
+
+        @Override
+        public final boolean equals(final Object obj) {
+            return (this == obj) || ((obj instanceof final FileNode other) && entry.path()
+                                                                                   .equals(other.entry.path()));
+        }
+
+        @Override
+        public final int hashCode() {
+            return entry.path().hashCode();
+        }
+
+        @Override
+        public final String toString() {
+            return entry.name();
         }
     }
 }
