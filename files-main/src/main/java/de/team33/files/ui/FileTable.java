@@ -2,14 +2,14 @@ package de.team33.files.ui;
 
 import de.team33.patterns.io.phobos.FileEntry;
 import de.team33.patterns.serving.alpha.Retrievable;
+import de.team33.sphinx.alpha.visual.JLabels;
 import de.team33.sphinx.alpha.visual.JTables;
+import net.team33.fscalc.ui.rsrc.Ico;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
@@ -29,6 +29,7 @@ public class FileTable {
 //                                                              new InfoTable.HEADER_MOUSE_LISTENER(jTable, context)::mouseClicked))
 //                            .setRowHeight(cr.getPreferredSize().height + 3)
 //                            .setDefaultRenderer(FileInfo.class, cr)
+                            .setDefaultRenderer(FileEntry.class, this::newCell)
                             .setShowGrid(false)
                             .setRowSelectionAllowed(true)
                             .setColumnSelectionAllowed(false)
@@ -40,6 +41,25 @@ public class FileTable {
         this.component = new JScrollPane(table);
     }
 
+    private Component newCell(final JTable table,
+                              final Object value,
+                              final boolean isSelected,
+                              final boolean hasFocus,
+                              final int row,
+                              final int col) {
+        final FileEntry entry = (FileEntry) value;
+        final Column column = Column.values()[col];
+        return JLabels.builder()
+                      .setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 3))
+                      .setForeground(isSelected ? table.getSelectionForeground() : table.getForeground())
+                      .setBackground(isSelected ? table.getSelectionBackground() : table.getBackground())
+                      .setOpaque(isSelected)
+                      .setText(column.toText.apply(entry))
+                      .setIcon(column.toIcon.apply(entry))
+                      //.setFileInfo((FileInfo) value, table.convertColumnIndexToModel(column))
+                      .build();
+    }
+
     public static FileTable serving(final Retrievable<? extends Path> path) {
         return new FileTable(path);
     }
@@ -49,18 +69,22 @@ public class FileTable {
     }
 
     private enum Column {
-        NAME("Name", String.class, FileEntry::name),
-        UPDATE("Last Modified", Instant.class, FileEntry::lastModified),
-        SIZE("Size", Long.class, FileEntry::size);
+        NAME("Name", FileEntry::name, entry -> entry.isDirectory() ? Ico.CLSDIR : Ico.FILE),
+        @SuppressWarnings("ReturnOfNull")
+        UPDATE("Last Modified", entry -> entry.lastModified().toString(), entry -> null),
+        @SuppressWarnings("ReturnOfNull")
+        SIZE("Size", entry -> String.valueOf(entry.size()), entry -> null);
 
         private final String title;
-        private final Class<?> type;
-        private final Function<FileEntry, ?> getter;
+        private final Function<FileEntry, String> toText;
+        private final Function<FileEntry, Icon> toIcon;
 
-        <T> Column(final String title, final Class<T> type, final Function<FileEntry, T> getter) {
+        <T> Column(final String title,
+                   final Function<FileEntry, String> toText,
+                   final Function<FileEntry, Icon> toIcon) {
             this.title = title;
-            this.type = type;
-            this.getter = getter;
+            this.toText = toText;
+            this.toIcon = toIcon;
         }
 
         private static Column of(final String title) {
@@ -99,7 +123,7 @@ public class FileTable {
 
         @Override
         public final Object getValueAt(final int rowIndex, final int columnIndex) {
-            return Column.values()[columnIndex].getter.apply(entries.get(rowIndex));
+            return entries.get(rowIndex);
         }
 
         @Override
@@ -114,19 +138,7 @@ public class FileTable {
 
         @Override
         public final Class<?> getColumnClass(final int column) {
-            return Column.values()[column].type;
-        }
-    }
-
-    private static class CellRenderer extends JLabel implements TableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(final JTable table,
-                                                       final Object value,
-                                                       final boolean isSelected,
-                                                       final boolean hasFocus,
-                                                       final int row,
-                                                       final int column) {
-            throw new UnsupportedOperationException("not yet implemented");
+            return FileEntry.class;
         }
     }
 }
