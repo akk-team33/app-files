@@ -23,7 +23,7 @@ public class BrowserPane extends JPanel {
     private BrowserPane(final Context context) {
         super(new GridBagLayout());
         final InfoTable table = infoTable(context);
-        add(new JScrollPane(infoTable(context)), GBC_TABLE);
+        add(new JScrollPane(table), GBC_TABLE);
         add(new JPanel(), GBC_SPACE1);
         add(ControlPane.by(table, context), GBC_CONTROLS);
         add(new JPanel(), GBC_SPACE2);
