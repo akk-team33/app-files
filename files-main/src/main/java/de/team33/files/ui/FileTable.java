@@ -26,6 +26,8 @@ public class FileTable {
 
     private final TableCellRenderer fileEntryRenderer = new JTable().getDefaultRenderer(String.class);
     private final TableCellRenderer lastModifiedRenderer = new JTable().getDefaultRenderer(String.class);
+    private final TableCellRenderer longRenderer = new JTable().getDefaultRenderer(String.class);
+    private final TableCellRenderer headRenderer = new JTable().getTableHeader().getDefaultRenderer();
     private final JTable table;
     private final Component component;
 
@@ -39,6 +41,9 @@ public class FileTable {
 //                            .setRowHeight(cr.getPreferredSize().height + 3)
                             .setDefaultRenderer(FileEntry.class, this::newFileEntryCell)
                             .setDefaultRenderer(Instant.class, this::newLastModifiedCell)
+                            .setDefaultRenderer(Long.class, this::newLongCell)
+                            .setup(jTable -> jTable.getTableHeader()
+                                                   .setDefaultRenderer(this::newHead))
                             .setShowGrid(false)
                             .setRowSelectionAllowed(true)
                             .setColumnSelectionAllowed(false)
@@ -68,18 +73,53 @@ public class FileTable {
         return cast(JLabel.class, candidate);
     }
 
+    @SuppressWarnings("MethodWithTooManyParameters")
+    private Component newHead(final JTable jTable,
+                              final Object value,
+                              final boolean isSelected,
+                              final boolean hasFocus,
+                              final int row,
+                              final int col) {
+        final Column column = Column.of(col);
+        final Component result = headRenderer.getTableCellRendererComponent(jTable, value,
+                                                                            isSelected, hasFocus,
+                                                                            row, col);
+        jLabel(result).setHorizontalAlignment(column.alignment);
+        return result;
+    }
+
+    @SuppressWarnings("MethodWithTooManyParameters")
+    private Component newLongCell(final JTable jTable,
+                                  final Object value,
+                                  final boolean isSelected,
+                                  final boolean hasFocus,
+                                  final int row,
+                                  final int col) {
+        final Component result = lastModifiedRenderer.getTableCellRendererComponent(jTable, value,
+                                                                                    isSelected, hasFocus,
+                                                                                    row, col);
+        return JLabels.charger(jLabel(result))
+                      .setText("%,d".formatted(cast(Long.class, value)))
+                      .setHorizontalAlignment(Column.of(col).alignment)
+                      .charged();
+    }
+
+    @SuppressWarnings("MethodWithTooManyParameters")
     private Component newLastModifiedCell(final JTable jTable,
                                           final Object value,
                                           final boolean isSelected,
                                           final boolean hasFocus,
                                           final int row,
                                           final int col) {
-        final Component result =
-                lastModifiedRenderer.getTableCellRendererComponent(jTable, value, isSelected, hasFocus, row, col);
-        jLabel(result).setText(LocalDateTime.ofInstant(cast(Instant.class, value), ZoneId.systemDefault())
+        final Component result = lastModifiedRenderer.getTableCellRendererComponent(jTable, value,
+                                                                                    isSelected, hasFocus,
+                                                                                    row, col);
+        return JLabels.charger(jLabel(result))
+                      .setText(LocalDateTime.ofInstant(cast(Instant.class, value), ZoneId.systemDefault())
                                             .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                                                                     .withLocale(Locale.getDefault())));
-        return result;
+                                                                     .withLocale(Locale.getDefault())))
+                      .setHorizontalAlignment(Column.of(col).alignment)
+                      .charged();
     }
 
     @SuppressWarnings("MethodWithTooManyParameters")
@@ -95,6 +135,7 @@ public class FileTable {
         return JLabels.charger(jLabel(result))
                       .setText(entry.name())
                       .setIcon(entry.isDirectory() ? Ico.CLSDIR : Ico.FILE)
+                      .setHorizontalAlignment(Column.of(col).alignment)
                       .charged();
     }
 
@@ -104,20 +145,27 @@ public class FileTable {
     }
 
     private enum Column {
-        NAME("Name", FileEntry.class, Function.identity()),
-        UPDATE("Last Modified", Instant.class, FileEntry::lastModified),
-        SIZE("Size", Long.class, FileEntry::size);
+        NAME("Name", FileEntry.class, SwingConstants.LEADING, Function.identity()),
+        UPDATE("Last Modified", Instant.class, SwingConstants.CENTER, FileEntry::lastModified),
+        SIZE("Size", Long.class, SwingConstants.TRAILING, FileEntry::size);
 
         private final String title;
         private final Class<?> type;
+        private final int alignment;
         private final Function<FileEntry, ?> toValue;
 
         <T> Column(final String title,
                    final Class<T> type,
+                   final int alignment,
                    final Function<FileEntry, T> toValue) {
             this.title = title;
             this.type = type;
+            this.alignment = alignment;
             this.toValue = toValue;
+        }
+
+        private static Column of(final int index) {
+            return values()[index];
         }
 
         private static Column of(final String title) {
@@ -134,10 +182,6 @@ public class FileTable {
 
         private Model(final Retrievable<? extends Path> path) {
             path.retrieve(this::onSetPath);
-        }
-
-        private static Column column(final int index) {
-            return Column.values()[index];
         }
 
         private void onSetPath(final Path path) {
@@ -160,23 +204,22 @@ public class FileTable {
 
         @Override
         public final Object getValueAt(final int rowIndex, final int colIndex) {
-            return column(colIndex).toValue.apply(entries.get(rowIndex));
+            return Column.of(colIndex).toValue.apply(entries.get(rowIndex));
         }
 
         @Override
         public final String getColumnName(final int colIndex) {
-            return column(colIndex).title;
+            return Column.of(colIndex).title;
         }
 
         @Override
         public final int findColumn(final String columnName) {
-            return List.of(Column.values())
-                       .indexOf(Column.of(columnName));
+            return Column.of(columnName).ordinal();
         }
 
         @Override
         public final Class<?> getColumnClass(final int colIndex) {
-            return column(colIndex).type;
+            return Column.of(colIndex).type;
         }
     }
 }
