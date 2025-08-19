@@ -1,6 +1,7 @@
 package de.team33.files.ui;
 
 import de.team33.patterns.io.phobos.FileEntry;
+import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.alpha.visual.JLabels;
 import de.team33.sphinx.alpha.visual.JTables;
@@ -11,39 +12,40 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.NoSuchElementException;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class FileTable {
 
-    private final TableCellRenderer fileEntryRenderer = new JTable().getDefaultRenderer(String.class);
-    private final TableCellRenderer lastModifiedRenderer = new JTable().getDefaultRenderer(String.class);
-    private final TableCellRenderer longRenderer = new JTable().getDefaultRenderer(String.class);
-    private final TableCellRenderer headRenderer = new JTable().getTableHeader().getDefaultRenderer();
+    // TODO: parameterized, preliminary ...
+    private static final Icons ICONS = new Icons() {
+        @Override
+        public Icon stdFolder() {
+            return Ico.CLSDIR;
+        }
+
+        @Override
+        public Icon stdFile() {
+            return Ico.FILE;
+        }
+    };
+
     private final JTable table;
     private final Component component;
 
-    private FileTable(final Retrievable<? extends Path> path) {
+    private FileTable(final Retrievable<? extends Path> cwd) {
+        final Columns columns = new Columns(List.of(Column.values()));
         this.table = JTables.builder()
-                            .setModel(new Model(path))
-//                            .setup(jTable -> JTableHeaders.charger(jTable.getTableHeader())
-//                                                          .setDefaultRenderer(headRenderer(context))
-//                                                          .on(de.team33.sphinx.alpha.activity.Event.MOUSE_CLICKED,
-//                                                              new InfoTable.HEADER_MOUSE_LISTENER(jTable, context)::mouseClicked))
-//                            .setRowHeight(cr.getPreferredSize().height + 3)
-                            .setDefaultRenderer(FileEntry.class, this::newFileEntryCell)
-                            .setDefaultRenderer(Instant.class, this::newLastModifiedCell)
-                            .setDefaultRenderer(Long.class, this::newLongCell)
+                            .setModel(new Model(columns, cwd))
+                            .setDefaultRenderer(FileEntry.class, new CellRenderer(columns, ICONS, cwd))
                             .setup(jTable -> jTable.getTableHeader()
-                                                   .setDefaultRenderer(this::newHead))
+                                                   .setDefaultRenderer(new HeadRenderer(columns)))
                             .setShowGrid(false)
                             .setRowSelectionAllowed(true)
                             .setColumnSelectionAllowed(false)
@@ -73,115 +75,183 @@ public class FileTable {
         return cast(JLabel.class, candidate);
     }
 
-    @SuppressWarnings("MethodWithTooManyParameters")
-    private Component newHead(final JTable jTable,
-                              final Object value,
-                              final boolean isSelected,
-                              final boolean hasFocus,
-                              final int row,
-                              final int col) {
-        final Column column = Column.of(col);
-        final Component result = headRenderer.getTableCellRendererComponent(jTable, value,
-                                                                            isSelected, hasFocus,
-                                                                            row, col);
-        jLabel(result).setHorizontalAlignment(column.alignment);
-        return result;
-    }
-
-    @SuppressWarnings("MethodWithTooManyParameters")
-    private Component newLongCell(final JTable jTable,
-                                  final Object value,
-                                  final boolean isSelected,
-                                  final boolean hasFocus,
-                                  final int row,
-                                  final int col) {
-        final Component result = lastModifiedRenderer.getTableCellRendererComponent(jTable, value,
-                                                                                    isSelected, hasFocus,
-                                                                                    row, col);
-        return JLabels.charger(jLabel(result))
-                      .setText("%,d".formatted(cast(Long.class, value)))
-                      .setHorizontalAlignment(Column.of(col).alignment)
-                      .charged();
-    }
-
-    @SuppressWarnings("MethodWithTooManyParameters")
-    private Component newLastModifiedCell(final JTable jTable,
-                                          final Object value,
-                                          final boolean isSelected,
-                                          final boolean hasFocus,
-                                          final int row,
-                                          final int col) {
-        final Component result = lastModifiedRenderer.getTableCellRendererComponent(jTable, value,
-                                                                                    isSelected, hasFocus,
-                                                                                    row, col);
-        return JLabels.charger(jLabel(result))
-                      .setText(LocalDateTime.ofInstant(cast(Instant.class, value), ZoneId.systemDefault())
-                                            .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                                                                     .withLocale(Locale.getDefault())))
-                      .setHorizontalAlignment(Column.of(col).alignment)
-                      .charged();
-    }
-
-    @SuppressWarnings("MethodWithTooManyParameters")
-    private Component newFileEntryCell(final JTable jTable,
-                                       final Object value,
-                                       final boolean isSelected,
-                                       final boolean hasFocus,
-                                       final int row,
-                                       final int col) {
-        final Component result =
-                fileEntryRenderer.getTableCellRendererComponent(jTable, value, isSelected, hasFocus, row, col);
-        final FileEntry entry = cast(FileEntry.class, value);
-        return JLabels.charger(jLabel(result))
-                      .setText(entry.name())
-                      .setIcon(entry.isDirectory() ? Ico.CLSDIR : Ico.FILE)
-                      .setHorizontalAlignment(Column.of(col).alignment)
-                      .charged();
-    }
-
     public final Component component() {
         DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.FULL);
         return component;
     }
 
     private enum Column {
-        NAME("Name", FileEntry.class, SwingConstants.LEADING, Function.identity()),
-        UPDATE("Last Modified", Instant.class, SwingConstants.CENTER, FileEntry::lastModified),
-        SIZE("Size", Long.class, SwingConstants.TRAILING, FileEntry::size);
+
+        NAME____("Name", cwd -> FileEntry::name,
+                 SwingConstants.LEADING),
+        ABS_PATH("Abs. Path", cwd -> entry -> entry.path().toString(),
+                 SwingConstants.LEADING),
+        REL_PATH("Path", cwd -> entry -> cwd.relativize(entry.path()).toString(),
+                 SwingConstants.LEADING),
+        ABS_DIR_("Abs. Parent", cwd -> entry -> entry.path().getParent().toString(),
+                 SwingConstants.LEADING),
+        REL_DIR_("Parent", cwd -> entry -> cwd.relativize(entry.path().getParent()).toString(),
+                 SwingConstants.LEADING),
+        UPDATE__("Last Modified", cwd -> entry -> dateTime(entry.lastModified()),
+                 SwingConstants.TRAILING),
+        UPDATE_D("Last Modified Date", cwd -> entry -> date(entry.lastModified()),
+                 SwingConstants.TRAILING),
+        UPDATE_T("Last Modified Time", cwd -> entry -> time(entry.lastModified()),
+                 SwingConstants.TRAILING),
+        SIZE____("Size", cwd -> entry -> "%,d".formatted(entry.size()),
+                 SwingConstants.TRAILING);
+
+        private static final ZoneId ZONE_ID =
+                ZoneId.systemDefault();
+        private static final DateTimeFormatter DATE_TIME_FORMATTER =
+                DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                                 .withLocale(Locale.getDefault());
+        private static final DateTimeFormatter TIME_FORMATTER =
+                DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM)
+                                 .withLocale(Locale.getDefault());
+        private static final DateTimeFormatter DATE_FORMATTER =
+                DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                                 .withLocale(Locale.getDefault());
 
         private final String title;
-        private final Class<?> type;
+        private final Function<Path, Function<FileEntry, String>> toText;
         private final int alignment;
-        private final Function<FileEntry, ?> toValue;
 
-        <T> Column(final String title,
-                   final Class<T> type,
-                   final int alignment,
-                   final Function<FileEntry, T> toValue) {
+        Column(final String title, final Function<Path, Function<FileEntry, String>> toText, final int alignment) {
             this.title = title;
-            this.type = type;
+            this.toText = toText;
             this.alignment = alignment;
-            this.toValue = toValue;
         }
 
-        private static Column of(final int index) {
-            return values()[index];
+        private static String time(final Instant instant) {
+            return LocalTime.ofInstant(instant, ZONE_ID)
+                            .format(TIME_FORMATTER);
         }
 
-        private static Column of(final String title) {
+        private static String date(final Instant instant) {
+            return LocalDate.ofInstant(instant, ZONE_ID)
+                            .format(DATE_FORMATTER);
+        }
+
+        private static String dateTime(final Instant instant) {
+            return LocalDateTime.ofInstant(instant, ZONE_ID)
+                                .format(DATE_TIME_FORMATTER);
+        }
+
+        static Column of(final String columnName) {
             return Stream.of(values())
-                         .filter(value -> value.title.equals(title))
+                         .filter(value -> value.title.equals(columnName))
                          .findAny()
-                         .orElseThrow(() -> new NoSuchElementException("not found: " + title));
+                         .orElseThrow();
         }
     }
 
-    private static class Model extends AbstractTableModel {
+    private interface Icons {
 
+        Icon stdFolder();
+
+        Icon stdFile();
+    }
+
+    private static final class Columns {
+
+        private final List<Column> backing;
+
+        private Columns(final Collection<Column> columns) {
+            this.backing = List.copyOf(columns);
+        }
+
+        final Column get(final int index) {
+            return backing.get(index);
+        }
+
+        final int size() {
+            return backing.size();
+        }
+
+        final int indexOf(final Column column) {
+            return backing.indexOf(column);
+        }
+    }
+
+    private static final class HeadRenderer implements TableCellRenderer {
+
+        private final TableCellRenderer backing = new JTable().getTableHeader().getDefaultRenderer();
+        private final Columns columns;
+
+        private HeadRenderer(final Columns columns) {
+            this.columns = columns;
+        }
+
+        @Override
+        public final Component getTableCellRendererComponent(final JTable table,
+                                                             final Object value,
+                                                             final boolean isSelected,
+                                                             final boolean hasFocus,
+                                                             final int rowIndex,
+                                                             final int colIndex) {
+            final Column column =
+                    columns.get(colIndex);
+            final Component result =
+                    backing.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, colIndex);
+            jLabel(result).setHorizontalAlignment(column.alignment);
+            return result;
+        }
+    }
+
+    private static final class CellRenderer implements TableCellRenderer {
+
+        private final TableCellRenderer backing = new JTable().getDefaultRenderer(String.class);
+        private final Columns columns;
+        private final Icons icons;
+        private final Gettable<? extends Path> cwd;
+
+        private CellRenderer(final Columns columns, final Icons icons, final Gettable<? extends Path> cwd) {
+            this.columns = columns;
+            this.icons = icons;
+            this.cwd = cwd;
+        }
+
+        @Override
+        public final Component getTableCellRendererComponent(final JTable table,
+                                                             final Object value,
+                                                             final boolean isSelected,
+                                                             final boolean hasFocus,
+                                                             final int rowIndex,
+                                                             final int colIndex) {
+            final FileEntry entry =
+                    cast(FileEntry.class, value);
+            final Column column =
+                    columns.get(colIndex);
+            final Component result =
+                    backing.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, colIndex);
+            return JLabels.charger(jLabel(result))
+                          .setText(column.toText.apply(cwd.get()).apply(entry))
+                          .setIcon(iconOf(entry, colIndex))
+                          .setHorizontalAlignment(column.alignment)
+                          .charged();
+        }
+
+        @SuppressWarnings("ReturnOfNull")
+        private Icon iconOf(final FileEntry entry, final int colIndex) {
+            if (0 < colIndex) {
+                return null;
+            } else if (entry.isDirectory()) {
+                return icons.stdFolder();
+            } else {
+                return icons.stdFile();
+            }
+        }
+    }
+
+    private static final class Model extends AbstractTableModel {
+
+        private final Columns columns;
         private volatile List<FileEntry> entries = List.of();
 
-        private Model(final Retrievable<? extends Path> path) {
-            path.retrieve(this::onSetPath);
+        private Model(final Columns columns, final Retrievable<? extends Path> cwd) {
+            this.columns = columns;
+            cwd.retrieve(this::onSetPath);
         }
 
         private void onSetPath(final Path path) {
@@ -199,27 +269,27 @@ public class FileTable {
 
         @Override
         public final int getColumnCount() {
-            return Column.values().length;
+            return columns.size();
         }
 
         @Override
         public final Object getValueAt(final int rowIndex, final int colIndex) {
-            return Column.of(colIndex).toValue.apply(entries.get(rowIndex));
+            return entries.get(rowIndex);
         }
 
         @Override
         public final String getColumnName(final int colIndex) {
-            return Column.of(colIndex).title;
+            return columns.get(colIndex).title;
         }
 
         @Override
         public final int findColumn(final String columnName) {
-            return Column.of(columnName).ordinal();
+            return columns.indexOf(Column.of(columnName));
         }
 
         @Override
         public final Class<?> getColumnClass(final int colIndex) {
-            return Column.of(colIndex).type;
+            return FileEntry.class;
         }
     }
 }
