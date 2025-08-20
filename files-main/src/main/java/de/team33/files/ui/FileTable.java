@@ -5,7 +5,6 @@ import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.alpha.visual.JLabels;
 import de.team33.sphinx.alpha.visual.JTables;
-import net.team33.fscalc.ui.rsrc.Ico;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -24,27 +23,15 @@ import java.util.stream.Stream;
 
 public class FileTable {
 
-    // TODO: parameterized, preliminary ...
-    private static final Icons ICONS = new Icons() {
-        @Override
-        public Icon stdFolder() {
-            return Ico.CLSDIR;
-        }
-
-        @Override
-        public Icon stdFile() {
-            return Ico.FILE;
-        }
-    };
-
     private final JTable table;
     private final Component component;
 
-    private FileTable(final Retrievable<? extends Path> cwd) {
-        final Columns columns = new Columns(List.of(Column.values()));
+    private FileTable(final Context context) {
+        final Columns columns = new Columns(context.columns());
+        final Retrievable<Path> cwd = context.cwd();
         this.table = JTables.builder()
                             .setModel(new Model(columns, cwd))
-                            .setDefaultRenderer(FileEntry.class, new CellRenderer(columns, ICONS, cwd))
+                            .setDefaultRenderer(FileEntry.class, new CellRenderer(columns, context.icons(), cwd))
                             .setup(jTable -> jTable.getTableHeader()
                                                    .setDefaultRenderer(new HeadRenderer(columns)))
                             .setShowGrid(false)
@@ -58,8 +45,8 @@ public class FileTable {
         this.component = new JScrollPane(table);
     }
 
-    public static FileTable serving(final Retrievable<? extends Path> path) {
-        return new FileTable(path);
+    public static FileTable by(final Context context) {
+        return new FileTable(context);
     }
 
     private static <R> R cast(final Class<R> rClass, final Object value) {
@@ -81,7 +68,7 @@ public class FileTable {
         return component;
     }
 
-    private enum Column {
+    public enum Column {
 
         NAME____("Name", cwd -> FileEntry::name,
                  SwingConstants.LEADING),
@@ -139,7 +126,7 @@ public class FileTable {
                                 .format(DATE_TIME_FORMATTER);
         }
 
-        static Column of(final String columnName) {
+        private static Column of(final String columnName) {
             return Stream.of(values())
                          .filter(value -> value.title.equals(columnName))
                          .findAny()
@@ -147,7 +134,7 @@ public class FileTable {
         }
     }
 
-    private interface Icons {
+    public interface Icons {
 
         Icon stdFolder();
 
@@ -298,5 +285,14 @@ public class FileTable {
         public final Class<?> getColumnClass(final int colIndex) {
             return FileEntry.class;
         }
+    }
+
+    public interface Context {
+
+        Icons icons();
+
+        List<Column> columns();
+
+        Retrievable<Path> cwd();
     }
 }
