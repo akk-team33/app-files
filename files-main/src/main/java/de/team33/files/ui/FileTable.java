@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class FileTable {
@@ -84,20 +85,16 @@ public class FileTable {
 
         NAME____("Name", cwd -> FileEntry::name,
                  SwingConstants.LEADING),
-        ABS_PATH("Abs. Path", cwd -> entry -> entry.path().toString(),
+        PATH____("Path", cwd -> entry -> cwd.relativize(entry.path()).toString(),
                  SwingConstants.LEADING),
-        REL_PATH("Path", cwd -> entry -> cwd.relativize(entry.path()).toString(),
-                 SwingConstants.LEADING),
-        ABS_DIR_("Abs. Parent", cwd -> entry -> entry.path().getParent().toString(),
-                 SwingConstants.LEADING),
-        REL_DIR_("Parent", cwd -> entry -> cwd.relativize(entry.path().getParent()).toString(),
+        PARENT__("Directory", cwd -> entry -> min(cwd.relativize(entry.path().getParent()).toString()),
                  SwingConstants.LEADING),
         UPDATE__("Last Modified", cwd -> entry -> dateTime(entry.lastModified()),
-                 SwingConstants.TRAILING),
-        UPDATE_D("Last Modified Date", cwd -> entry -> date(entry.lastModified()),
-                 SwingConstants.TRAILING),
-        UPDATE_T("Last Modified Time", cwd -> entry -> time(entry.lastModified()),
-                 SwingConstants.TRAILING),
+                 SwingConstants.CENTER),
+        UPDATE_D("Last Mod. Date", cwd -> entry -> date(entry.lastModified()),
+                 SwingConstants.CENTER),
+        UPDATE_T("Last Mod. Time", cwd -> entry -> time(entry.lastModified()),
+                 SwingConstants.CENTER),
         SIZE____("Size", cwd -> entry -> "%,d".formatted(entry.size()),
                  SwingConstants.TRAILING);
 
@@ -121,6 +118,10 @@ public class FileTable {
             this.title = title;
             this.toText = toText;
             this.alignment = alignment;
+        }
+
+        private static String min(final String path) {
+            return path.isBlank() ? "." : path;
         }
 
         private static String time(final Instant instant) {
@@ -174,12 +175,15 @@ public class FileTable {
         }
     }
 
-    private static final class HeadRenderer implements TableCellRenderer {
+    private abstract static class BaseRenderer<V> implements TableCellRenderer {
 
-        private final TableCellRenderer backing = new JTable().getTableHeader().getDefaultRenderer();
-        private final Columns columns;
+        private final Class<V> vClass;
+        final TableCellRenderer backing;
+        final Columns columns;
 
-        private HeadRenderer(final Columns columns) {
+        BaseRenderer(final Class<V> vClass, final Columns columns, final Supplier<TableCellRenderer> newRenderer) {
+            this.vClass = vClass;
+            this.backing = newRenderer.get();
             this.columns = columns;
         }
 
@@ -195,46 +199,49 @@ public class FileTable {
             final Component result =
                     backing.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, colIndex);
             jLabel(result).setHorizontalAlignment(column.alignment);
-            return result;
+            return updated(column, cast(vClass, value), cast(JLabel.class, result));
+        }
+
+        abstract JLabel updated(final Column column, final V value, final JLabel label);
+    }
+
+    private static final class HeadRenderer extends BaseRenderer<String> {
+
+        private HeadRenderer(final Columns columns) {
+            super(String.class, columns, () -> new JTable().getTableHeader().getDefaultRenderer());
+        }
+
+        @Override
+        final JLabel updated(final Column column, final String value, final JLabel label) {
+            label.setHorizontalAlignment(column.alignment);
+            return label;
         }
     }
 
-    private static final class CellRenderer implements TableCellRenderer {
+    private static final class CellRenderer extends BaseRenderer<FileEntry> {
 
-        private final TableCellRenderer backing = new JTable().getDefaultRenderer(String.class);
-        private final Columns columns;
         private final Icons icons;
         private final Gettable<? extends Path> cwd;
 
         private CellRenderer(final Columns columns, final Icons icons, final Gettable<? extends Path> cwd) {
-            this.columns = columns;
+            super(FileEntry.class, columns, () -> new JTable().getDefaultRenderer(String.class));
             this.icons = icons;
             this.cwd = cwd;
         }
 
         @Override
-        public final Component getTableCellRendererComponent(final JTable table,
-                                                             final Object value,
-                                                             final boolean isSelected,
-                                                             final boolean hasFocus,
-                                                             final int rowIndex,
-                                                             final int colIndex) {
-            final FileEntry entry =
-                    cast(FileEntry.class, value);
-            final Column column =
-                    columns.get(colIndex);
-            final Component result =
-                    backing.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, colIndex);
-            return JLabels.charger(jLabel(result))
-                          .setText(column.toText.apply(cwd.get()).apply(entry))
-                          .setIcon(iconOf(entry, colIndex))
+        final JLabel updated(final Column column, final FileEntry entry, final JLabel label) {
+            return JLabels.charger(label)
+                          .setText(column.toText.apply(cwd.get())
+                                                .apply(entry))
+                          .setIcon(iconOf(entry, column))
                           .setHorizontalAlignment(column.alignment)
                           .charged();
         }
 
         @SuppressWarnings("ReturnOfNull")
-        private Icon iconOf(final FileEntry entry, final int colIndex) {
-            if (0 < colIndex) {
+        private Icon iconOf(final FileEntry entry, final Column column) {
+            if (column != columns.get(0)) {
                 return null;
             } else if (entry.isDirectory()) {
                 return icons.stdFolder();
