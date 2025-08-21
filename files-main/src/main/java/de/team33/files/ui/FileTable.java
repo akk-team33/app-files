@@ -33,14 +33,16 @@ public class FileTable {
 
     private static final int MARGIN = 8;
 
+    private final Model model;
     private final JTable table;
     private final Component component;
 
     private FileTable(final Context context) {
         final Columns columns = new Columns(context.columns());
         final Retrievable<Path> cwd = context.cwd();
+        this.model = new Model(columns, cwd);
         this.table = JTables.builder()
-                            .setModel(new Model(columns, cwd))
+                            .setModel(model)
                             .setDefaultRenderer(FileEntry.class, new CellRenderer(columns, context.icons(), cwd))
                             .setup(jTable -> jTable.getTableHeader()
                                                    .setDefaultRenderer(new HeadRenderer(columns)))
@@ -59,18 +61,41 @@ public class FileTable {
         Event.MOUSE_CLICKED.add(table.getTableHeader(), this::onMouseClicked);
     }
 
+    public static FileTable by(final Context context) {
+        return new FileTable(context);
+    }
+
+    private static <R> R cast(final Class<R> rClass, final Object value) {
+        if (rClass.isInstance(value)) {
+            return rClass.cast(value);
+        } else {
+            final Class<?> vClass = (null == value) ? null : value.getClass();
+            throw new IllegalStateException(
+                    "<value> is expected to be an instance of %s - but was %s".formatted(rClass, vClass));
+        }
+    }
+
+    private static JLabel jLabel(final Object candidate) {
+        return cast(JLabel.class, candidate);
+    }
+
     private void onMouseClicked(final MouseEvent event) {
         if ((event.getComponent() instanceof final JTableHeader header) && (table == header.getTable())) {
             if (SwingUtilities.isLeftMouseButton(event)) {
-                if (2 == event.getClickCount()) {
-                    final int col = header.columnAtPoint(event.getPoint());
-                    if (col >= 0) {
-                        final int colIndex = table.convertColumnIndexToModel(col);
-                        resizeColumn(colIndex); // 10px Padding
+                final int viewColIndex = header.columnAtPoint(event.getPoint());
+                if (0 <= viewColIndex) {
+                    final int colIndex = table.convertColumnIndexToModel(viewColIndex);
+                    switch (event.getClickCount()) {
+                        case 1 -> sort_(colIndex);
+                        case 2 -> resizeColumn(colIndex);
                     }
                 }
             }
         }
+    }
+
+    private void sort_(final int colIndex) {
+        throw new UnsupportedOperationException("not yet implemented");
     }
 
     private void resizeColumn(final int colIndex) {
@@ -90,24 +115,6 @@ public class FileTable {
         final TableCellRenderer cellRenderer = table.getCellRenderer(rowIndex, colIndex);
         final Component cell = table.prepareRenderer(cellRenderer, rowIndex, colIndex);
         return cell.getPreferredSize().width;
-    }
-
-    public static FileTable by(final Context context) {
-        return new FileTable(context);
-    }
-
-    private static <R> R cast(final Class<R> rClass, final Object value) {
-        if (rClass.isInstance(value)) {
-            return rClass.cast(value);
-        } else {
-            final Class<?> vClass = (null == value) ? null : value.getClass();
-            throw new IllegalStateException(
-                    "<value> is expected to be an instance of %s - but was %s".formatted(rClass, vClass));
-        }
-    }
-
-    private static JLabel jLabel(final Object candidate) {
-        return cast(JLabel.class, candidate);
     }
 
     public final Component component() {
@@ -188,6 +195,15 @@ public class FileTable {
         Icon stdFile();
     }
 
+    public interface Context {
+
+        Icons icons();
+
+        List<Column> columns();
+
+        Retrievable<Path> cwd();
+    }
+
     private static final class Columns {
 
         private final List<Column> backing;
@@ -211,9 +227,9 @@ public class FileTable {
 
     private abstract static class BaseRenderer<V> implements TableCellRenderer {
 
-        private final Class<V> vClass;
         final TableCellRenderer backing;
         final Columns columns;
+        private final Class<V> vClass;
 
         BaseRenderer(final Class<V> vClass, final Columns columns, final Supplier<TableCellRenderer> newRenderer) {
             this.vClass = vClass;
@@ -332,14 +348,5 @@ public class FileTable {
         public final Class<?> getColumnClass(final int colIndex) {
             return FileEntry.class;
         }
-    }
-
-    public interface Context {
-
-        Icons icons();
-
-        List<Column> columns();
-
-        Retrievable<Path> cwd();
     }
 }
