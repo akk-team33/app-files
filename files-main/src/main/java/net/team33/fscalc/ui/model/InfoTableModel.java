@@ -81,19 +81,16 @@ public class InfoTableModel extends AbstractTableModel {
 
         @Override
         public final void accept(final FileService.MsgInvalid message) {
-            synchronized (fileInfos) {
-                final int i = fileInfos.indexOf(message.getInfo());
-                if (i >= 0) {
-                    final File path = message.getInfo().getPath();
-                    if (path.exists()) {
-                        fileInfos.set(i, FileService.getInstance().getInfo(path));
-                        fireTableRowsUpdated(i, i);
-                    } else {
-                        fileInfos.remove(i);
-                        fireTableRowsDeleted(i, i);
-                    }
+            final int i = fileInfos.indexOf(message.getInfo());
+            if (i >= 0) {
+                final File path = message.getInfo().getPath();
+                if (path.exists()) {
+                    fileInfos.set(i, FileService.getInstance().getInfo(path));
+                    fireTableRowsUpdated(i, i);
+                } else {
+                    fileInfos.remove(i);
+                    fireTableRowsDeleted(i, i);
                 }
-
             }
         }
     }

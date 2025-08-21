@@ -3,13 +3,17 @@ package de.team33.files.ui;
 import de.team33.patterns.io.phobos.FileEntry;
 import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
+import de.team33.sphinx.alpha.activity.Event;
 import de.team33.sphinx.alpha.visual.JLabels;
 import de.team33.sphinx.alpha.visual.JTables;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.nio.file.Path;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -17,11 +21,17 @@ import java.time.format.FormatStyle;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static javax.swing.JTable.AUTO_RESIZE_OFF;
+
 public class FileTable {
+
+    private static final int MARGIN = 8;
 
     private final JTable table;
     private final Component component;
@@ -37,12 +47,49 @@ public class FileTable {
                             .setShowGrid(false)
                             .setRowSelectionAllowed(true)
                             .setColumnSelectionAllowed(false)
+                            //.setAutoCreateRowSorter(true)
+                            //.setRowSorter(new TableRowSorter<>())
+                            .setAutoResizeMode(AUTO_RESIZE_OFF)
 //                            .on(Event.MOUSE_CLICKED, new InfoTable.MOUSE_LISTENER(context)::mouseClicked)
 //                            .setup(table -> table.getSelectionModel()
 //                                                 .addListSelectionListener(new InfoTable.SelectionListener(table)))
 //                            .setup(table -> FS.getRegister().add(new InfoTable.LSTNR_UPDINFO(table, context)))
                             .build();
         this.component = new JScrollPane(table);
+        Event.MOUSE_CLICKED.add(table.getTableHeader(), this::onMouseClicked);
+    }
+
+    private void onMouseClicked(final MouseEvent event) {
+        if ((event.getComponent() instanceof final JTableHeader header) && (table == header.getTable())) {
+            if (SwingUtilities.isLeftMouseButton(event)) {
+                if (2 == event.getClickCount()) {
+                    final int col = header.columnAtPoint(event.getPoint());
+                    if (col >= 0) {
+                        final int colIndex = table.convertColumnIndexToModel(col);
+                        resizeColumn(colIndex); // 10px Padding
+                    }
+                }
+            }
+        }
+    }
+
+    private void resizeColumn(final int colIndex) {
+        final TableColumn column = table.getColumnModel().getColumn(colIndex);
+        final TableCellRenderer headRenderer = Optional.ofNullable(column.getHeaderRenderer())
+                                                       .orElseGet(() -> table.getTableHeader()
+                                                                             .getDefaultRenderer());
+        final Component head = headRenderer.getTableCellRendererComponent(
+                table, column.getHeaderValue(), false, false, 0, colIndex);
+        final int maxWidth = IntStream.range(0, table.getRowCount())
+                                      .map(rowIndex -> preferredWidth(colIndex, rowIndex))
+                                      .reduce(head.getPreferredSize().width, Math::max);
+        column.setPreferredWidth(maxWidth + MARGIN);
+    }
+
+    private int preferredWidth(final int colIndex, final int rowIndex) {
+        final TableCellRenderer cellRenderer = table.getCellRenderer(rowIndex, colIndex);
+        final Component cell = table.prepareRenderer(cellRenderer, rowIndex, colIndex);
+        return cell.getPreferredSize().width;
     }
 
     public static FileTable by(final Context context) {
