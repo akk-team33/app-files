@@ -1,11 +1,13 @@
 package de.team33.files.ui;
 
+import de.team33.files.uix.SwingTrial;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.alpha.visual.JSplitPanes;
 import net.team33.fscalc.ui.rsrc.Ico;
 
 import javax.swing.*;
+import java.awt.*;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -14,22 +16,26 @@ final class FileTableTrial extends SwingTrial {
 
     private static final UnaryOperator<Path> NORMAL_PATH = path -> path.toAbsolutePath().normalize();
 
-    private FileTableTrial() {
-        this(new Context());
+    private final Context context = new Context();
+
+    public static void main(final String[] args) {
+        run(new FileTableTrial());
     }
 
-    private FileTableTrial(final Context context) {
-        super(trialPane(context));
-        context.cwd().retrieve(this::setPath);
-    }
-
-    private static JSplitPane trialPane(final Context context) {
+    @Override
+    protected Container contentPane() {
         return JSplitPanes.builder()
                           .setLeftComponent(FileTree.serving(context.cwd()).component())
                           .setRightComponent(FileTable.by(context).component())
                           .build();
     }
 
+    @Override
+    protected void setupFrame(final JFrame jFrame) {
+        context.cwd().retrieve(path -> jFrame.setTitle(path.toString()));
+    }
+
+    @SuppressWarnings("ClassNameSameAsAncestorName")
     private static class Icons implements FileTable.Icons {
 
         @Override
@@ -43,6 +49,7 @@ final class FileTableTrial extends SwingTrial {
         }
     }
 
+    @SuppressWarnings("ClassNameSameAsAncestorName")
     private static class Context implements FileTable.Context {
 
         private static final Icons ICONS = new Icons();
@@ -63,13 +70,5 @@ final class FileTableTrial extends SwingTrial {
         public final Variable<Path> cwd() {
             return cwd;
         }
-    }
-
-    public static void main(final String[] args) {
-        SwingUtilities.invokeLater(new FileTableTrial());
-    }
-
-    private void setPath(final Path path) {
-        setTitle(path.toAbsolutePath().normalize().toString());
     }
 }
