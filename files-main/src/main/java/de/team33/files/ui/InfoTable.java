@@ -122,7 +122,7 @@ public final class InfoTable extends JTable {
         @Override
         public final void accept(final FileService.MsgUpdate message) {
             final File path = message.getInfo().getPath();
-            if (path.equals(context.path().get().toFile())) {
+            if (path.equals(context.cwd().get().toFile())) {
                 table.getTableHeader().repaint();
             }
         }
@@ -144,7 +144,7 @@ public final class InfoTable extends JTable {
                     final FileInfo it = (FileInfo) table.getValueAt(row, 0);
                     final File path = it.getPath();
                     if (path.isDirectory()) {
-                        context.path().set(path.toPath());
+                        context.cwd().set(path.toPath());
                     }
                 }
             }

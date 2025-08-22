@@ -1,5 +1,6 @@
 package net.team33.fscalc.work;
 
+import de.team33.files.ui.FileTable;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.patterns.serving.alpha.Variable;
@@ -9,9 +10,11 @@ import net.team33.fscalc.info.FileService;
 import net.team33.fscalc.task.Task;
 import net.team33.fscalc.task.impl.Calculator;
 import net.team33.fscalc.task.impl.Deletion;
+import net.team33.fscalc.ui.rsrc.Ico;
 import net.team33.messaging.Message;
 import net.team33.messaging.multiplex.Sender;
 
+import javax.swing.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -23,6 +26,22 @@ import java.util.function.UnaryOperator;
 public class ContextImpl extends Sender<Message<Context>> implements Context {
 
     private static final UnaryOperator<Path> NORMAL_PATH = path -> path.toAbsolutePath().normalize();
+    private static final Context.Icons ICONS = new Context.Icons() {
+        @Override
+        public Icon stdFolder() {
+            return Ico.CLSDIR;
+        }
+
+        @Override
+        public Icon opnFolder() {
+            return Ico.OPNDIR;
+        }
+
+        @Override
+        public Icon stdFile() {
+            return Ico.FILE;
+        }
+    };
 
     private final Component<Order> order;
     private final Component<Path> path;
@@ -39,7 +58,17 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     }
 
     @Override
-    public final Variable<Path> path() {
+    public final List<FileTable.Column> columns() {
+        throw new UnsupportedOperationException("not yet implemented");
+    }
+
+    @Override
+    public final Context.Icons icons() {
+        return ICONS;
+    }
+
+    @Override
+    public final Variable<Path> cwd() {
         return path;
     }
 
@@ -54,8 +83,8 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     }
 
     @Override
-    public final Calculator startCalculation(final File path) {
-        return startCalculation(FileService.getInstance().getInfo(path));
+    public final Calculator startCalculation(final File file) {
+        return startCalculation(FileService.getInstance().getInfo(file));
     }
 
     @Override
@@ -84,8 +113,8 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     }
 
     @Override
-    public final Deletion startDeletion(final File[] paths) {
-        final Deletion ret = start(new Deletion(paths));
+    public final Deletion startDeletion(final File[] files) {
+        final Deletion ret = start(new Deletion(files));
         ret.getRegister().add(new LSN_CLOSURE());
         return ret;
     }

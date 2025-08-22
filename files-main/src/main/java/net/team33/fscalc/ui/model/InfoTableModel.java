@@ -31,8 +31,8 @@ public class InfoTableModel extends AbstractTableModel {
     }
 
     public InfoTableModel(final Context context) {
-        context.path().retrieve(path -> setInfos(path.toFile().listFiles(), context.order().get()));
-        context.order().retrieve(order -> setInfos(context.path().get().toFile().listFiles(), order));
+        context.cwd().retrieve(path -> setInfos(path.toFile().listFiles(), context.order().get()));
+        context.order().retrieve(order -> setInfos(context.cwd().get().toFile().listFiles(), order));
         FS.getRegister().add(new LSTNR_UPDT());
         FS.getRegister().add(new LSTNR_INVAL());
     }

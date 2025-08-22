@@ -19,7 +19,7 @@ public class MainFrame extends JFrame {
         setContentPane(contentPane(context));
         setLocationByPlatform(true);
         pack();
-        context.path().retrieve(path -> setTitle(TTL_FORMAT.formatted(path.getFileName())));
+        context.cwd().retrieve(path -> setTitle(TTL_FORMAT.formatted(path.getFileName())));
     }
 
     public static MainFrame by(final Context context) {
@@ -44,7 +44,7 @@ public class MainFrame extends JFrame {
     }
 
     private static Component leftCenterPane(final Context context) {
-        return FileTree.serving(context.path())
+        return FileTree.by(context)
                        .component();
     }
 

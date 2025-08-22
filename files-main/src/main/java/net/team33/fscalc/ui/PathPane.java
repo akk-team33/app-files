@@ -81,7 +81,7 @@ public abstract class PathPane extends JPanel {
             super(16);
             setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
             setFont(new Font(getFont().getName(), 1, getFont().getSize()));
-            getContext().path().retrieve(path -> setText(path.toString()));
+            getContext().cwd().retrieve(path -> setText(path.toString()));
         }
     }
 }

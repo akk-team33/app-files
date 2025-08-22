@@ -10,6 +10,7 @@ import javax.swing.*;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
@@ -25,15 +26,15 @@ public final class FileTree {
 
     private static final Node ROOT_NODE = new RootNode();
 
-    private final Variable<Path> path;
+    private final Variable<Path> cwd;
     private final JTree tree;
     private final JScrollPane pane;
 
     @SuppressWarnings("BoundedWildcard")
-    private FileTree(final Variable<Path> path) {
-        this.path = path;
+    private FileTree(final Icons icons, final Variable<Path> cwd) {
+        this.cwd = cwd;
         this.tree = JTrees.builder()
-                          .setModel(new Model())
+                          .setModel(new Model()).setCellRenderer(new CellRenderer(icons))
                           .setRootVisible(false)
                           .setShowsRootHandles(true)
                           .setScrollsOnExpand(true)
@@ -43,7 +44,7 @@ public final class FileTree {
                           .on(Event.ANCESTOR_ADDED, this::onAncestorAdded)
                           .build();
         this.pane = new JScrollPane(tree);
-        path.retrieve(this::setTreePath);
+        cwd.retrieve(this::setTreePath);
     }
 
     private static void singleTreeSelection(final JTree tree) {
@@ -60,8 +61,8 @@ public final class FileTree {
                               : map(path.getParent()).pathByAddingChild(new FileNode(path));
     }
 
-    public static FileTree serving(final Variable<Path> path) {
-        return new FileTree(path);
+    public static FileTree by(final Context context) {
+        return new FileTree(context.icons(), context.cwd());
     }
 
     private void onAncestorAdded(final AncestorEvent event) {
@@ -73,7 +74,7 @@ public final class FileTree {
     }
 
     private void onTreeValueChanged(final TreeSelectionEvent event) {
-        path.set(map(event.getPath()));
+        cwd.set(map(event.getPath()));
     }
 
     private void setTreePath(final Path path) {
@@ -84,6 +85,22 @@ public final class FileTree {
 
     public final Component component() {
         return pane;
+    }
+
+    public interface Icons {
+
+        Icon stdFolder();
+
+        Icon stdFile();
+
+        Icon opnFolder();
+    }
+
+    public interface Context {
+
+        Icons icons();
+
+        Variable<Path> cwd();
     }
 
     private static class Model implements TreeModel {
@@ -232,6 +249,16 @@ public final class FileTree {
         @Override
         public final String toString() {
             return entry.name();
+        }
+    }
+
+    private static final class CellRenderer extends DefaultTreeCellRenderer {
+
+        @SuppressWarnings("AssignmentToSuperclassField")
+        private CellRenderer(final Icons icons) {
+            this.closedIcon = icons.stdFolder();
+            this.openIcon = icons.opnFolder();
+            this.leafIcon = icons.stdFile();
         }
     }
 }

@@ -8,10 +8,7 @@ import de.team33.sphinx.alpha.visual.JLabels;
 import de.team33.sphinx.alpha.visual.JTables;
 
 import javax.swing.*;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.nio.file.Path;
@@ -29,21 +26,18 @@ import java.util.stream.Stream;
 
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
 
-public class FileTable {
+public final class FileTable {
 
     private static final int MARGIN = 8;
 
-    private final Model model;
     private final JTable table;
     private final Component component;
 
-    private FileTable(final Context context) {
-        final Columns columns = new Columns(context.columns());
-        final Retrievable<Path> cwd = context.cwd();
-        this.model = new Model(columns, cwd);
+    private FileTable(final Retrievable<Path> cwd, final Columns columns, final Icons icons) {
+        final TableModel model = new Model(columns, cwd);
         this.table = JTables.builder()
                             .setModel(model)
-                            .setDefaultRenderer(FileEntry.class, new CellRenderer(columns, context.icons(), cwd))
+                            .setDefaultRenderer(FileEntry.class, new CellRenderer(columns, icons, cwd))
                             .setup(jTable -> jTable.getTableHeader()
                                                    .setDefaultRenderer(new HeadRenderer(columns)))
                             .setShowGrid(false)
@@ -62,21 +56,7 @@ public class FileTable {
     }
 
     public static FileTable by(final Context context) {
-        return new FileTable(context);
-    }
-
-    private static <R> R cast(final Class<R> rClass, final Object value) {
-        if (rClass.isInstance(value)) {
-            return rClass.cast(value);
-        } else {
-            final Class<?> vClass = (null == value) ? null : value.getClass();
-            throw new IllegalStateException(
-                    "<value> is expected to be an instance of %s - but was %s".formatted(rClass, vClass));
-        }
-    }
-
-    private static JLabel jLabel(final Object candidate) {
-        return cast(JLabel.class, candidate);
+        return new FileTable(context.cwd(), new Columns(context.columns()), context.icons());
     }
 
     private void onMouseClicked(final MouseEvent event) {
@@ -181,6 +161,7 @@ public class FileTable {
         }
 
         private static Column of(final String columnName) {
+            //noinspection CallToSuspiciousStringMethod
             return Stream.of(values())
                          .filter(value -> value.title.equals(columnName))
                          .findAny()
@@ -231,10 +212,21 @@ public class FileTable {
         final Columns columns;
         private final Class<V> vClass;
 
+        @SuppressWarnings("BoundedWildcard")
         BaseRenderer(final Class<V> vClass, final Columns columns, final Supplier<TableCellRenderer> newRenderer) {
             this.vClass = vClass;
             this.backing = newRenderer.get();
             this.columns = columns;
+        }
+
+        private static <R> R cast(final Class<R> rClass, final Object value) {
+            if (rClass.isInstance(value)) {
+                return rClass.cast(value);
+            } else {
+                final Class<?> vClass = (null == value) ? null : value.getClass();
+                throw new IllegalStateException(
+                        "<value> is expected to be an instance of %s - but was %s".formatted(rClass, vClass));
+            }
         }
 
         @Override
@@ -248,7 +240,7 @@ public class FileTable {
                     columns.get(colIndex);
             final Component result =
                     backing.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, colIndex);
-            jLabel(result).setHorizontalAlignment(column.alignment);
+            cast(JLabel.class, result).setHorizontalAlignment(column.alignment);
             return updated(column, cast(vClass, value), cast(JLabel.class, result));
         }
 

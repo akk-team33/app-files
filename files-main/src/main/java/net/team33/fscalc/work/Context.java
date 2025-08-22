@@ -1,5 +1,7 @@
 package net.team33.fscalc.work;
 
+import de.team33.files.ui.FileTable;
+import de.team33.files.ui.FileTree;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.patterns.serving.alpha.Variable;
 import net.team33.fscalc.info.FileInfo;
@@ -13,21 +15,33 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 
-public interface Context extends Originator<Message<Context>> {
+@SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
+public interface Context extends Originator<Message<Context>>, FileTree.Context, FileTable.Context {
 
-    Variable<Path> path();
+    @Override
+    Icons icons();
+
+    @SuppressWarnings("AbstractMethodOverridesAbstractMethod")
+    @Override
+    Variable<Path> cwd();
 
     Variable<Order> order();
 
+    @SuppressWarnings("unused")
     Retrievable<List<Task>> tasks();
 
-    Calculator startCalculation(File var1);
+    @SuppressWarnings("UnusedReturnValue")
+    Calculator startCalculation(File file);
 
-    Calculator startCalculation(FileInfo var1);
+    Calculator startCalculation(FileInfo info);
 
-    Deletion startDeletion(File[] var1);
+    @SuppressWarnings("UnusedReturnValue")
+    Deletion startDeletion(File[] files);
 
-    public interface MsgStarting extends Message<Context> {
+    interface MsgStarting extends Message<Context> {
         Task getTask();
+    }
+
+    interface Icons extends FileTree.Icons, FileTable.Icons {
     }
 }
