@@ -11,7 +11,8 @@ import java.util.UUID;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ComponentTest {
 
@@ -39,7 +40,7 @@ class ComponentTest {
         final Component<String> component = new Component<>(Runnable::run, STRING[0]);
         final List<String> target = new LinkedList<>();
 
-        final Subscription subscription = component.retrieve(target::add);
+        final Subscription subscription = component.subscribe(INIT, target::add);
         assertEquals(List.of(STRING[0]), target, "<target> is expected to contain STRING[0]");
 
         component.set(STRING[1]);

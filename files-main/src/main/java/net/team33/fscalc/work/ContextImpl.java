@@ -23,6 +23,8 @@ import java.util.Vector;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+
 public class ContextImpl extends Sender<Message<Context>> implements Context {
 
     private static final UnaryOperator<Path> NORMAL_PATH = path -> path.toAbsolutePath().normalize();
@@ -54,7 +56,7 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         this.order = new Component<>(order);
         this.tasks = new Component<>(List.of());
 
-        this.path.retrieve(p -> startCalculation(p.toFile()));
+        this.path.subscribe(INIT, p -> startCalculation(p.toFile()));
     }
 
     @Override

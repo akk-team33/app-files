@@ -6,6 +6,8 @@ import net.team33.fscalc.work.Context;
 import javax.swing.*;
 import java.awt.*;
 
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+
 public abstract class PathPane extends JPanel {
     protected static final Insets GBC_INSETS = new Insets(2, 2, 2, 2);
     protected static final int GBC_ANCHOR = 10;
@@ -81,7 +83,7 @@ public abstract class PathPane extends JPanel {
             super(16);
             setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
             setFont(new Font(getFont().getName(), 1, getFont().getSize()));
-            getContext().cwd().retrieve(path -> setText(path.toString()));
+            getContext().cwd().subscribe(INIT, path -> setText(path.toString()));
         }
     }
 }

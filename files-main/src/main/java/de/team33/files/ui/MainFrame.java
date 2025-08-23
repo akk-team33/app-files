@@ -9,6 +9,8 @@ import net.team33.fscalc.work.Context;
 import javax.swing.*;
 import java.awt.*;
 
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+
 public class MainFrame extends JFrame {
     private static final String TTL_SUFFIX = "Files";
     private static final String TTL_FORMAT = "%s - " + TTL_SUFFIX;
@@ -19,7 +21,7 @@ public class MainFrame extends JFrame {
         setContentPane(contentPane(context));
         setLocationByPlatform(true);
         pack();
-        context.cwd().retrieve(path -> setTitle(TTL_FORMAT.formatted(path.getFileName())));
+        context.cwd().subscribe(INIT, path -> setTitle(TTL_FORMAT.formatted(path.getFileName())));
     }
 
     public static MainFrame by(final Context context) {

@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Vector;
 import java.util.function.Consumer;
 
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+
 public class InfoTableModel extends AbstractTableModel {
     private static final FileService FS = FileService.getInstance();
     private static final FileInfo[] NOPATHS = new FileInfo[0];
@@ -31,8 +33,8 @@ public class InfoTableModel extends AbstractTableModel {
     }
 
     public InfoTableModel(final Context context) {
-        context.cwd().retrieve(path -> setInfos(path.toFile().listFiles(), context.order().get()));
-        context.order().retrieve(order -> setInfos(context.cwd().get().toFile().listFiles(), order));
+        context.cwd().subscribe(INIT, path -> setInfos(path.toFile().listFiles(), context.order().get()));
+        context.order().subscribe(INIT, order -> setInfos(context.cwd().get().toFile().listFiles(), order));
         FS.getRegister().add(new LSTNR_UPDT());
         FS.getRegister().add(new LSTNR_INVAL());
     }

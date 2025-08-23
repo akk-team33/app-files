@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
 
 public final class FileTable {
@@ -300,7 +301,7 @@ public final class FileTable {
 
         private Model(final Columns columns, final Retrievable<? extends Path> cwd) {
             this.columns = columns;
-            cwd.retrieve(this::onSetPath);
+            cwd.subscribe(INIT, this::onSetPath);
         }
 
         private void onSetPath(final Path path) {

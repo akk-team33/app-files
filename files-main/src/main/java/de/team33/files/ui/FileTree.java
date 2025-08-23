@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
 
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+
 public final class FileTree {
 
     private static final Node ROOT_NODE = new RootNode();
@@ -44,7 +46,7 @@ public final class FileTree {
                           .on(Event.ANCESTOR_ADDED, this::onAncestorAdded)
                           .build();
         this.pane = new JScrollPane(tree);
-        cwd.retrieve(this::setTreePath);
+        cwd.subscribe(INIT, this::setTreePath);
     }
 
     private static void singleTreeSelection(final JTree tree) {

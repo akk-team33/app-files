@@ -6,6 +6,8 @@ import de.team33.sphinx.alpha.visual.JSplitPanes;
 import javax.swing.*;
 import java.awt.*;
 
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+
 final class FileTreeTrial extends SwingTrial {
 
     private final FileTree.Context context = new Context();
@@ -24,6 +26,6 @@ final class FileTreeTrial extends SwingTrial {
 
     @Override
     protected void setupFrame(final JFrame jFrame) {
-        context.cwd().retrieve(path -> jFrame.setTitle(path.toString()));
+        context.cwd().subscribe(INIT, path -> jFrame.setTitle(path.toString()));
     }
 }
