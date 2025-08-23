@@ -43,6 +43,16 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         public Icon stdFile() {
             return Ico.FILE;
         }
+
+        @Override
+        public Icon optWidth() {
+            return Ico.RELOAD; // TODO
+        }
+
+        @Override
+        public Icon parentFolder() {
+            return Ico.UPDIR; // TODO?
+        }
     };
 
     private final Component<Order> order;

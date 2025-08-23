@@ -4,8 +4,8 @@ import de.team33.patterns.io.phobos.FileEntry;
 import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.alpha.activity.Event;
-import de.team33.sphinx.alpha.visual.JLabels;
-import de.team33.sphinx.alpha.visual.JTables;
+import de.team33.sphinx.alpha.model.ComboListModel;
+import de.team33.sphinx.alpha.visual.*;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -52,7 +52,11 @@ public final class FileTable {
 //                                                 .addListSelectionListener(new InfoTable.SelectionListener(table)))
 //                            .setup(table -> FS.getRegister().add(new InfoTable.LSTNR_UPDINFO(table, context)))
                             .build();
-        this.component = new JScrollPane(table);
+        this.component = JPanels.builder()
+                                .setLayout(new BorderLayout())
+                                .add(new Controls(icons).panel, BorderLayout.PAGE_START)
+                                .add(new JScrollPane(table), BorderLayout.CENTER)
+                                .build();
         Event.MOUSE_CLICKED.add(table.getTableHeader(), this::onMouseClicked);
     }
 
@@ -175,6 +179,10 @@ public final class FileTable {
         Icon stdFolder();
 
         Icon stdFile();
+
+        Icon optWidth();
+
+        Icon parentFolder();
     }
 
     public interface Context {
@@ -340,6 +348,29 @@ public final class FileTable {
         @Override
         public final Class<?> getColumnClass(final int colIndex) {
             return FileEntry.class;
+        }
+    }
+
+    private class Controls {
+
+        private final JPanel panel;
+
+        private Controls(final Icons icons) {
+            panel = JPanels.builder()
+                           .setLayout(new GridBagLayout())
+                           .add(JButtons.builder()
+                                        .setIcon(icons.parentFolder())
+                                        .setToolTipText("Switch to parent directory")
+                                        .build())
+                           .add(JButtons.builder()
+                                        .setIcon(icons.optWidth())
+                                        .setToolTipText("Optimize column width")
+                                        .build())
+                           .add(JComboBoxes.builder(ComboListModel.of(Column.class))
+                                           //.setIcon(icons.stdFolder()) // TODO!
+                                           .setToolTipText("Set file order")
+                                           .build())
+                           .build();
         }
     }
 }

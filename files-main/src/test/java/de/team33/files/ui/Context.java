@@ -50,5 +50,15 @@ public class Context implements FileTree.Context, FileTable.Context {
         public final Icon stdFile() {
             return Ico.FILE;
         }
+
+        @Override
+        public Icon optWidth() {
+            return Ico.RELOAD; // TODO
+        }
+
+        @Override
+        public Icon parentFolder() {
+            return Ico.UPDIR; // TODO?
+        }
     }
 }
