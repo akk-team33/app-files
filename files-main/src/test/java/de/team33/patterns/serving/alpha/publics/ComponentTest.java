@@ -12,6 +12,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.NEXT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ComponentTest {
@@ -21,11 +22,11 @@ class ComponentTest {
                                                  .toArray(String[]::new);
 
     @Test
-    final void subscribe() {
+    final void subscribe_NEXT() {
         final Component<String> component = new Component<>(STRING[0]);
         final List<String> target = new LinkedList<>();
 
-        component.subscribe(target::add);
+        component.subscribe(NEXT, target::add);
         assertEquals(List.of(), target, "<target> is still expected to be empty");
 
         component.set(STRING[1]);
@@ -36,7 +37,7 @@ class ComponentTest {
     }
 
     @Test
-    final void retrieve() {
+    final void subscribe_INIT() {
         final Component<String> component = new Component<>(Runnable::run, STRING[0]);
         final List<String> target = new LinkedList<>();
 
