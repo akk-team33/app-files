@@ -70,7 +70,7 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
     }
 
     @Override
-    public final List<FileTable.Column> columns() {
+    public final List<FileTable.Column<?>> columns() {
         throw new UnsupportedOperationException("not yet implemented");
     }
 

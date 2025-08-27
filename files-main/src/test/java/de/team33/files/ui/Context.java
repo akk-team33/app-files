@@ -24,8 +24,10 @@ public class Context implements FileTree.Context, FileTable.Context {
     }
 
     @Override
-    public final List<FileTable.Column> columns() {
-        return List.of(FileTable.Column.values());
+    public final List<FileTable.Column<?>> columns() {
+        // Already is immutable ...
+        // noinspection AssignmentOrReturnOfFieldWithMutableType
+        return FileTable.Column.VALUES;
     }
 
     @Override

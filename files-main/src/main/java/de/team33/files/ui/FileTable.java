@@ -1,30 +1,29 @@
 package de.team33.files.ui;
 
 import de.team33.patterns.io.phobos.FileEntry;
-import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
+import de.team33.sphinx.gamma.table.GenericModel;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JButtons;
-import de.team33.sphinx.metis.JLabels;
 import de.team33.sphinx.metis.JPanels;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
-import javax.swing.table.*;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.nio.file.Path;
-import java.time.*;
+import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
@@ -36,18 +35,19 @@ public final class FileTable {
     private final JTable table;
     private final Component component;
 
-    private FileTable(final Retrievable<Path> cwd, final Columns columns, final Icons icons) {
+    private FileTable(final Retrievable<Path> cwd,
+                      final Collection<? extends GenericModel.Column<FileEntry, ?>> columns,
+                      final Icons icons) {
         final TableModel model = new Model(columns, cwd);
         this.table = JTables.builder()
                             .setModel(model)
-                            .setDefaultRenderer(FileEntry.class, new CellRenderer(columns, icons, cwd))
-                            .setup(jTable -> jTable.getTableHeader()
-                                                   .setDefaultRenderer(new HeadRenderer(columns)))
+                            //.setDefaultRenderer(FileEntry.class, new CellRenderer(columns, icons, cwd))
+                            //.setup(jTable -> jTable.getTableHeader()
+                            //                       .setDefaultRenderer(new HeadRenderer(columns)))
                             .setShowGrid(false)
                             .setRowSelectionAllowed(true)
                             .setColumnSelectionAllowed(false)
-                            //.setAutoCreateRowSorter(true)
-                            //.setRowSorter(new TableRowSorter<>())
+                            .setAutoCreateRowSorter(true)
                             .setAutoResizeMode(AUTO_RESIZE_OFF)
 //                            .on(Event.MOUSE_CLICKED, new InfoTable.MOUSE_LISTENER(context)::mouseClicked)
 //                            .setup(table -> table.getSelectionModel()
@@ -63,7 +63,7 @@ public final class FileTable {
     }
 
     public static FileTable by(final Context context) {
-        return new FileTable(context.cwd(), new Columns(context.columns()), context.icons());
+        return new FileTable(context.cwd(), Column.VALUES, context.icons());
     }
 
     private void onMouseClicked(final MouseEvent event) {
@@ -109,71 +109,13 @@ public final class FileTable {
         return component;
     }
 
-    public enum Column {
+    public interface Context {
 
-        NAME____("Name", cwd -> FileEntry::name,
-                 SwingConstants.LEADING),
-        PATH____("Path", cwd -> entry -> cwd.relativize(entry.path()).toString(),
-                 SwingConstants.LEADING),
-        PARENT__("Directory", cwd -> entry -> min(cwd.relativize(entry.path().getParent()).toString()),
-                 SwingConstants.LEADING),
-        UPDATE__("Last Modified", cwd -> entry -> dateTime(entry.lastModified()),
-                 SwingConstants.CENTER),
-        UPDATE_D("Last Mod. Date", cwd -> entry -> date(entry.lastModified()),
-                 SwingConstants.CENTER),
-        UPDATE_T("Last Mod. Time", cwd -> entry -> time(entry.lastModified()),
-                 SwingConstants.CENTER),
-        SIZE____("Size", cwd -> entry -> "%,d".formatted(entry.size()),
-                 SwingConstants.TRAILING);
+        Icons icons();
 
-        private static final ZoneId ZONE_ID =
-                ZoneId.systemDefault();
-        private static final DateTimeFormatter DATE_TIME_FORMATTER =
-                DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                                 .withLocale(Locale.getDefault());
-        private static final DateTimeFormatter TIME_FORMATTER =
-                DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM)
-                                 .withLocale(Locale.getDefault());
-        private static final DateTimeFormatter DATE_FORMATTER =
-                DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-                                 .withLocale(Locale.getDefault());
+        List<Column<?>> columns();
 
-        private final String title;
-        private final Function<Path, Function<FileEntry, String>> toText;
-        private final int alignment;
-
-        Column(final String title, final Function<Path, Function<FileEntry, String>> toText, final int alignment) {
-            this.title = title;
-            this.toText = toText;
-            this.alignment = alignment;
-        }
-
-        private static String min(final String path) {
-            return path.isBlank() ? "." : path;
-        }
-
-        private static String time(final Instant instant) {
-            return LocalTime.ofInstant(instant, ZONE_ID)
-                            .format(TIME_FORMATTER);
-        }
-
-        private static String date(final Instant instant) {
-            return LocalDate.ofInstant(instant, ZONE_ID)
-                            .format(DATE_FORMATTER);
-        }
-
-        private static String dateTime(final Instant instant) {
-            return LocalDateTime.ofInstant(instant, ZONE_ID)
-                                .format(DATE_TIME_FORMATTER);
-        }
-
-        private static Column of(final String columnName) {
-            //noinspection CallToSuspiciousStringMethod
-            return Stream.of(values())
-                         .filter(value -> value.title.equals(columnName))
-                         .findAny()
-                         .orElseThrow();
-        }
+        Retrievable<Path> cwd();
     }
 
     public interface Icons {
@@ -187,130 +129,34 @@ public final class FileTable {
         Icon parentFolder();
     }
 
-    public interface Context {
+    public record Column<C extends Comparable<C>>(String title, Class<C> type, Function<FileEntry, C> mapping)
+            implements GenericModel.Column<FileEntry, C> {
 
-        Icons icons();
-
-        List<Column> columns();
-
-        Retrievable<Path> cwd();
-    }
-
-    private static final class Columns {
-
-        private final List<Column> backing;
-
-        private Columns(final Collection<Column> columns) {
-            this.backing = List.copyOf(columns);
-        }
-
-        final Column get(final int index) {
-            return backing.get(index);
-        }
-
-        final int size() {
-            return backing.size();
-        }
-
-        final int indexOf(final Column column) {
-            return backing.indexOf(column);
-        }
-    }
-
-    private abstract static class BaseRenderer<V> implements TableCellRenderer {
-
-        final TableCellRenderer backing;
-        final Columns columns;
-        private final Class<V> vClass;
-
-        @SuppressWarnings("BoundedWildcard")
-        BaseRenderer(final Class<V> vClass, final Columns columns, final Supplier<TableCellRenderer> newRenderer) {
-            this.vClass = vClass;
-            this.backing = newRenderer.get();
-            this.columns = columns;
-        }
-
-        private static <R> R cast(final Class<R> rClass, final Object value) {
-            if (rClass.isInstance(value)) {
-                return rClass.cast(value);
-            } else {
-                final Class<?> vClass = (null == value) ? null : value.getClass();
-                throw new IllegalStateException(
-                        "<value> is expected to be an instance of %s - but was %s".formatted(rClass, vClass));
-            }
-        }
+        private static Column<String> NAME =
+                new Column<>("Name", String.class, FileEntry::name);
+        private static Column<Path> PATH =
+                new Column<>("Path", Path.class, FileEntry::path);
+        private static Column<Path> PARENT =
+                new Column<>("Parent", Path.class, fileEntry -> fileEntry.path().getParent());
+        private static Column<Instant> UPDATE =
+                new Column<>("Last Modified", Instant.class, FileEntry::lastModified);
+        private static Column<Long> SIZE =
+                new Column<>("Size", Long.class, FileEntry::size);
+        static List<Column<?>> VALUES = List.of(NAME, PATH, PARENT, UPDATE, SIZE);
 
         @Override
-        public final Component getTableCellRendererComponent(final JTable table,
-                                                             final Object value,
-                                                             final boolean isSelected,
-                                                             final boolean hasFocus,
-                                                             final int rowIndex,
-                                                             final int colIndex) {
-            final Column column =
-                    columns.get(colIndex);
-            final Component result =
-                    backing.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, colIndex);
-            cast(JLabel.class, result).setHorizontalAlignment(column.alignment);
-            return updated(column, cast(vClass, value), cast(JLabel.class, result));
-        }
-
-        abstract JLabel updated(final Column column, final V value, final JLabel label);
-    }
-
-    private static final class HeadRenderer extends BaseRenderer<String> {
-
-        private HeadRenderer(final Columns columns) {
-            super(String.class, columns, () -> new JTable().getTableHeader().getDefaultRenderer());
-        }
-
-        @Override
-        final JLabel updated(final Column column, final String value, final JLabel label) {
-            label.setHorizontalAlignment(column.alignment);
-            return label;
+        public final C map(final FileEntry element) {
+            return mapping.apply(element);
         }
     }
 
-    private static final class CellRenderer extends BaseRenderer<FileEntry> {
+    private static final class Model extends GenericModel<FileEntry> {
 
-        private final Icons icons;
-        private final Gettable<? extends Path> cwd;
-
-        private CellRenderer(final Columns columns, final Icons icons, final Gettable<? extends Path> cwd) {
-            super(FileEntry.class, columns, () -> new JTable().getDefaultRenderer(String.class));
-            this.icons = icons;
-            this.cwd = cwd;
-        }
-
-        @Override
-        final JLabel updated(final Column column, final FileEntry entry, final JLabel label) {
-            return JLabels.charger(label)
-                          .setText(column.toText.apply(cwd.get())
-                                                .apply(entry))
-                          .setIcon(iconOf(entry, column))
-                          .setHorizontalAlignment(column.alignment)
-                          .charged();
-        }
-
-        @SuppressWarnings("ReturnOfNull")
-        private Icon iconOf(final FileEntry entry, final Column column) {
-            if (column != columns.get(0)) {
-                return null;
-            } else if (entry.isDirectory()) {
-                return icons.stdFolder();
-            } else {
-                return icons.stdFile();
-            }
-        }
-    }
-
-    private static final class Model extends AbstractTableModel {
-
-        private final Columns columns;
+        private final List<Column<FileEntry, ?>> columns;
         private volatile List<FileEntry> entries = List.of();
 
-        private Model(final Columns columns, final Retrievable<? extends Path> cwd) {
-            this.columns = columns;
+        private Model(final Collection<? extends Column<FileEntry, ?>> columns, final Retrievable<? extends Path> cwd) {
+            this.columns = List.copyOf(columns);
             cwd.subscribe(INIT, this::onSetPath);
         }
 
@@ -323,33 +169,15 @@ public final class FileTable {
         }
 
         @Override
-        public final int getRowCount() {
-            return entries.size();
+        protected final List<FileEntry> rows() {
+            // Already IS immutable ...
+            // noinspection AssignmentOrReturnOfFieldWithMutableType
+            return entries;
         }
 
         @Override
-        public final int getColumnCount() {
-            return columns.size();
-        }
-
-        @Override
-        public final Object getValueAt(final int rowIndex, final int colIndex) {
-            return entries.get(rowIndex);
-        }
-
-        @Override
-        public final String getColumnName(final int colIndex) {
-            return columns.get(colIndex).title;
-        }
-
-        @Override
-        public final int findColumn(final String columnName) {
-            return columns.indexOf(Column.of(columnName));
-        }
-
-        @Override
-        public final Class<?> getColumnClass(final int colIndex) {
-            return FileEntry.class;
+        protected final List<Column<FileEntry, ?>> columns() {
+            return columns;
         }
     }
 
