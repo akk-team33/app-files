@@ -18,7 +18,8 @@ import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 
 final class GenericModelTrial extends SwingTrial {
 
-    private static final List<FileColumn<?>> COLUMNS = List.of(
+    @SuppressWarnings("StaticCollection")
+    private static final List<GenericModel.Column<File, ?>> COLUMNS = List.of(
             new FileColumn<>("Name", String.class, File::getName),
             new FileColumn<>("Last Modified", Instant.class, file -> Instant.ofEpochMilli(file.lastModified())),
             new FileColumn<>("Size", Long.class, File::length));
@@ -60,7 +61,6 @@ final class GenericModelTrial extends SwingTrial {
         private volatile List<File> files = List.of();
 
         FileModel(final Context context) {
-            super(COLUMNS);
             context.cwd().subscribe(INIT, this::onSetCWD);
         }
 
@@ -70,8 +70,15 @@ final class GenericModelTrial extends SwingTrial {
         }
 
         @Override
-        protected final List<File> list() {
+        protected final List<File> rows() {
+            // Already is an immutable List ...
+            // noinspection AssignmentOrReturnOfFieldWithMutableType
             return files;
+        }
+
+        @Override
+        protected final List<Column<File, ?>> columns() {
+            return COLUMNS;
         }
     }
 }

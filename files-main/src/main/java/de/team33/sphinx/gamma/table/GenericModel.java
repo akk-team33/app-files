@@ -3,34 +3,30 @@ package de.team33.sphinx.gamma.table;
 import javax.swing.table.AbstractTableModel;
 import java.util.List;
 
-public abstract class GenericModel<E> extends AbstractTableModel {
+public abstract class GenericModel<R> extends AbstractTableModel {
 
-    private final List<? extends Column<E, ?>> columns;
+    protected abstract List<R> rows();
 
-    protected GenericModel(final List<? extends Column<E, ?>> columns) {
-        this.columns = columns;
-    }
-
-    protected abstract List<E> list();
+    protected abstract List<Column<R, ?>> columns();
 
     @Override
     public final int getRowCount() {
-        return list().size();
+        return rows().size();
     }
 
     @Override
     public final int getColumnCount() {
-        return columns.size();
+        return columns().size();
     }
 
     @Override
     public final String getColumnName(final int columnIndex) {
-        return columns.get(columnIndex).title();
+        return columns().get(columnIndex).title();
     }
 
     @Override
     public final Class<?> getColumnClass(final int columnIndex) {
-        return columns.get(columnIndex).type();
+        return columns().get(columnIndex).type();
     }
 
     @Override
@@ -41,7 +37,7 @@ public abstract class GenericModel<E> extends AbstractTableModel {
 
     @Override
     public final Object getValueAt(final int rowIndex, final int columnIndex) {
-        return columns.get(columnIndex).map(list().get(rowIndex));
+        return columns().get(columnIndex).map(rows().get(rowIndex));
     }
 
     @Override
