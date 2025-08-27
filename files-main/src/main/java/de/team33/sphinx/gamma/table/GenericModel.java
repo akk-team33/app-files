@@ -37,7 +37,8 @@ public abstract class GenericModel<R> extends AbstractTableModel {
 
     @Override
     public final Object getValueAt(final int rowIndex, final int columnIndex) {
-        return columns().get(columnIndex).map(rows().get(rowIndex));
+        return columns().get(columnIndex)
+                        .map(rows().get(rowIndex));
     }
 
     @Override
@@ -46,12 +47,12 @@ public abstract class GenericModel<R> extends AbstractTableModel {
         super.setValueAt(aValue, rowIndex, columnIndex);
     }
 
-    public interface Column<E, C extends Comparable<C>> {
+    public interface Column<R, C extends Comparable<C>> {
 
         String title();
 
         Class<C> type();
 
-        C map(E element);
+        C map(R element);
     }
 }
