@@ -1,6 +1,6 @@
 package de.team33.files.uix;
 
-import de.team33.sphinx.alpha.visual.JFrames;
+import de.team33.sphinx.metis.JFrames;
 
 import javax.swing.*;
 import java.awt.*;

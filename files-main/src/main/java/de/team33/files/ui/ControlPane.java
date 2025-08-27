@@ -1,8 +1,8 @@
 package de.team33.files.ui;
 
-import de.team33.sphinx.alpha.activity.Event;
-import de.team33.sphinx.alpha.visual.JButtons;
-import de.team33.sphinx.alpha.visual.JPanels;
+import de.team33.sphinx.luna.Channel;
+import de.team33.sphinx.metis.JButtons;
+import de.team33.sphinx.metis.JPanels;
 import net.team33.fscalc.work.Context;
 
 import javax.swing.*;
@@ -25,7 +25,7 @@ final class ControlPane extends JPanel {
     private static JButton delButton(final InfoTable table, final Context context) {
         return JButtons.builder()
                        .setText("Delete")
-                       .on(Event.ACTION_PERFORMED, message -> onDelButtonPressed(table, context))
+                       .subscribe(Channel.ACTION_PERFORMED, message -> onDelButtonPressed(table, context))
                        .setup(button -> table.add(new UpdateSelectionListener(button)))
                        .build();
     }

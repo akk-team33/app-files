@@ -2,9 +2,8 @@ package de.team33.files.ui;
 
 import de.team33.patterns.notes.eris.Audience;
 import de.team33.patterns.notes.eris.Channel;
-import de.team33.sphinx.alpha.activity.Event;
-import de.team33.sphinx.alpha.visual.JTableHeaders;
-import de.team33.sphinx.alpha.visual.JTables;
+import de.team33.sphinx.metis.JTableHeaders;
+import de.team33.sphinx.metis.JTables;
 import net.team33.fscalc.info.FileInfo;
 import net.team33.fscalc.info.FileService;
 import net.team33.fscalc.ui.CellRenderer;
@@ -45,14 +44,14 @@ public final class InfoTable extends JTable {
         return JTables.builder(() -> new InfoTable(context))
                       .setup(table -> JTableHeaders.charger(table.getTableHeader())
                                                    .setDefaultRenderer(headRenderer(context))
-                                                   .on(Event.MOUSE_CLICKED,
-                                                       new HEADER_MOUSE_LISTENER(table, context)::mouseClicked))
+                                                   .subscribe(de.team33.sphinx.luna.Channel.MOUSE_CLICKED,
+                                                              new HEADER_MOUSE_LISTENER(table, context)::mouseClicked))
                       .setRowHeight(cr.getPreferredSize().height + 3)
                       .setDefaultRenderer(FileInfo.class, cr)
                       .setShowGrid(false)
                       .setRowSelectionAllowed(true)
                       .setColumnSelectionAllowed(false)
-                      .on(Event.MOUSE_CLICKED, new MOUSE_LISTENER(context)::mouseClicked)
+                      .subscribe(de.team33.sphinx.luna.Channel.MOUSE_CLICKED, new MOUSE_LISTENER(context)::mouseClicked)
                       .setup(table -> table.getSelectionModel()
                                            .addListSelectionListener(new SelectionListener(table)))
                       .setup(table -> FS.getRegister().add(new LSTNR_UPDINFO(table, context)))

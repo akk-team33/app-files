@@ -1,7 +1,7 @@
 package de.team33.files.ui;
 
-import de.team33.sphinx.alpha.visual.JPanels;
-import de.team33.sphinx.alpha.visual.JSplitPanes;
+import de.team33.sphinx.metis.JPanels;
+import de.team33.sphinx.metis.JSplitPanes;
 import net.team33.fscalc.ui.PathPane;
 import net.team33.fscalc.ui.ProgressPane;
 import net.team33.fscalc.work.Context;

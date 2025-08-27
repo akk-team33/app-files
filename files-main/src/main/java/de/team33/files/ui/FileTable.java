@@ -3,9 +3,11 @@ package de.team33.files.ui;
 import de.team33.patterns.io.phobos.FileEntry;
 import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
-import de.team33.sphinx.alpha.activity.Event;
-import de.team33.sphinx.alpha.model.ComboListModel;
-import de.team33.sphinx.alpha.visual.*;
+import de.team33.sphinx.luna.Channel;
+import de.team33.sphinx.metis.JButtons;
+import de.team33.sphinx.metis.JLabels;
+import de.team33.sphinx.metis.JPanels;
+import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -57,7 +59,7 @@ public final class FileTable {
                                 .add(new Controls(icons).panel, BorderLayout.PAGE_START)
                                 .add(new JScrollPane(table), BorderLayout.CENTER)
                                 .build();
-        Event.MOUSE_CLICKED.add(table.getTableHeader(), this::onMouseClicked);
+        Channel.MOUSE_CLICKED.subscribe(table.getTableHeader(), this::onMouseClicked);
     }
 
     public static FileTable by(final Context context) {
@@ -366,10 +368,10 @@ public final class FileTable {
                                         .setIcon(icons.optWidth())
                                         .setToolTipText("Optimize column width")
                                         .build())
-                           .add(JComboBoxes.builder(ComboListModel.of(Column.class))
-                                           //.setIcon(icons.stdFolder()) // TODO!
-                                           .setToolTipText("Set file order")
-                                           .build())
+//                           .add(JComboBoxes.builder(ComboListModel.of(Column.class))
+//                                           //.setIcon(icons.stdFolder()) // TODO!
+//                                           .setToolTipText("Set file order")
+//                                           .build())
                            .build();
         }
     }

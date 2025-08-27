@@ -1,7 +1,7 @@
 package de.team33.files.uix;
 
-import de.team33.sphinx.alpha.visual.JLabels;
-import de.team33.sphinx.alpha.visual.JPanels;
+import de.team33.sphinx.metis.JLabels;
+import de.team33.sphinx.metis.JPanels;
 
 import javax.swing.*;
 import java.awt.*;

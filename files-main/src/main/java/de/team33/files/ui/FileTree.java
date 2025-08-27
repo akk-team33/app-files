@@ -3,8 +3,8 @@ package de.team33.files.ui;
 import de.team33.patterns.expiry.tethys.Recent;
 import de.team33.patterns.io.phobos.FileEntry;
 import de.team33.patterns.serving.alpha.Variable;
-import de.team33.sphinx.alpha.activity.Event;
-import de.team33.sphinx.alpha.visual.JTrees;
+import de.team33.sphinx.luna.Channel;
+import de.team33.sphinx.metis.JTrees;
 
 import javax.swing.*;
 import javax.swing.event.AncestorEvent;
@@ -42,8 +42,8 @@ public final class FileTree {
                           .setScrollsOnExpand(true)
                           .setExpandsSelectedPaths(true)
                           .setup(FileTree::singleTreeSelection)
-                          .on(Event.TREE_VALUE_CHANGED, this::onTreeValueChanged)
-                          .on(Event.ANCESTOR_ADDED, this::onAncestorAdded)
+                          .subscribe(Channel.TREE_VALUE_CHANGED, this::onTreeValueChanged)
+                          .subscribe(Channel.ANCESTOR_ADDED, this::onAncestorAdded)
                           .build();
         this.pane = new JScrollPane(tree);
         cwd.subscribe(INIT, this::setTreePath);
