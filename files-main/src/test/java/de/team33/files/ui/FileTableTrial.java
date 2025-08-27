@@ -1,6 +1,6 @@
 package de.team33.files.ui;
 
-import de.team33.files.uix.SwingTrial;
+import de.team33.files.testing.SwingTrial;
 import de.team33.sphinx.metis.JSplitPanes;
 
 import javax.swing.*;

@@ -1,8 +1,8 @@
-package de.team33.files.ui.table;
+package de.team33.sphinx.gamma.table;
 
+import de.team33.files.testing.SwingTrial;
 import de.team33.files.ui.Context;
 import de.team33.files.ui.FileTree;
-import de.team33.files.uix.SwingTrial;
 import de.team33.sphinx.metis.JSplitPanes;
 import de.team33.sphinx.metis.JTables;
 
@@ -16,7 +16,7 @@ import java.util.function.Function;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 
-final class ModelTrial extends SwingTrial {
+final class GenericModelTrial extends SwingTrial {
 
     private static final List<FileColumn<?>> COLUMNS = List.of(
             new FileColumn<>("Name", String.class, File::getName),
@@ -24,13 +24,13 @@ final class ModelTrial extends SwingTrial {
             new FileColumn<>("Size", Long.class, File::length));
 
     private final Context context = new Context();
-    private final Model<File> model = new FileModel(context);
+    private final GenericModel<File> model = new FileModel(context);
     private final JTable fileTable = JTables.builder(model)
                                             .setAutoCreateRowSorter(true)
                                             .build();
 
     public static void main(final String[] args) {
-        run(new ModelTrial());
+        run(new GenericModelTrial());
     }
 
     @Override
@@ -47,7 +47,7 @@ final class ModelTrial extends SwingTrial {
     }
 
     private record FileColumn<C extends Comparable<C>>(String title, Class<C> type, Function<File, C> mapping)
-            implements Model.Column<File, C> {
+            implements GenericModel.Column<File, C> {
 
         @Override
         public C map(final File file) {
@@ -55,7 +55,7 @@ final class ModelTrial extends SwingTrial {
         }
     }
 
-    private static class FileModel extends Model<File> {
+    private static class FileModel extends GenericModel<File> {
 
         private volatile List<File> files = List.of();
 

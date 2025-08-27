@@ -1,13 +1,13 @@
-package de.team33.files.ui.table;
+package de.team33.sphinx.gamma.table;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.List;
 
-public abstract class Model<E> extends AbstractTableModel {
+public abstract class GenericModel<E> extends AbstractTableModel {
 
     private final List<? extends Column<E, ?>> columns;
 
-    protected Model(final List<? extends Column<E, ?>> columns) {
+    protected GenericModel(final List<? extends Column<E, ?>> columns) {
         this.columns = columns;
     }
 

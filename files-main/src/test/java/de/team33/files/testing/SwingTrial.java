@@ -1,4 +1,4 @@
-package de.team33.files.uix;
+package de.team33.files.testing;
 
 import de.team33.sphinx.metis.JFrames;
 
