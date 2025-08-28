@@ -19,7 +19,9 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -126,6 +128,38 @@ public final class FileTable {
         Icon optWidth();
 
         Icon parentFolder();
+    }
+
+    private static class FileProperty {
+
+        private final FileEntry entry;
+
+        private FileProperty(final FileEntry entry) {
+            this.entry = entry;
+        }
+
+        final FileEntry entry() {
+            return entry;
+        }
+    }
+
+    private static class FileName extends FileProperty implements Comparable<FileName> {
+
+        private static final Comparator<FileEntry> FILE_NAME_NO_CASE =
+                Comparator.comparing(left -> left.name().toLowerCase(Locale.getDefault()));
+        private static final Comparator<FileEntry> FILE_NAME_CASE_SENSITIVE =
+                Comparator.comparing(FileEntry::name);
+        private static final Comparator<FileEntry> FILE_NAME =
+                FILE_NAME_NO_CASE.thenComparing(FILE_NAME_CASE_SENSITIVE);
+
+        private FileName(final FileEntry entry) {
+            super(entry);
+        }
+
+        @Override
+        public final int compareTo(final FileName other) {
+            return FILE_NAME.compare(entry(), other.entry());
+        }
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "WeakerAccess"})
