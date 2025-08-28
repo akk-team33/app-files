@@ -3,11 +3,14 @@ package de.team33.sphinx.gamma.table;
 import javax.swing.table.AbstractTableModel;
 import java.util.List;
 
+/**
+ * @param <R> The type that represents the data of each row as a whole.
+ */
 public abstract class GenericModel<R> extends AbstractTableModel {
 
-    protected abstract List<R> rows();
+    protected abstract List<? extends R> rows();
 
-    protected abstract List<Column<R, ?>> columns();
+    protected abstract List<? extends Column<? super R, ?>> columns();
 
     @Override
     public final int getRowCount() {
@@ -47,12 +50,16 @@ public abstract class GenericModel<R> extends AbstractTableModel {
         super.setValueAt(aValue, rowIndex, columnIndex);
     }
 
+    /**
+     * @param <R> The type that represents the data of each row as a whole.
+     * @param <C> The type that represents the data of the column in question.
+     */
     public interface Column<R, C extends Comparable<C>> {
 
         String title();
 
         Class<C> type();
 
-        C map(R element);
+        C map(R row);
     }
 }

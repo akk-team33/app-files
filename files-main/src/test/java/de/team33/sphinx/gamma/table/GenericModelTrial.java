@@ -3,10 +3,12 @@ package de.team33.sphinx.gamma.table;
 import de.team33.files.testing.SwingTrial;
 import de.team33.files.ui.Context;
 import de.team33.files.ui.FileTree;
+import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.metis.JSplitPanes;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.io.File;
 import java.nio.file.Path;
@@ -19,13 +21,13 @@ import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 final class GenericModelTrial extends SwingTrial {
 
     @SuppressWarnings("StaticCollection")
-    private static final List<GenericModel.Column<File, ?>> COLUMNS = List.of(
+    private static final List<FileColumn<?>> COLUMNS = List.of(
             new FileColumn<>("Name", String.class, File::getName),
             new FileColumn<>("Last Modified", Instant.class, file -> Instant.ofEpochMilli(file.lastModified())),
             new FileColumn<>("Size", Long.class, File::length));
 
-    private final Context context = new Context();
-    private final GenericModel<File> model = new FileModel(context);
+    private final FileTree.Context context = new Context();
+    private final TableModel model = new FileModel(context.cwd());
     private final JTable fileTable = JTables.builder(model)
                                             .setAutoCreateRowSorter(true)
                                             .build();
@@ -60,8 +62,8 @@ final class GenericModelTrial extends SwingTrial {
 
         private volatile List<File> files = List.of();
 
-        FileModel(final Context context) {
-            context.cwd().subscribe(INIT, this::onSetCWD);
+        FileModel(final Retrievable<? extends Path> cwd) {
+            cwd.subscribe(INIT, this::onSetCWD);
         }
 
         private void onSetCWD(final Path path) {
@@ -70,14 +72,14 @@ final class GenericModelTrial extends SwingTrial {
         }
 
         @Override
-        protected final List<File> rows() {
+        protected final List<? extends File> rows() {
             // Already is an immutable List ...
             // noinspection AssignmentOrReturnOfFieldWithMutableType
             return files;
         }
 
         @Override
-        protected final List<Column<File, ?>> columns() {
+        protected final List<? extends Column<? super File, ?>> columns() {
             return COLUMNS;
         }
     }
