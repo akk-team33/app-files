@@ -1,5 +1,6 @@
 package de.team33.files.ui;
 
+import de.team33.files.ui.table.*;
 import de.team33.patterns.io.phobos.FileEntry;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.gamma.table.GenericModel;
@@ -16,12 +17,9 @@ import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -130,57 +128,29 @@ public final class FileTable {
         Icon parentFolder();
     }
 
-    private static class FileProperty {
-
-        private final FileEntry entry;
-
-        private FileProperty(final FileEntry entry) {
-            this.entry = entry;
-        }
-
-        final FileEntry entry() {
-            return entry;
-        }
-    }
-
-    private static class FileName extends FileProperty implements Comparable<FileName> {
-
-        private static final Comparator<FileEntry> FILE_NAME_NO_CASE =
-                Comparator.comparing(left -> left.name().toLowerCase(Locale.getDefault()));
-        private static final Comparator<FileEntry> FILE_NAME_CASE_SENSITIVE =
-                Comparator.comparing(FileEntry::name);
-        private static final Comparator<FileEntry> FILE_NAME =
-                FILE_NAME_NO_CASE.thenComparing(FILE_NAME_CASE_SENSITIVE);
-
-        private FileName(final FileEntry entry) {
-            super(entry);
-        }
-
-        @Override
-        public final int compareTo(final FileName other) {
-            return FILE_NAME.compare(entry(), other.entry());
-        }
-    }
-
     @SuppressWarnings({"ClassNameSameAsAncestorName", "WeakerAccess"})
-    public record Column<C extends Comparable<C>>(String title, Class<C> type, Function<FileEntry, C> mapping)
-            implements GenericModel.Column<FileEntry, C> {
+    public record Column<V extends Comparable<V>>(String title, Class<V> type, Function<FileEntry, V> mapping)
+            implements GenericModel.Column<FileEntry, V> {
 
-        public static final Column<String> NAME =
-                new Column<>("Name", String.class, FileEntry::name);
-        public static final Column<Path> PATH =
-                new Column<>("Path", Path.class, FileEntry::path);
-        public static final Column<Path> PARENT =
-                new Column<>("Parent", Path.class, fileEntry -> fileEntry.path().getParent());
-        public static final Column<Instant> UPDATE =
-                new Column<>("Last Modified", Instant.class, FileEntry::lastModified);
-        public static final Column<Long> SIZE =
-                new Column<>("Size", Long.class, FileEntry::size);
+        public static final Column<FileName> NAME =
+                new Column<>("Name", FileName.class, FileName::new);
+        public static final Column<FilePath> PATH =
+                new Column<>("Path", FilePath.class, FilePath::new);
+        public static final Column<FileParent> PARENT =
+                new Column<>("Parent", FileParent.class, FileParent::new);
+        public static final Column<FileDateTime> UPDATE =
+                new Column<>("Last Modified", FileDateTime.class, FileDateTime::new);
+        public static final Column<FileDate> UPDATE_DATE =
+                new Column<>("Last Mod. Date", FileDate.class, FileDate::new);
+        public static final Column<FileTime> UPDATE_TIME =
+                new Column<>("Last Mod. Time", FileTime.class, FileTime::new);
+        public static final Column<FileSize> SIZE =
+                new Column<>("Size", FileSize.class, FileSize::new);
         @SuppressWarnings("StaticCollection")
-        public static final List<Column<?>> VALUES = List.of(NAME, PATH, PARENT, UPDATE, SIZE);
+        public static final List<Column<?>> VALUES = List.of(NAME, PATH, PARENT, UPDATE, UPDATE_DATE, UPDATE_TIME, SIZE);
 
         @Override
-        public final C map(final FileEntry row) {
+        public final V map(final FileEntry row) {
             return mapping.apply(row);
         }
     }

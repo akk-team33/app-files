@@ -4,17 +4,17 @@ import de.team33.patterns.io.phobos.FileEntry;
 
 import java.util.Comparator;
 
-public class FileName extends FileProperty implements Comparable<FileName> {
+public class FileName extends FileProperty<FileName> {
 
     private static Comparator<FileName> ORDER =
-            Comparator.comparing(fileName -> fileName.entry, ENTRY_NAME);
+            Comparator.comparing(FileProperty::entry, ENTRY_NAME);
 
-    FileName(final FileEntry entry) {
-        super(entry);
+    public FileName(final FileEntry entry) {
+        super(entry, FileName.class, ORDER);
     }
 
     @Override
-    public final int compareTo(final FileName other) {
-        return FileProperty.ENTRY_NAME.compare(entry, other.entry);
+    public final String toString() {
+        return entry().name();
     }
 }

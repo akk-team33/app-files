@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Comparator;
 
-class FileProperty {
+abstract class FileProperty<P extends FileProperty<P>> implements Comparable<P> {
 
     private static final Comparator<String> STRING_IGNORE_CASE =
             String::compareToIgnoreCase;
@@ -28,13 +28,37 @@ class FileProperty {
             Comparator.comparing(FileEntry::size, Long::compareTo)
                       .thenComparing(ENTRY_PATH);
 
-    final FileEntry entry;
+    private final FileEntry entry;
+    private final Class<P> pClass;
+    private final Comparator<P> order;
 
-    FileProperty(final FileEntry entry) {
+    FileProperty(final FileEntry entry, final Class<P> pClass, final Comparator<P> order) {
         this.entry = entry;
+        this.pClass = pClass;
+        this.order = order;
+        // fast fail if so ...
+        pClass.cast(this);
     }
 
     public final FileEntry entry() {
         return entry;
     }
+
+    @Override
+    public final int compareTo(final P other) {
+        return order.compare(pClass.cast(this), other);
+    }
+
+    @Override
+    public final boolean equals(final Object obj) {
+        return (this == obj) || (pClass.isInstance(obj) && (0 == compareTo(pClass.cast(obj))));
+    }
+
+    @Override
+    public final int hashCode() {
+        return entry.path().hashCode();
+    }
+
+    @Override
+    public abstract String toString();
 }
