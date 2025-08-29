@@ -1,6 +1,7 @@
 package de.team33.files.ui.table;
 
 import de.team33.patterns.io.phobos.FileEntry;
+import de.team33.patterns.serving.alpha.Gettable;
 
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -12,18 +13,19 @@ public class FileParent extends FileProperty<FileParent> {
 
     private static Comparator<FileParent> ORDER =
             Comparator.comparing(FileProperty::entry, ENTRY_PATH);
-    private final Path parent;
+    private final Optional<Path> parent;
 
-    public FileParent(final FileEntry entry) {
+    public FileParent(final Gettable<Path> cwd, final FileEntry entry) {
         super(entry, FileParent.class, ORDER);
-        this.parent = entry.path().getParent();
+        this.parent = Optional.ofNullable(entry.path().getParent())
+                              .map(p -> cwd.get()
+                                           .relativize(p));
     }
 
     @Override
     public final String toString() {
-        return Optional.ofNullable(parent)
-                       .map(Path::toString)
-                       .filter(not(String::isBlank))
-                       .orElse(".");
+        return parent.map(Path::toString)
+                     .filter(not(String::isBlank))
+                     .orElse(".");
     }
 }

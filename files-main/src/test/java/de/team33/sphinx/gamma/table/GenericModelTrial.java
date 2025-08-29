@@ -50,15 +50,15 @@ final class GenericModelTrial extends SwingTrial {
     }
 
     private record FileColumn<C extends Comparable<C>>(String title, Class<C> type, Function<File, C> mapping)
-            implements GenericModel.Column<File, C> {
+            implements GenericModel.Column<File, Void, C> {
 
         @Override
-        public C map(final File file) {
-            return mapping.apply(file);
+        public Function<File, C> mapping(final Void context) {
+            return mapping;
         }
     }
 
-    private static class FileModel extends GenericModel<File> {
+    private static class FileModel extends GenericModel<File, Void> {
 
         private volatile List<File> files = List.of();
 
@@ -72,6 +72,11 @@ final class GenericModelTrial extends SwingTrial {
         }
 
         @Override
+        protected final Void context() {
+            return null;
+        }
+
+        @Override
         protected final List<? extends File> rows() {
             // Already is an immutable List ...
             // noinspection AssignmentOrReturnOfFieldWithMutableType
@@ -79,7 +84,7 @@ final class GenericModelTrial extends SwingTrial {
         }
 
         @Override
-        protected final List<? extends Column<? super File, ?>> columns() {
+        protected final List<FileColumn<?>> columns() {
             return COLUMNS;
         }
     }

@@ -2,15 +2,19 @@ package de.team33.sphinx.gamma.table;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * @param <R> The type that represents the data of each row as a whole.
+ * @param <C> The type of context information used for {@linkplain Column#mapping(Object) column mapping}
  */
-public abstract class GenericModel<R> extends AbstractTableModel {
+public abstract class GenericModel<R, C> extends AbstractTableModel {
+
+    protected abstract C context();
 
     protected abstract List<? extends R> rows();
 
-    protected abstract List<? extends Column<? super R, ?>> columns();
+    protected abstract List<? extends Column<R, C, ?>> columns();
 
     @Override
     public final int getRowCount() {
@@ -40,8 +44,10 @@ public abstract class GenericModel<R> extends AbstractTableModel {
 
     @Override
     public final Object getValueAt(final int rowIndex, final int columnIndex) {
+        final R row = rows().get(rowIndex);
         return columns().get(columnIndex)
-                        .map(rows().get(rowIndex));
+                        .mapping(context())
+                        .apply(row);
     }
 
     @Override
@@ -52,14 +58,15 @@ public abstract class GenericModel<R> extends AbstractTableModel {
 
     /**
      * @param <R> The type that represents the data of each row as a whole.
-     * @param <C> The type that represents the data of the column in question.
+     * @param <C> The type of context information used for {@linkplain #mapping(Object) mapping}
+     * @param <P> The type that represents the cell property of the column in question.
      */
-    public interface Column<R, C extends Comparable<C>> {
+    public interface Column<R, C, P> {
 
         String title();
 
-        Class<C> type();
+        Class<P> type();
 
-        C map(R row);
+        Function<R, P> mapping(C context);
     }
 }

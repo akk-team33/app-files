@@ -1,7 +1,9 @@
 package de.team33.files.ui.table;
 
 import de.team33.patterns.io.phobos.FileEntry;
+import de.team33.patterns.serving.alpha.Gettable;
 
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -18,7 +20,7 @@ public class FileDate extends FileProperty<FileDate> {
 
     private final LocalDate date;
 
-    public FileDate(final FileEntry entry) {
+    public FileDate(final Gettable<Path> cwd, final FileEntry entry) {
         super(entry, FileDate.class, ORDER);
         this.date = LocalDate.ofInstant(entry().lastModified(), ZONE_ID);
     }

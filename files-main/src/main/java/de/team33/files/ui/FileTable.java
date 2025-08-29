@@ -2,6 +2,7 @@ package de.team33.files.ui;
 
 import de.team33.files.ui.table.*;
 import de.team33.patterns.io.phobos.FileEntry;
+import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.gamma.table.GenericModel;
 import de.team33.sphinx.luna.Channel;
@@ -21,6 +22,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -129,8 +131,9 @@ public final class FileTable {
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "WeakerAccess"})
-    public record Column<V extends Comparable<V>>(String title, Class<V> type, Function<FileEntry, V> mapping)
-            implements GenericModel.Column<FileEntry, V> {
+    public record Column<V extends Comparable<V>>(String title, Class<V> type,
+                                                  BiFunction<Gettable<Path>, FileEntry, V> biMapping)
+            implements GenericModel.Column<FileEntry, Gettable<Path>, V> {
 
         public static final Column<FileName> NAME =
                 new Column<>("Name", FileName.class, FileName::new);
@@ -150,19 +153,21 @@ public final class FileTable {
         public static final List<Column<?>> VALUES = List.of(NAME, PATH, PARENT, UPDATE, UPDATE_DATE, UPDATE_TIME, SIZE);
 
         @Override
-        public final V map(final FileEntry row) {
-            return mapping.apply(row);
+        public Function<FileEntry, V> mapping(final Gettable<Path> context) {
+            return entry -> biMapping.apply(context, entry);
         }
     }
 
-    private static final class Model extends GenericModel<FileEntry> {
+    private static final class Model extends GenericModel<FileEntry, Gettable<Path>> {
 
         private final List<FileTable.Column<?>> columns;
+        private final Retrievable<? extends Path> cwd;
         private volatile List<FileEntry> entries = List.of();
 
         private Model(final List<FileTable.Column<?>> columns,
                       final Retrievable<? extends Path> cwd) {
             this.columns = columns;
+            this.cwd = cwd;
             cwd.subscribe(INIT, this::onSetPath);
         }
 
@@ -172,6 +177,11 @@ public final class FileTable {
                                     .entries()
                                     .toList();
             fireTableDataChanged();
+        }
+
+        @Override
+        protected final Gettable<Path> context() {
+            return cwd::get;
         }
 
         @Override
