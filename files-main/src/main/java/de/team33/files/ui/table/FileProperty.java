@@ -1,12 +1,13 @@
 package de.team33.files.ui.table;
 
 import de.team33.patterns.io.phobos.FileEntry;
+import de.team33.sphinx.gamma.table.CellProperty;
 
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Comparator;
 
-abstract class FileProperty<P extends FileProperty<P>> implements Comparable<P> {
+abstract class FileProperty<P extends FileProperty<P>> extends CellProperty<P> {
 
     private static final Comparator<String> STRING_IGNORE_CASE =
             String::compareToIgnoreCase;
@@ -29,15 +30,10 @@ abstract class FileProperty<P extends FileProperty<P>> implements Comparable<P> 
                       .thenComparing(ENTRY_PATH);
 
     private final FileEntry entry;
-    private final Class<P> pClass;
-    private final Comparator<P> order;
 
     FileProperty(final FileEntry entry, final Class<P> pClass, final Comparator<P> order) {
+        super(pClass, order);
         this.entry = entry;
-        this.pClass = pClass;
-        this.order = order;
-        // fast fail if so ...
-        pClass.cast(this);
     }
 
     public final FileEntry entry() {
@@ -45,20 +41,7 @@ abstract class FileProperty<P extends FileProperty<P>> implements Comparable<P> 
     }
 
     @Override
-    public final int compareTo(final P other) {
-        return order.compare(pClass.cast(this), other);
+    protected final Path hashCriterion() {
+        return entry.path();
     }
-
-    @Override
-    public final boolean equals(final Object obj) {
-        return (this == obj) || (pClass.isInstance(obj) && (0 == compareTo(pClass.cast(obj))));
-    }
-
-    @Override
-    public final int hashCode() {
-        return entry.path().hashCode();
-    }
-
-    @Override
-    public abstract String toString();
 }
