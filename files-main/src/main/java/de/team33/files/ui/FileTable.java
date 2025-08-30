@@ -130,7 +130,7 @@ public final class FileTable {
         Icon parentFolder();
     }
 
-    public interface Column<P> extends RowModel.Column<FileEntry, P> {
+    public interface Column<P> extends de.team33.sphinx.gamma.table.Column<FileEntry, P> {
 
         Column<FileName> NAME =
                 new ColumnB<>("Name", FileName.class, FileName::new);
