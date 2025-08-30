@@ -4,7 +4,7 @@ import de.team33.files.ui.table.*;
 import de.team33.patterns.io.phobos.FileEntry;
 import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
-import de.team33.sphinx.gamma.table.GenericModel;
+import de.team33.sphinx.gamma.table.RowModel;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JButtons;
 import de.team33.sphinx.metis.JPanels;
@@ -130,7 +130,7 @@ public final class FileTable {
         Icon parentFolder();
     }
 
-    public interface Column<P> extends GenericModel.Column<FileEntry, P> {
+    public interface Column<P> extends RowModel.Column<FileEntry, P> {
 
         Column<FileName> NAME =
                 new ColumnB<>("Name", FileName.class, FileName::new);
@@ -184,7 +184,7 @@ public final class FileTable {
         }
     }
 
-    private static final class Model extends GenericModel<FileEntry, Gettable<Path>> {
+    private static final class Model extends RowModel<FileEntry> {
 
         private final List<? extends FileTable.Column<?>> columns;
         private volatile List<FileEntry> entries = List.of();

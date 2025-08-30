@@ -50,7 +50,7 @@ final class GenericModelTrial extends SwingTrial {
     }
 
     private record FileColumn<C extends Comparable<C>>(String title, Class<C> type, Function<File, C> mapping)
-            implements GenericModel.Column<File, C> {
+            implements RowModel.Column<File, C> {
 
         @Override
         public C map(final File row) {
@@ -58,7 +58,7 @@ final class GenericModelTrial extends SwingTrial {
         }
     }
 
-    private static class FileModel extends GenericModel<File, Void> {
+    private static class FileModel extends RowModel<File> {
 
         private volatile List<File> files = List.of();
 
