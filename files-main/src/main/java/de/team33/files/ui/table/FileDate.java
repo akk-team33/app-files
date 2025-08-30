@@ -20,7 +20,7 @@ public class FileDate extends FileProperty<FileDate> {
 
     private final LocalDate date;
 
-    public FileDate(final Gettable<Path> cwd, final FileEntry entry) {
+    public FileDate(final Gettable<Path> ignored, final FileEntry entry) {
         super(entry, FileDate.class, ORDER);
         this.date = LocalDate.ofInstant(entry().lastModified(), ZONE_ID);
     }

@@ -8,10 +8,9 @@ import java.util.Comparator;
 
 public class FileSize extends FileProperty<FileSize> {
 
-    private static Comparator<FileSize> ORDER =
-            Comparator.comparing(FileProperty::entry, ENTRY_SIZE);
+    private static final Comparator<FileSize> ORDER = Comparator.comparing(FileProperty::entry, ENTRY_SIZE);
 
-    public FileSize(final Gettable<Path> cwd, final FileEntry entry) {
+    public FileSize(final Gettable<Path> ignored, final FileEntry entry) {
         super(entry, FileSize.class, ORDER);
     }
 

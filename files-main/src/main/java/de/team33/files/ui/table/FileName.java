@@ -8,10 +8,10 @@ import java.util.Comparator;
 
 public class FileName extends FileProperty<FileName> {
 
-    private static Comparator<FileName> ORDER =
+    private static final Comparator<FileName> ORDER =
             Comparator.comparing(FileProperty::entry, ENTRY_NAME);
 
-    public FileName(final Gettable<Path> cwd, final FileEntry entry) {
+    public FileName(final Gettable<Path> ignored, final FileEntry entry) {
         super(entry, FileName.class, ORDER);
     }
 

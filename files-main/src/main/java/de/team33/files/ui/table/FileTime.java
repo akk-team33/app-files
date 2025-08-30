@@ -16,13 +16,13 @@ public class FileTime extends FileProperty<FileTime> {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM)
                                                                         .withLocale(DEFAULT);
-    private static final Comparator<FileTime> ORDER = Comparator.comparing((FileTime fileTime) -> fileTime.time,
+    private static final Comparator<FileTime> ORDER = Comparator.comparing((FileTime ft) -> ft.time,
                                                                            LocalTime::compareTo)
                                                                 .thenComparing(FileProperty::entry,
                                                                                ENTRY_LAST_MODIFIED);
     private final LocalTime time;
 
-    public FileTime(final Gettable<Path> cwd, final FileEntry entry) {
+    public FileTime(final Gettable<Path> ignored, final FileEntry entry) {
         super(entry, FileTime.class, ORDER);
         this.time = LocalTime.ofInstant(entry().lastModified(), ZONE_ID);
     }

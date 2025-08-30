@@ -21,7 +21,7 @@ public class FileDateTime extends FileProperty<FileDateTime> {
 
     private final LocalDateTime dateTime;
 
-    public FileDateTime(final Gettable<Path> cwd, final FileEntry entry) {
+    public FileDateTime(final Gettable<Path> ignored, final FileEntry entry) {
         super(entry, FileDateTime.class, ORDER);
         this.dateTime = LocalDateTime.ofInstant(entry().lastModified(), ZONE_ID);
     }
