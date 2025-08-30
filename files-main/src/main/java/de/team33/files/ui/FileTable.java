@@ -130,44 +130,68 @@ public final class FileTable {
         Icon parentFolder();
     }
 
-    @SuppressWarnings({"ClassNameSameAsAncestorName", "WeakerAccess"})
-    public record Column<V extends Comparable<V>>(String title, Class<V> type,
-                                                  BiFunction<Gettable<Path>, FileEntry, V> biMapping)
-            implements GenericModel.Column<FileEntry, Gettable<Path>, V> {
+    public interface Column<P> extends GenericModel.Column<FileEntry, P> {
 
-        public static final Column<FileName> NAME =
-                new Column<>("Name", FileName.class, FileName::new);
-        public static final Column<FilePath> PATH =
-                new Column<>("Path", FilePath.class, FilePath::new);
-        public static final Column<FileParent> PARENT =
-                new Column<>("Parent", FileParent.class, FileParent::new);
-        public static final Column<FileDateTime> UPDATE =
-                new Column<>("Last Modified", FileDateTime.class, FileDateTime::new);
-        public static final Column<FileDate> UPDATE_DATE =
-                new Column<>("Last Mod. Date", FileDate.class, FileDate::new);
-        public static final Column<FileTime> UPDATE_TIME =
-                new Column<>("Last Mod. Time", FileTime.class, FileTime::new);
-        public static final Column<FileSize> SIZE =
-                new Column<>("Size", FileSize.class, FileSize::new);
-        @SuppressWarnings("StaticCollection")
-        public static final List<Column<?>> VALUES = List.of(NAME, PATH, PARENT, UPDATE, UPDATE_DATE, UPDATE_TIME, SIZE);
+        Column<FileName> NAME =
+                new ColumnB<>("Name", FileName.class, FileName::new);
+        Column<FilePath> PATH =
+                new ColumnA<>("Path", FilePath.class, FilePath::new);
+        Column<FileParent> PARENT =
+                new ColumnA<>("Parent", FileParent.class, FileParent::new);
+        Column<FileDateTime> UPDATE =
+                new ColumnB<>("Last Modified", FileDateTime.class, FileDateTime::new);
+        Column<FileDate> UPDATE_DATE =
+                new ColumnB<>("Last Mod. Date", FileDate.class, FileDate::new);
+        Column<FileTime> UPDATE_TIME =
+                new ColumnB<>("Last Mod. Time", FileTime.class, FileTime::new);
+        Column<FileSize> SIZE =
+                new ColumnB<>("Size", FileSize.class, FileSize::new);
+
+        @SuppressWarnings("StaticCollection") // List is immutable!
+        List<Column<?>> VALUES = List.of(NAME, PATH, PARENT, UPDATE, UPDATE_DATE, UPDATE_TIME, SIZE);
+
+        static List<? extends Column<?>> using(final Gettable<Path> cwd, final List<? extends Column<?>> origin) {
+            return origin.stream()
+                         .map(column -> column.using(cwd))
+                         .toList();
+        }
+
+        Column<P> using(Gettable<Path> cwd);
+    }
+
+    private record ColumnA<P>(String title, Class<P> type,
+                              BiFunction<Gettable<Path>, FileEntry, P> biMapping) implements Column<P> {
+        @Override
+        public Column<P> using(final Gettable<Path> cwd) {
+            return new ColumnB<>(title, type, fileEntry -> biMapping.apply(cwd, fileEntry));
+        }
 
         @Override
-        public Function<FileEntry, V> mapping(final Gettable<Path> context) {
-            return entry -> biMapping.apply(context, entry);
+        public P map(final FileEntry row) {
+            throw new UnsupportedOperationException("Context <cwd> is missing - use using(cwd)");
+        }
+    }
+
+    private record ColumnB<P>(String title, Class<P> type, Function<FileEntry, P> mapping) implements Column<P> {
+        @Override
+        public Column<P> using(final Gettable<Path> cwd) {
+            return this;
+        }
+
+        @Override
+        public P map(final FileEntry row) {
+            return mapping.apply(row);
         }
     }
 
     private static final class Model extends GenericModel<FileEntry, Gettable<Path>> {
 
-        private final List<FileTable.Column<?>> columns;
-        private final Retrievable<? extends Path> cwd;
+        private final List<? extends FileTable.Column<?>> columns;
         private volatile List<FileEntry> entries = List.of();
 
-        private Model(final List<FileTable.Column<?>> columns,
-                      final Retrievable<? extends Path> cwd) {
-            this.columns = columns;
-            this.cwd = cwd;
+        private Model(final List<? extends FileTable.Column<?>> columns,
+                      final Retrievable<Path> cwd) {
+            this.columns = FileTable.Column.using(cwd, columns);
             cwd.subscribe(INIT, this::onSetPath);
         }
 
@@ -180,11 +204,6 @@ public final class FileTable {
         }
 
         @Override
-        protected final Gettable<Path> context() {
-            return cwd::get;
-        }
-
-        @Override
         protected final List<FileEntry> rows() {
             // Already IS immutable ...
             // noinspection AssignmentOrReturnOfFieldWithMutableType
@@ -192,7 +211,8 @@ public final class FileTable {
         }
 
         @Override
-        protected final List<FileTable.Column<?>> columns() {
+        protected final List<? extends FileTable.Column<?>> columns() {
+            // noinspection AssignmentOrReturnOfFieldWithMutableType
             return columns;
         }
     }

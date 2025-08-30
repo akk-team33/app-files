@@ -50,11 +50,11 @@ final class GenericModelTrial extends SwingTrial {
     }
 
     private record FileColumn<C extends Comparable<C>>(String title, Class<C> type, Function<File, C> mapping)
-            implements GenericModel.Column<File, Void, C> {
+            implements GenericModel.Column<File, C> {
 
         @Override
-        public Function<File, C> mapping(final Void context) {
-            return mapping;
+        public C map(final File row) {
+            return mapping.apply(row);
         }
     }
 
@@ -69,11 +69,6 @@ final class GenericModelTrial extends SwingTrial {
         private void onSetCWD(final Path path) {
             this.files = List.of(path.toFile().listFiles());
             fireTableDataChanged();
-        }
-
-        @Override
-        protected final Void context() {
-            return null;
         }
 
         @Override

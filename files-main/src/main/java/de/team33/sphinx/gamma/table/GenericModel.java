@@ -1,20 +1,20 @@
 package de.team33.sphinx.gamma.table;
 
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
 import java.util.List;
-import java.util.function.Function;
 
 /**
- * @param <R> The type that represents the data of each row as a whole.
- * @param <C> The type of context information used for {@linkplain Column#mapping(Object) column mapping}
+ * A {@link TableModel} that is based on the fact that all table rows are represented by
+ * a specific type whose properties form the table columns.
+ *
+ * @param <R> The type that represents the table rows.
  */
 public abstract class GenericModel<R, C> extends AbstractTableModel {
 
-    protected abstract C context();
-
     protected abstract List<? extends R> rows();
 
-    protected abstract List<? extends Column<R, C, ?>> columns();
+    protected abstract List<? extends Column<R, ?>> columns();
 
     @Override
     public final int getRowCount() {
@@ -45,9 +45,7 @@ public abstract class GenericModel<R, C> extends AbstractTableModel {
     @Override
     public final Object getValueAt(final int rowIndex, final int columnIndex) {
         final R row = rows().get(rowIndex);
-        return columns().get(columnIndex)
-                        .mapping(context())
-                        .apply(row);
+        return columns().get(columnIndex).map(row);
     }
 
     @Override
@@ -58,15 +56,14 @@ public abstract class GenericModel<R, C> extends AbstractTableModel {
 
     /**
      * @param <R> The type that represents the data of each row as a whole.
-     * @param <C> The type of context information used for {@linkplain #mapping(Object) mapping}
      * @param <P> The type that represents the cell property of the column in question.
      */
-    public interface Column<R, C, P> {
+    public interface Column<R, P> {
 
         String title();
 
         Class<P> type();
 
-        Function<R, P> mapping(C context);
+        P map(R row);
     }
 }
