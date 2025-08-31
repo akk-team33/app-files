@@ -17,14 +17,15 @@ import java.util.List;
 import java.util.function.Function;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+import static javax.swing.SwingConstants.*;
 
 final class GenericModelTrial extends SwingTrial {
 
     @SuppressWarnings("StaticCollection")
     private static final List<FileColumn<?>> COLUMNS = List.of(
-            new FileColumn<>("Name", String.class, File::getName),
-            new FileColumn<>("Last Modified", Instant.class, file -> Instant.ofEpochMilli(file.lastModified())),
-            new FileColumn<>("Size", Long.class, File::length));
+            new FileColumn<>("Name", String.class, LEFT, File::getName),
+            new FileColumn<>("Last Modified", Instant.class, CENTER, file -> Instant.ofEpochMilli(file.lastModified())),
+            new FileColumn<>("Size", Long.class, RIGHT, File::length));
 
     private final FileTree.Context context = new Context();
     private final TableModel model = new FileModel(context.cwd());
@@ -49,8 +50,9 @@ final class GenericModelTrial extends SwingTrial {
         context.cwd().subscribe(INIT, path -> jFrame.setTitle(path.toString()));
     }
 
-    private record FileColumn<C extends Comparable<C>>(String title, Class<C> type, Function<File, C> mapping)
-            implements Column<File, C> {
+    private record FileColumn<C extends Comparable<C>>(String title, Class<C> type, int horizontalAlignment,
+                                                       Function<File, C> mapping)
+            implements Column<File> {
 
         @Override
         public C map(final File row) {
