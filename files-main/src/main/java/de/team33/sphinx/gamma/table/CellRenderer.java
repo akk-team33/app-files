@@ -43,7 +43,7 @@ public abstract class CellRenderer<V, C> implements TableCellRenderer {
                                                          final int colIndex) {
         final Component result =
                 backing.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, colIndex);
-        return charged((JLabel) result, valueClass.cast(value), columns.get(colIndex));
+        return charged((JLabel) result, valueClass.cast(value), columns.get(table.convertColumnIndexToModel(colIndex)));
     }
 
     protected abstract JLabel charged(final JLabel result, final V value, final C column);

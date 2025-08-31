@@ -8,13 +8,13 @@ import java.util.List;
  * A {@link TableModel} that is based on the fact that all table rows are represented by
  * a specific type whose properties form the table columns.
  *
- * @param <R> The type that represents the table rows.
+ * @param <R> The type that represents the content of any table row as a whole.
  */
 public abstract class Model<R> extends AbstractTableModel {
 
     protected abstract List<? extends R> rows();
 
-    protected abstract List<? extends Column<R, ?>> columns();
+    protected abstract List<? extends Column<R>> columns();
 
     @Override
     public final int getRowCount() {

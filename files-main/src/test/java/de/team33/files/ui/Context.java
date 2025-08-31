@@ -24,7 +24,7 @@ public class Context implements FileTree.Context, FileTable.Context {
     }
 
     @Override
-    public final List<FileTable.Column<?>> columns() {
+    public final List<FileTable.Column> columns() {
         return FileTable.Column.VALUES;
     }
 

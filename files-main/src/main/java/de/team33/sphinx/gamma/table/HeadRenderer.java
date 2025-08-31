@@ -35,7 +35,7 @@ public abstract class HeadRenderer<C> implements TableCellRenderer {
                                                          final int colIndex) {
         final Component result =
                 backing.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, colIndex);
-        return charged((JLabel) result, columns.get(colIndex));
+        return charged((JLabel) result, columns.get(table.convertColumnIndexToModel(colIndex)));
     }
 
     protected abstract JLabel charged(final JLabel result, final C column);

@@ -37,7 +37,7 @@ public final class FileTable {
     private final Component component;
 
     private FileTable(final Retrievable<Path> cwd,
-                      final List<Column<?>> columns,
+                      final List<Column> columns,
                       final Icons icons) {
         final TableModel model = new Model(columns, cwd);
         this.table = JTables.builder()
@@ -73,9 +73,7 @@ public final class FileTable {
                 final int viewColIndex = header.columnAtPoint(event.getPoint());
                 if (0 <= viewColIndex) {
                     final int colIndex = table.convertColumnIndexToModel(viewColIndex);
-                    if (2 == event.getClickCount()) {
-                        resizeColumn(colIndex);
-                    }
+                    resizeColumn(colIndex);
                 }
             }
         }
@@ -109,7 +107,7 @@ public final class FileTable {
 
         Icons icons();
 
-        List<Column<?>> columns();
+        List<Column> columns();
 
         Retrievable<Path> cwd();
     }
@@ -126,42 +124,42 @@ public final class FileTable {
     }
 
     @SuppressWarnings("ClassNameSameAsAncestorName")
-    public interface Column<P> extends de.team33.sphinx.gamma.table.Column<FileEntry, P> {
+    public interface Column extends de.team33.sphinx.gamma.table.Column<FileEntry> {
 
-        Column<FileName> NAME =
+        Column NAME =
                 new ColumnB<>("Name", FileName.class, SwingConstants.LEADING, FileName::new);
-        Column<FilePath> PATH =
+        Column PATH =
                 new ColumnA<>("Path", FilePath.class, SwingConstants.LEADING, FilePath::new);
-        Column<FileParent> PARENT =
+        Column PARENT =
                 new ColumnA<>("Parent", FileParent.class, SwingConstants.LEADING, FileParent::new);
-        Column<FileDateTime> UPDATE =
-                new ColumnB<>("Last Modified", FileDateTime.class, SwingConstants.LEADING, FileDateTime::new);
-        Column<FileDate> UPDATE_DATE =
-                new ColumnB<>("Last Mod. Date", FileDate.class, SwingConstants.LEADING, FileDate::new);
-        Column<FileTime> UPDATE_TIME =
-                new ColumnB<>("Last Mod. Time", FileTime.class, SwingConstants.LEADING, FileTime::new);
-        Column<FileSize> SIZE =
+        Column UPDATE =
+                new ColumnB<>("Last Modified", FileDateTime.class, SwingConstants.CENTER, FileDateTime::new);
+        Column UPDATE_DATE =
+                new ColumnB<>("Last Mod. Date", FileDate.class, SwingConstants.CENTER, FileDate::new);
+        Column UPDATE_TIME =
+                new ColumnB<>("Last Mod. Time", FileTime.class, SwingConstants.CENTER, FileTime::new);
+        Column SIZE =
                 new ColumnB<>("Size", FileSize.class, SwingConstants.TRAILING, FileSize::new);
 
         @SuppressWarnings({"StaticCollection", "StaticMethodOnlyUsedInOneClass"}) // List is immutable!
-        List<Column<?>> VALUES = List.of(NAME, PATH, PARENT, UPDATE, UPDATE_DATE, UPDATE_TIME, SIZE);
+        List<Column> VALUES = List.of(NAME, PATH, PARENT, UPDATE, UPDATE_DATE, UPDATE_TIME, SIZE);
 
         @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
-        static List<? extends Column<?>> using(final Gettable<Path> cwd, final List<? extends Column<?>> origin) {
+        static List<? extends Column> using(final Gettable<Path> cwd, final List<? extends Column> origin) {
             return origin.stream()
                          .map(column -> column.using(cwd))
                          .toList();
         }
 
-        Column<P> using(Gettable<Path> cwd);
+        Column using(Gettable<Path> cwd);
 
         int horizontalAlignment();
     }
 
     private record ColumnA<P>(String title, Class<P> type, int horizontalAlignment,
-                              BiFunction<Gettable<Path>, FileEntry, P> biMapping) implements Column<P> {
+                              BiFunction<Gettable<Path>, FileEntry, P> biMapping) implements Column {
         @Override
-        public Column<P> using(final Gettable<Path> cwd) {
+        public Column using(final Gettable<Path> cwd) {
             return new ColumnB<>(title, type, horizontalAlignment, fileEntry -> biMapping.apply(cwd, fileEntry));
         }
 
@@ -172,9 +170,9 @@ public final class FileTable {
     }
 
     private record ColumnB<P>(String title, Class<P> type, int horizontalAlignment,
-                              Function<FileEntry, P> mapping) implements Column<P> {
+                              Function<FileEntry, P> mapping) implements Column {
         @Override
-        public Column<P> using(final Gettable<Path> cwd) {
+        public Column using(final Gettable<Path> cwd) {
             return this;
         }
 
@@ -187,10 +185,10 @@ public final class FileTable {
     @SuppressWarnings("ClassNameSameAsAncestorName")
     private static final class Model extends de.team33.sphinx.gamma.table.Model<FileEntry> {
 
-        private final List<? extends FileTable.Column<?>> columns;
+        private final List<? extends FileTable.Column> columns;
         private volatile List<FileEntry> entries = List.of();
 
-        private Model(final List<? extends FileTable.Column<?>> columns,
+        private Model(final List<? extends FileTable.Column> columns,
                       final Retrievable<Path> cwd) {
             this.columns = FileTable.Column.using(cwd, columns);
             cwd.subscribe(INIT, this::onSetPath);
@@ -212,21 +210,21 @@ public final class FileTable {
         }
 
         @Override
-        protected final List<? extends FileTable.Column<?>> columns() {
+        protected final List<? extends FileTable.Column> columns() {
             // noinspection AssignmentOrReturnOfFieldWithMutableType
             return columns;
         }
     }
 
     @SuppressWarnings("ClassNameSameAsAncestorName")
-    private static final class HeadRenderer extends de.team33.sphinx.gamma.table.HeadRenderer<Column<?>> {
+    private static final class HeadRenderer extends de.team33.sphinx.gamma.table.HeadRenderer<Column> {
 
-        private HeadRenderer(final List<? extends Column<?>> columns) {
+        private HeadRenderer(final List<? extends Column> columns) {
             super(columns);
         }
 
         @Override
-        protected JLabel charged(final JLabel result, final Column<?> column) {
+        protected JLabel charged(final JLabel result, final Column column) {
             return JLabels.charger(result)
                           .setHorizontalAlignment(column.horizontalAlignment())
                           .charged();
@@ -234,17 +232,17 @@ public final class FileTable {
     }
 
     @SuppressWarnings({"rawtypes", "ClassNameSameAsAncestorName"})
-    private static final class CellRenderer extends de.team33.sphinx.gamma.table.CellRenderer<FileProperty, Column<?>> {
+    private static final class CellRenderer extends de.team33.sphinx.gamma.table.CellRenderer<FileProperty, Column> {
 
         private final Icons icons;
 
-        private CellRenderer(final List<? extends Column<?>> columns, final Icons icons) {
+        private CellRenderer(final List<? extends Column> columns, final Icons icons) {
             super(columns, FileProperty.class);
             this.icons = icons;
         }
 
         @Override
-        protected final JLabel charged(final JLabel result, final FileProperty value, final Column<?> column) {
+        protected final JLabel charged(final JLabel result, final FileProperty value, final Column column) {
             return JLabels.charger(result)
                           .setIcon(column == columns().get(0) ? icon(value) : null)
                           .setHorizontalAlignment(column.horizontalAlignment())

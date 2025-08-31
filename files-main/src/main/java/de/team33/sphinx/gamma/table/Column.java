@@ -3,14 +3,13 @@ package de.team33.sphinx.gamma.table;
 /**
  * Represents a table column description.
  *
- * @param <R> The type that represents the data of each row as a whole.
- * @param <P> The type that represents the cell property of the column in question.
+ * @param <R> The type that represents the content of a table row as a whole.
  */
-public interface Column<R, P> {
+public interface Column<R> {
 
     String title();
 
-    Class<P> type();
+    Class<?> type();
 
-    P map(R row);
+    Object map(R row);
 }

@@ -50,7 +50,7 @@ final class GenericModelTrial extends SwingTrial {
     }
 
     private record FileColumn<C extends Comparable<C>>(String title, Class<C> type, Function<File, C> mapping)
-            implements Column<File, C> {
+            implements Column<File> {
 
         @Override
         public C map(final File row) {
