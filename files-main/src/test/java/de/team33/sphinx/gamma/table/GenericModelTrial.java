@@ -58,7 +58,7 @@ final class GenericModelTrial extends SwingTrial {
         }
     }
 
-    private static class FileModel extends RowModel<File> {
+    private static class FileModel extends Model<File> {
 
         private volatile List<File> files = List.of();
 

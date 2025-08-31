@@ -1,13 +1,13 @@
 package de.team33.files.ui.table;
 
 import de.team33.patterns.io.phobos.FileEntry;
-import de.team33.sphinx.gamma.table.ColumnProperty;
+import de.team33.sphinx.gamma.table.Property;
 
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Comparator;
 
-abstract class FileProperty<P extends FileProperty<P>> extends ColumnProperty<P> {
+abstract class FileProperty<P extends FileProperty<P>> extends Property<P> {
 
     private static final Comparator<String> STRING_IGNORE_CASE =
             String::compareToIgnoreCase;
@@ -44,7 +44,7 @@ abstract class FileProperty<P extends FileProperty<P>> extends ColumnProperty<P>
     @Override
     public final boolean equals(final Object other) {
         // consistently with <compareTo()> ...
-        return ColumnProperty.equals(this, other);
+        return Property.equals(this, other);
     }
 
     @Override

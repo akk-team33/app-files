@@ -4,7 +4,6 @@ import de.team33.files.ui.table.*;
 import de.team33.patterns.io.phobos.FileEntry;
 import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
-import de.team33.sphinx.gamma.table.RowModel;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JButtons;
 import de.team33.sphinx.metis.JPanels;
@@ -184,7 +183,7 @@ public final class FileTable {
         }
     }
 
-    private static final class Model extends RowModel<FileEntry> {
+    private static final class Model extends de.team33.sphinx.gamma.table.Model<FileEntry> {
 
         private final List<? extends FileTable.Column<?>> columns;
         private volatile List<FileEntry> entries = List.of();

@@ -10,7 +10,7 @@ import java.util.List;
  *
  * @param <R> The type that represents the table rows.
  */
-public abstract class RowModel<R> extends AbstractTableModel {
+public abstract class Model<R> extends AbstractTableModel {
 
     protected abstract List<? extends R> rows();
 

@@ -9,10 +9,10 @@ import java.util.Comparator;
  * Note: this class has a natural ordering that is inconsistent with equals.
  *
  * @param <P> The final type of data to be displayed within a specific table column.
- * @see #equals(ColumnProperty, Object)
+ * @see #equals(Property, Object)
  */
 @SuppressWarnings("AbstractClassWithOnlyOneDirectInheritor")
-public abstract class ColumnProperty<P extends ColumnProperty<P>> implements Comparable<P> {
+public abstract class Property<P extends Property<P>> implements Comparable<P> {
 
     private static final String ILLEGAL_FINAL_CLASS =
             "<finalClass> is expected to represent the class of <this> (%s) - but was %s";
@@ -26,7 +26,7 @@ public abstract class ColumnProperty<P extends ColumnProperty<P>> implements Com
      * @param finalClass The {@link Class} representation of the intended final type.
      * @param order      The sorting criterion intended for the final type.
      */
-    protected ColumnProperty(final Class<? extends P> finalClass, final Comparator<? super P> order) {
+    protected Property(final Class<? extends P> finalClass, final Comparator<? super P> order) {
         //noinspection ThisEscapedInObjectConstruction
         if (finalClass.isInstance(this)) {
             this.finalClass = finalClass;
@@ -38,14 +38,14 @@ public abstract class ColumnProperty<P extends ColumnProperty<P>> implements Com
 
     /**
      * Utility method to support an implementation of {@link #equals(Object)} that behaves consistently with
-     * {@link #compareTo(ColumnProperty)}.
+     * {@link #compareTo(Property)}.
      * <p>
      * It's important to remember that {@link #hashCode()} must also behave appropriately!
      *
-     * @param <P> The final type of {@link ColumnProperty}.
+     * @param <P> The final type of {@link Property}.
      */
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public static <P extends ColumnProperty<P>> boolean equals(final ColumnProperty<P> property, final Object other) {
+    public static <P extends Property<P>> boolean equals(final Property<P> property, final Object other) {
         return (property == other) ||
                (property.finalClass.isInstance(other) && (0 == property.compareTo(property.finalClass.cast(other))));
     }
