@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Comparator;
 
-abstract class FileProperty<P extends FileProperty<P>> extends Property<P> {
+public abstract class FileProperty<P extends FileProperty<P>> extends Property<P> {
 
     private static final Comparator<String> STRING_IGNORE_CASE =
             String::compareToIgnoreCase;

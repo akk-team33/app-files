@@ -1,6 +1,8 @@
 package de.team33.sphinx.gamma.table;
 
 /**
+ * Represents a table column description.
+ *
  * @param <R> The type that represents the data of each row as a whole.
  * @param <P> The type that represents the cell property of the column in question.
  */
