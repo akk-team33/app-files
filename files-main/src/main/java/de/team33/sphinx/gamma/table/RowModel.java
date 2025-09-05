@@ -10,15 +10,18 @@ import java.util.List;
  * of a specific type, with each row of the table representing one of these elements.
  * The table's columns are then determined by the individual properties of the elements.
  *
- * A {@link TableModel} that is based on the fact that all table rows are represented by
- * a specific type whose properties form the table columns.
- *
- * @param <E> The type of list elements.
+ * @param <E> The type of list elements, each of which is represented as a table row.
  */
 public abstract class RowModel<E> extends AbstractTableModel {
 
+    /**
+     * Returns the currently valid {@link List} of elements that should be displayed as one table row each.
+     */
     protected abstract List<? extends E> rows();
 
+    /**
+     * Returns a {@link List} of {@link Column}s describing the columns of the table in question.
+     */
     protected abstract List<? extends Column<E>> columns();
 
     @Override
@@ -57,5 +60,21 @@ public abstract class RowModel<E> extends AbstractTableModel {
     public final void setValueAt(final Object aValue, final int rowIndex, final int columnIndex) {
         // TODO? preliminary ...
         super.setValueAt(aValue, rowIndex, columnIndex);
+    }
+
+    /**
+     * Represents a table column description to be used in the context of a {@link RowModel}.
+     *
+     * @param <E> The type of list elements, each of which is represented as a table row.
+     */
+    public interface Column<E> {
+
+        String title();
+
+        Class<?> type();
+
+        int horizontalAlignment();
+
+        Object map(E row);
     }
 }

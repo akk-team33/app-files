@@ -124,7 +124,7 @@ public final class FileTable {
     }
 
     @SuppressWarnings("ClassNameSameAsAncestorName")
-    public interface Column extends de.team33.sphinx.gamma.table.Column<FileEntry> {
+    public interface Column extends RowModel.Column<FileEntry> {
 
         Column NAME =
                 new ColumnB<>("Name", FileName.class, SwingConstants.LEADING, FileName::new);

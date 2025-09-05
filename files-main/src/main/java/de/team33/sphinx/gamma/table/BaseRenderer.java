@@ -11,7 +11,7 @@ import java.util.List;
  * @param <V> The type of values to be rendered.
  * @param <C> A type that represents a column descriptor.
  */
-abstract class BaseRenderer<V, C extends Column<?>> implements TableCellRenderer {
+abstract class BaseRenderer<V, C extends RowModel.Column<?>> implements TableCellRenderer {
 
     private final TableCellRenderer backing;
     private final List<? extends C> columns;

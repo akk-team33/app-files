@@ -7,7 +7,7 @@ import java.util.List;
  * @param <V> The type of values to be rendered.
  * @param <C> A type that represents a column descriptor.
  */
-public abstract class CellRenderer<V, C extends Column<?>> extends BaseRenderer<V, C> {
+public abstract class CellRenderer<V, C extends RowModel.Column<?>> extends BaseRenderer<V, C> {
 
     /**
      * @param columns    An <b>immutable</b> {@link List} of column descriptors.

@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * @param <C> A type that represents a column descriptor.
  */
-public abstract class HeadRenderer<C extends Column<?>> extends BaseRenderer<String, C> {
+public abstract class HeadRenderer<C extends RowModel.Column<?>> extends BaseRenderer<String, C> {
 
     /**
      * @param columns An <b>immutable</b> {@link List} of column descriptors.

@@ -52,7 +52,7 @@ final class GenericModelTrial extends SwingTrial {
 
     private record FileColumn<C extends Comparable<C>>(String title, Class<C> type, int horizontalAlignment,
                                                        Function<File, C> mapping)
-            implements Column<File> {
+            implements RowModel.Column<File> {
 
         @Override
         public C map(final File row) {
