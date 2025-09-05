@@ -158,13 +158,13 @@ public final class FileTable {
     public interface Column extends RowModel.Column<FileEntry>,
                                     CellRenderer.Column {
 
-        Column NAME = new ColumnB<>("Name", Name.class, SwingConstants.LEADING, Name::new);
-        Column PATH = new ColumnA<>("Path", RelPath.class, SwingConstants.LEADING, RelPath::new);
-        Column PARENT = new ColumnA<>("Location", RelLocation.class, SwingConstants.LEADING, RelLocation::new);
-        Column UPDATE = new ColumnB<>("Last Modified", DateTime.class, SwingConstants.CENTER, DateTime::new);
-        Column UPDATE_DATE = new ColumnB<>("Last Mod. Date", Date.class, SwingConstants.CENTER, Date::new);
-        Column UPDATE_TIME = new ColumnB<>("Last Mod. Time", Time.class, SwingConstants.CENTER, Time::new);
-        Column SIZE = new ColumnB<>("Size", Size.class, SwingConstants.TRAILING, Size::new);
+        Column NAME = new FinalColumn<>("Name", Name.class, SwingConstants.LEADING, Name::new);
+        Column PATH = new ProColumn<>("Path", RelPath.class, SwingConstants.LEADING, RelPath::new);
+        Column PARENT = new ProColumn<>("Location", RelLocation.class, SwingConstants.LEADING, RelLocation::new);
+        Column UPDATE = new FinalColumn<>("Last Modified", DateTime.class, SwingConstants.CENTER, DateTime::new);
+        Column UPDATE_DATE = new FinalColumn<>("Last Mod. Date", Date.class, SwingConstants.CENTER, Date::new);
+        Column UPDATE_TIME = new FinalColumn<>("Last Mod. Time", Time.class, SwingConstants.CENTER, Time::new);
+        Column SIZE = new FinalColumn<>("Size", Size.class, SwingConstants.TRAILING, Size::new);
 
         @SuppressWarnings({"StaticCollection", "StaticMethodOnlyUsedInOneClass"}) // List is immutable!
         List<Column> VALUES = List.of(NAME, PATH, PARENT, UPDATE, UPDATE_DATE, UPDATE_TIME, SIZE);
@@ -179,11 +179,11 @@ public final class FileTable {
         Column using(Gettable<Path> cwd);
     }
 
-    private record ColumnA<P>(String title, Class<P> type, int horizontalAlignment,
-                              BiFunction<Gettable<Path>, FileEntry, P> biMapping) implements Column {
+    private record ProColumn<P>(String title, Class<P> type, int horizontalAlignment,
+                                BiFunction<Gettable<Path>, FileEntry, P> biMapping) implements Column {
         @Override
         public Column using(final Gettable<Path> cwd) {
-            return new ColumnB<>(title, type, horizontalAlignment, fileEntry -> biMapping.apply(cwd, fileEntry));
+            return new FinalColumn<>(title, type, horizontalAlignment, fileEntry -> biMapping.apply(cwd, fileEntry));
         }
 
         @Override
@@ -192,8 +192,8 @@ public final class FileTable {
         }
     }
 
-    private record ColumnB<P>(String title, Class<P> type, int horizontalAlignment,
-                              Function<FileEntry, P> mapping) implements Column {
+    private record FinalColumn<P>(String title, Class<P> type, int horizontalAlignment,
+                                  Function<FileEntry, P> mapping) implements Column {
         @Override
         public Column using(final Gettable<Path> cwd) {
             return this;

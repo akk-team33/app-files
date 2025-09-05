@@ -20,6 +20,7 @@ public abstract class HeadRenderer<C extends CellRenderer.Column> extends CellRe
 
     @Override
     protected final void setup(final JLabel result, final String value, final C column) {
+        // result.setToolTipText("ToolTipText");
         // nothing to do
     }
 }
