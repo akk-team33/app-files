@@ -162,7 +162,7 @@ public final class FileTable {
         }
 
         @Override
-        public P map(final FileEntry row) {
+        public P map(final FileEntry element) {
             throw new UnsupportedOperationException("Context <cwd> is missing - use using(cwd)");
         }
     }
@@ -175,8 +175,8 @@ public final class FileTable {
         }
 
         @Override
-        public P map(final FileEntry row) {
-            return mapping.apply(row);
+        public P map(final FileEntry element) {
+            return mapping.apply(element);
         }
     }
 

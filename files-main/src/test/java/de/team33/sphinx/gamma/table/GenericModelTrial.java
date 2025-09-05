@@ -55,8 +55,8 @@ final class GenericModelTrial extends SwingTrial {
             implements RowModel.Column<File> {
 
         @Override
-        public C map(final File row) {
-            return mapping.apply(row);
+        public C map(final File element) {
+            return mapping.apply(element);
         }
     }
 
