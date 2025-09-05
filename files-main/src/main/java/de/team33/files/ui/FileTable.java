@@ -228,7 +228,7 @@ public final class FileTable {
         private final Icons icons;
 
         private CellRenderer(final List<? extends Column> columns, final Icons icons) {
-            super(columns, FileProperty.class);
+            super(FileProperty.class, columns);
             this.icons = icons;
         }
 

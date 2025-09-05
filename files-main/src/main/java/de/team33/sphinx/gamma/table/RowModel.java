@@ -93,4 +93,5 @@ public abstract class RowModel<E> extends AbstractTableModel {
          */
         Object map(E element);
     }
+
 }
