@@ -1,11 +1,11 @@
 package de.team33.files.ui;
 
-import de.team33.files.ui.table.*;
 import de.team33.patterns.io.phobos.FileEntry;
 import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.gamma.table.CellRenderer;
 import de.team33.sphinx.gamma.table.HeadRenderer;
+import de.team33.sphinx.gamma.table.Property;
 import de.team33.sphinx.gamma.table.RowModel;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JButtons;
@@ -19,20 +19,43 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.nio.file.Path;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+import static java.util.function.Predicate.not;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
 
 public final class FileTable {
 
     private static final int MARGIN = 8;
+    private static final Locale LOCALE = Locale.getDefault();
+    private static final ZoneId ZONE_ID = ZoneId.systemDefault();
+    private static final Comparator<FileEntry> ENTRY_SIZE =
+            Comparator.comparing(FileEntry::size, Long::compareTo);
+    private static final Comparator<FileEntry> ENTRY_LAST_MODIFIED =
+            Comparator.comparing(FileEntry::lastModified, Instant::compareTo);
+    private static final Comparator<String> STRING_IGNORE_CASE =
+            String::compareToIgnoreCase;
+    private static final Comparator<String> STRING_RESPECT_CASE =
+            String::compareTo;
+    private static final Comparator<String> STRING_NORMAL =
+            STRING_IGNORE_CASE.thenComparing(STRING_RESPECT_CASE);
+    private static final Comparator<FileEntry> ENTRY_NAME =
+            Comparator.comparing(FileEntry::name, STRING_NORMAL);
+    private static final Comparator<Path> PATH_NORMAL =
+            Comparator.comparing(Path::toString, STRING_NORMAL);
+    private static final Comparator<FileEntry> ENTRY_PATH =
+            Comparator.comparing(FileEntry::path, PATH_NORMAL);
 
     private final List<? extends Column> columns;
     private final Icons icons;
@@ -69,6 +92,10 @@ public final class FileTable {
 
     public static FileTable by(final Context context) {
         return new FileTable(context.cwd(), context.columns(), context.icons());
+    }
+
+    private static <P> Comparator<P> neutralOrder() {
+        return (left, right) -> 0;
     }
 
     private void onMouseClicked(final MouseEvent event) {
@@ -182,6 +209,162 @@ public final class FileTable {
         @Override
         public P map(final FileEntry element) {
             return mapping.apply(element);
+        }
+    }
+
+    private static final class FileName extends FileProperty<FileName> {
+
+        private static final Comparator<FileName> ORDER = Comparator.comparing(FileProperty::entry, ENTRY_NAME);
+
+        private FileName(final FileEntry entry) {
+            super(entry, FileName.class, ORDER);
+        }
+
+        @Override
+        public final String toString() {
+            return entry().name();
+        }
+    }
+
+    private static final class FilePath extends FileProperty<FilePath> {
+
+        private static final Comparator<FilePath> ORDER = neutralOrder();
+
+        private final Path relative;
+
+        private FilePath(final Supplier<Path> cwd, final FileEntry entry) {
+            super(entry, FilePath.class, ORDER);
+            this.relative = cwd.get().relativize(entry.path());
+        }
+
+        @Override
+        public final String toString() {
+            return relative.toString();
+        }
+    }
+
+    private static final class FileParent extends FileProperty<FileParent> {
+
+        private static final Comparator<FileParent> ORDER = neutralOrder();
+
+        @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+        private final Optional<Path> parent;
+
+        private FileParent(final Supplier<Path> cwd, final FileEntry entry) {
+            super(entry, FileParent.class, ORDER);
+            this.parent = Optional.ofNullable(entry.path().getParent())
+                                  .map(p -> cwd.get()
+                                               .relativize(p));
+        }
+
+        @Override
+        public final String toString() {
+            return parent.map(Path::toString)
+                         .filter(not(String::isBlank))
+                         .orElse(".");
+        }
+    }
+
+    private static final class FileDateTime extends FileProperty<FileDateTime> {
+
+        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                                                                            .withLocale(LOCALE);
+        private static final Comparator<FileDateTime> ORDER = Comparator.comparing(FileProperty::entry,
+                                                                                   ENTRY_LAST_MODIFIED);
+
+        private final LocalDateTime dateTime;
+
+        private FileDateTime(final FileEntry entry) {
+            super(entry, FileDateTime.class, ORDER);
+            this.dateTime = LocalDateTime.ofInstant(entry().lastModified(), ZONE_ID);
+        }
+
+        @Override
+        public final String toString() {
+            return dateTime.format(FORMATTER);
+        }
+    }
+
+    private static final class FileDate extends FileProperty<FileDate> {
+
+        private static final DateTimeFormatter FORMATTER =
+                DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                                 .withLocale(LOCALE);
+        private static final Comparator<FileDate> ORDER =
+                Comparator.comparing(FileProperty::entry, ENTRY_LAST_MODIFIED);
+
+        private final LocalDate date;
+
+        private FileDate(final FileEntry entry) {
+            super(entry, FileDate.class, ORDER);
+            this.date = LocalDate.ofInstant(entry().lastModified(), ZONE_ID);
+        }
+
+        @Override
+        public final String toString() {
+            return date.format(FORMATTER);
+        }
+    }
+
+    private static final class FileTime extends FileProperty<FileTime> {
+
+        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM)
+                                                                            .withLocale(LOCALE);
+        private static final Comparator<FileTime> ORDER = Comparator.comparing((FileTime ft) -> ft.time,
+                                                                               LocalTime::compareTo)
+                                                                    .thenComparing(FileProperty::entry,
+                                                                                   ENTRY_LAST_MODIFIED);
+        private final LocalTime time;
+
+        private FileTime(final FileEntry entry) {
+            super(entry, FileTime.class, ORDER);
+            this.time = LocalTime.ofInstant(entry().lastModified(), ZONE_ID);
+        }
+
+        @Override
+        public final String toString() {
+            return time.format(FORMATTER);
+        }
+    }
+
+    private static final class FileSize extends FileProperty<FileSize> {
+
+        private static final Comparator<FileSize> ORDER = Comparator.comparing(FileProperty::entry, ENTRY_SIZE);
+
+        private FileSize(final FileEntry entry) {
+            super(entry, FileSize.class, ORDER);
+        }
+
+        @Override
+        public final String toString() {
+            return "%,d".formatted(entry().size());
+        }
+    }
+
+    private abstract static class FileProperty<P extends FileProperty<P>> extends Property<P> {
+
+        private final FileEntry entry;
+
+        private FileProperty(final FileEntry entry, final Class<P> pClass, final Comparator<P> primaryOrder) {
+            super(pClass, primaryOrder.thenComparing(FileProperty::entry, ENTRY_PATH));
+            this.entry = entry;
+        }
+
+        final FileEntry entry() {
+            return entry;
+        }
+
+        @Override
+        public final boolean equals(final Object other) {
+            // consistently with <compareTo()> ...
+            return Property.equals(this, other);
+        }
+
+        @Override
+        public final int hashCode() {
+            // consistently with <equals()> and <compareTo()>:
+            // final order depends on file entry path (see constructor) ...
+            return entry.path().hashCode();
         }
     }
 
