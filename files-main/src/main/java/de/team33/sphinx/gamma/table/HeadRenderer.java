@@ -1,18 +1,21 @@
 package de.team33.sphinx.gamma.table;
 
 import javax.swing.*;
-import java.util.List;
+import javax.swing.table.TableCellRenderer;
 
 /**
- * @param <C> A type that represents a column descriptor.
+ * Basic {@link TableCellRenderer} implementation for a table header that is rendered by a JLabel.
+ *
+ * @param <C> A type that represents a {@linkplain Column column descriptor}.
  */
-public class HeadRenderer<C extends RowModel.Column<?>> extends CellRenderer<String, C> {
+@SuppressWarnings("AbstractClassWithOnlyOneDirectInheritor")
+public abstract class HeadRenderer<C extends CellRenderer.Column> extends CellRenderer<String, C> {
 
     /**
-     * @param columns An <b>immutable</b> {@link List} of column descriptors.
+     *
      */
-    protected HeadRenderer(final List<? extends C> columns) {
-        super(new JTable().getTableHeader().getDefaultRenderer(), String.class, columns);
+    protected HeadRenderer() {
+        super(new JTable().getTableHeader().getDefaultRenderer(), String.class);
     }
 
     @Override

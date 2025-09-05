@@ -4,6 +4,8 @@ import de.team33.files.ui.table.*;
 import de.team33.patterns.io.phobos.FileEntry;
 import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
+import de.team33.sphinx.gamma.table.CellRenderer;
+import de.team33.sphinx.gamma.table.HeadRenderer;
 import de.team33.sphinx.gamma.table.RowModel;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JButtons;
@@ -14,7 +16,6 @@ import javax.swing.*;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
-import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.nio.file.Path;
@@ -33,18 +34,21 @@ public final class FileTable {
 
     private static final int MARGIN = 8;
 
+    private final List<? extends Column> columns;
+    private final Icons icons;
     private final JTable table;
     private final Component component;
 
     private FileTable(final Retrievable<Path> cwd,
                       final List<Column> columns,
                       final Icons icons) {
-        final TableModel model = new Model(columns, cwd);
+        this.columns = Column.using(cwd, columns);
+        this.icons = icons;
         this.table = JTables.builder()
-                            .setModel(model)
-                            .setDefaultRenderer(FileProperty.class, new CellRenderer(columns, icons))
+                            .setModel(new Model(cwd))
+                            .setDefaultRenderer(FileProperty.class, new MyCellRenderer())
                             .setup(jTable -> jTable.getTableHeader()
-                                                   .setDefaultRenderer(new HeadRenderer(columns)))
+                                                   .setDefaultRenderer(new MyHeadRenderer()))
                             .setShowGrid(false)
                             .setRowSelectionAllowed(true)
                             .setColumnSelectionAllowed(false)
@@ -57,7 +61,7 @@ public final class FileTable {
                             .build();
         this.component = JPanels.builder()
                                 .setLayout(new BorderLayout())
-                                .add(new Controls(icons).panel, BorderLayout.PAGE_START)
+                                .add(new Controls().panel, BorderLayout.PAGE_START)
                                 .add(new JScrollPane(table), BorderLayout.CENTER)
                                 .build();
         Channel.MOUSE_CLICKED.subscribe(table.getTableHeader(), this::onMouseClicked);
@@ -124,7 +128,8 @@ public final class FileTable {
     }
 
     @SuppressWarnings("ClassNameSameAsAncestorName")
-    public interface Column extends RowModel.Column<FileEntry> {
+    public interface Column extends RowModel.Column<FileEntry>,
+                                    CellRenderer.Column {
 
         Column NAME =
                 new ColumnB<>("Name", FileName.class, SwingConstants.LEADING, FileName::new);
@@ -180,15 +185,11 @@ public final class FileTable {
         }
     }
 
-    @SuppressWarnings("ClassNameSameAsAncestorName")
-    private static final class Model extends RowModel<FileEntry> {
+    private final class Model extends RowModel<FileEntry> {
 
-        private final List<? extends FileTable.Column> columns;
         private volatile List<FileEntry> entries = List.of();
 
-        private Model(final List<? extends FileTable.Column> columns,
-                      final Retrievable<Path> cwd) {
-            this.columns = FileTable.Column.using(cwd, columns);
+        private Model(final Retrievable<? extends Path> cwd) {
             cwd.subscribe(INIT, this::onSetPath);
         }
 
@@ -209,31 +210,38 @@ public final class FileTable {
 
         @Override
         protected final List<? extends FileTable.Column> columns() {
+            // Already IS immutable ...
             // noinspection AssignmentOrReturnOfFieldWithMutableType
             return columns;
         }
     }
 
-    @SuppressWarnings("ClassNameSameAsAncestorName")
-    private static final class HeadRenderer extends de.team33.sphinx.gamma.table.HeadRenderer<Column> {
+    private final class MyHeadRenderer extends HeadRenderer<Column> {
 
-        private HeadRenderer(final List<? extends Column> columns) {
-            super(columns);
+        @Override
+        protected List<? extends FileTable.Column> columns() {
+            // Already IS immutable ...
+            // noinspection AssignmentOrReturnOfFieldWithMutableType
+            return columns;
         }
     }
 
-    @SuppressWarnings({"rawtypes", "ClassNameSameAsAncestorName"})
-    private static final class CellRenderer extends de.team33.sphinx.gamma.table.CellRenderer<FileProperty, Column> {
+    @SuppressWarnings("rawtypes")
+    private final class MyCellRenderer extends CellRenderer<FileProperty, Column> {
 
-        private final Icons icons;
-
-        private CellRenderer(final List<? extends Column> columns, final Icons icons) {
-            super(FileProperty.class, columns);
-            this.icons = icons;
+        private MyCellRenderer() {
+            super(FileProperty.class);
         }
 
         @Override
-        protected void setup(final JLabel result, final FileProperty value, final Column column) {
+        protected List<? extends FileTable.Column> columns() {
+            // Already IS immutable ...
+            // noinspection AssignmentOrReturnOfFieldWithMutableType
+            return columns;
+        }
+
+        @Override
+        protected void setup(final JLabel result, final FileProperty value, final FileTable.Column column) {
             result.setIcon(column == columns().get(0) ? icon(value) : null);
         }
 
@@ -242,11 +250,11 @@ public final class FileTable {
         }
     }
 
-    private static final class Controls {
+    private final class Controls {
 
         private final JPanel panel;
 
-        private Controls(final Icons icons) {
+        private Controls() {
             panel = JPanels.builder()
                            .setLayout(new GridBagLayout())
                            .add(JButtons.builder()

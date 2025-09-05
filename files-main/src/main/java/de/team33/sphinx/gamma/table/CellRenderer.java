@@ -12,31 +12,24 @@ import java.util.List;
  * by a certain type and is rendered by a JLabel.
  *
  * @param <V> The type of values to be rendered.
- * @param <C> A type that represents a column descriptor.
+ * @param <C> A type that represents a {@linkplain Column column descriptor}.
  */
-public abstract class CellRenderer<V, C extends RowModel.Column<?>> implements TableCellRenderer {
+public abstract class CellRenderer<V, C extends CellRenderer.Column> implements TableCellRenderer {
 
     private final TableCellRenderer backing;
-    private final List<? extends C> columns;
     private final Class<? extends V> valueClass;
 
-    protected CellRenderer(final Class<? extends V> valueClass, final List<? extends C> columns) {
-        this(new JTable().getDefaultRenderer(valueClass), valueClass, columns);
+    protected CellRenderer(final Class<? extends V> valueClass) {
+        this(new JTable().getDefaultRenderer(valueClass), valueClass);
     }
 
-    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
     CellRenderer(final TableCellRenderer backing,
-                 final Class<? extends V> valueClass,
-                 final List<? extends C> columns) {
+                 final Class<? extends V> valueClass) {
         this.backing = backing;
-        this.columns = columns;
         this.valueClass = valueClass;
     }
 
-    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
-    protected final List<? extends C> columns() {
-        return columns;
-    }
+    protected abstract List<? extends C> columns();
 
     @Override
     public final Component getTableCellRendererComponent(final JTable table,
@@ -49,7 +42,7 @@ public abstract class CellRenderer<V, C extends RowModel.Column<?>> implements T
                 backing.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, colIndex);
         return charged((JLabel) result,
                        valueClass.cast(value),
-                       columns.get(table.convertColumnIndexToModel(colIndex)));
+                       columns().get(table.convertColumnIndexToModel(colIndex)));
     }
 
     private JLabel charged(final JLabel result, final V value, final C column) {
@@ -60,4 +53,15 @@ public abstract class CellRenderer<V, C extends RowModel.Column<?>> implements T
     }
 
     protected abstract void setup(JLabel result, final V value, final C column);
+
+    /**
+     * Represents a table column description to be used in the context of a {@link CellRenderer}.
+     */
+    public interface Column {
+
+        /**
+         * Returns the horizontal alignment to be applied in <em>this</em> column.
+         */
+        int horizontalAlignment();
+    }
 }

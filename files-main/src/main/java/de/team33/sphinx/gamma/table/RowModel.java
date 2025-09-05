@@ -75,11 +75,6 @@ public abstract class RowModel<E> extends AbstractTableModel {
         String title();
 
         /**
-         * Returns the horizontal alignment to be applied in <em>this</em> column.
-         */
-        int horizontalAlignment();
-
-        /**
          * Returns the {@link Class} that represents the type of property to be displayed in <em>this</em> column.
          * <p>
          * A result of {@link #map(Object)} must match that type.
@@ -93,5 +88,4 @@ public abstract class RowModel<E> extends AbstractTableModel {
          */
         Object map(E element);
     }
-
 }
