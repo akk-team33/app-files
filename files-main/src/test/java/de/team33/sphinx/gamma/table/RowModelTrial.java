@@ -17,9 +17,10 @@ import java.util.List;
 import java.util.function.Function;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+import static javax.swing.JTable.AUTO_RESIZE_OFF;
 import static javax.swing.SwingConstants.*;
 
-final class GenericModelTrial extends SwingTrial {
+final class RowModelTrial extends SwingTrial {
 
     @SuppressWarnings("StaticCollection")
     private static final List<FileColumn<?>> COLUMNS = List.of(
@@ -31,10 +32,11 @@ final class GenericModelTrial extends SwingTrial {
     private final TableModel model = new FileModel(context.cwd());
     private final JTable fileTable = JTables.builder(model)
                                             .setAutoCreateRowSorter(true)
+                                            .setAutoResizeMode(AUTO_RESIZE_OFF)
                                             .build();
 
     public static void main(final String[] args) {
-        run(new GenericModelTrial());
+        run(new RowModelTrial());
     }
 
     @Override
@@ -50,8 +52,7 @@ final class GenericModelTrial extends SwingTrial {
         context.cwd().subscribe(INIT, path -> jFrame.setTitle(path.toString()));
     }
 
-    private record FileColumn<C extends Comparable<C>>(String title, Class<C> type, int horizontalAlignment,
-                                                       Function<File, C> mapping)
+    private record FileColumn<C>(String title, Class<C> type, int horizontalAlignment, Function<File, C> mapping)
             implements RowModel.Column<File> {
 
         @Override
