@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class FileEntryTest {
 
     private static final Path DEV_NULL = Paths.get("/", "dev", "null"); // special file
-    private static final Path ROOT_DIR = Paths.get("/", "root"); // unreadable directory
+    private static final Path ROOT_HOME = Paths.get("/", "root"); // unreadable directory (linux)
     private static final Path ROOT = Paths.get("/"); // root directory
 
     static Stream<Path> paths() {
@@ -26,7 +26,7 @@ class FileEntryTest {
                 Paths.get("src", "main", "java"),
                 Paths.get("pom.xml"),
                 DEV_NULL,
-                ROOT_DIR,
+                ROOT_HOME,
                 ROOT);
     }
 

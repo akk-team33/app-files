@@ -7,10 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -25,15 +23,15 @@ import static java.util.Comparator.comparing;
  * Therefore, an instance should be short-lived. The longer an instance "lives", the more likely it is
  * that the meta information is out of date because the underlying file may have been changed in the meantime.
  */
-public class FileEntry {
+@SuppressWarnings("ClassWithTooManyMethods")
+public final class FileEntry {
 
     private static final String PROPERTY_NOT_AVAILABLE =
             "property not available because the file does not exist:%n%n" +
-            "    path: %s%n%n";
+            "    path: %s%n";
     private static final String ENTRIES_NOT_AVAILABLE =
             "entries not available because the file is not a directory:%n%n" +
-            "    path: %s%n%n";
-
+            "    path: %s%n";
     private static final Comparator<String> PRIMARY = String::compareToIgnoreCase;
     private static final Comparator<String> SECONDARY = String::compareTo;
     private static final Comparator<FileEntry> ENTRY_ORDER = comparing(FileEntry::name,
@@ -43,7 +41,7 @@ public class FileEntry {
     @SuppressWarnings("StaticCollection") // Set is immutable
     private static final Set<FileType> BROKEN_LINK = Set.of(FileType.SYMBOLIC_LINK);
     @SuppressWarnings("StaticCollection") // Set is immutable
-    private static final Set<FileType> NO_TYPES = Set.of();
+    private static final Set<FileType> EMPTY_TYPES = Set.of();
 
     private final List<Exception> problems = new LinkedList<>();
     private final Path path;
@@ -82,6 +80,7 @@ public class FileEntry {
         return lazyAttributes.get();
     }
 
+    @SuppressWarnings("unused")
     public final List<Exception> problems() {
         return List.copyOf(problems);
     }
@@ -267,33 +266,33 @@ public class FileEntry {
         return path.toString();
     }
 
-    private interface FileAttributes extends BasicFileAttributes {
+    private interface Attributes {
 
-        Path path();
+        Attributes resolved();
 
-        default Stream<FileEntry> entries() {
-            throw new UnsupportedOperationException(format(ENTRIES_NOT_AVAILABLE, path()));
+        Set<FileType> types();
+
+        long size();
+
+        Stream<FileEntry> entries();
+
+        Instant lastAccess();
+
+        Instant creation();
+
+        Instant lastModified();
+    }
+
+    private interface Resolved extends Attributes {
+
+        default Attributes resolved() {
+            return this;
         }
     }
 
-    private abstract static class Attributes {
+    private abstract static class ExistingFileAttributes implements Attributes {
 
-        abstract Set<FileType> types();
-
-        abstract long size();
-
-        abstract Stream<FileEntry> entries();
-
-        abstract Instant lastAccess();
-
-        abstract Instant creation();
-
-        abstract Instant lastModified();
-    }
-
-    private abstract static class ExistingFileAttributes extends Attributes {
-
-        final BasicFileAttributes backing;
+        private final BasicFileAttributes backing;
         private final Lazy<Set<FileType>> lazyTypes;
 
         private ExistingFileAttributes(final BasicFileAttributes backing) {
@@ -301,247 +300,112 @@ public class FileEntry {
             this.lazyTypes = Lazy.init(() -> Set.copyOf(newTypes().toList()));
         }
 
-        abstract Stream<FileType> newTypes();
+        private Stream<FileType> newTypes() {
+            if (this == resolved()) {
+                return FileType.matching(backing);
+            } else {
+                return Stream.concat(FileType.matching(backing), resolved().types().stream());
+            }
+        }
 
         @Override
-        final Set<FileType> types() {
+        public final Set<FileType> types() {
             return lazyTypes.get();
         }
 
         @Override
-        final long size() {
+        public final long size() {
             return backing.size();
         }
 
         @Override
-        final Instant lastAccess() {
+        public final Instant lastAccess() {
             return backing.lastAccessTime().toInstant();
         }
 
         @Override
-        final Instant creation() {
+        public final Instant creation() {
             return backing.creationTime().toInstant();
         }
 
         @Override
-        final Instant lastModified() {
+        public final Instant lastModified() {
             return backing.lastModifiedTime().toInstant();
         }
     }
 
-    private class MissingFileAttributes_ implements FileAttributes {
+    private final class DirectoryAttributes extends ExistingFileAttributes implements Resolved {
 
-        @Override
-        public final Path path() {
-            return path;
-        }
-
-        @Override
-        public final FileTime lastModifiedTime() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
-        }
-
-        @Override
-        public final FileTime lastAccessTime() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
-        }
-
-        @Override
-        public final FileTime creationTime() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
-        }
-
-        @Override
-        public final boolean isRegularFile() {
-            return false;
-        }
-
-        @Override
-        public final boolean isDirectory() {
-            return false;
-        }
-
-        @Override
-        public final boolean isSymbolicLink() {
-            return false;
-        }
-
-        @Override
-        public final boolean isOther() {
-            return false;
-        }
-
-        @Override
-        public final long size() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
-        }
-
-        @Override
-        public final Object fileKey() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
-        }
-    }
-
-    private class ExistingFileAttributes_ implements FileAttributes {
-
-        private final BasicFileAttributes backing;
-
-        ExistingFileAttributes_(final BasicFileAttributes backing) {
-            this.backing = backing;
-        }
-
-        @Override
-        public final Path path() {
-            return path;
-        }
-
-        @Override
-        public final FileTime lastModifiedTime() {
-            return backing.lastModifiedTime();
-        }
-
-        @Override
-        public final FileTime lastAccessTime() {
-            return backing.lastAccessTime();
-        }
-
-        @Override
-        public final FileTime creationTime() {
-            return backing.creationTime();
-        }
-
-        @Override
-        public final boolean isRegularFile() {
-            return backing.isRegularFile();
-        }
-
-        @Override
-        public final boolean isDirectory() {
-            return backing.isDirectory();
-        }
-
-        @Override
-        public final boolean isSymbolicLink() {
-            return backing.isSymbolicLink();
-        }
-
-        @Override
-        public final boolean isOther() {
-            return backing.isOther();
-        }
-
-        @Override
-        public final long size() {
-            return backing.size();
-        }
-
-        @Override
-        public final Object fileKey() {
-            return backing.fileKey();
-        }
-    }
-
-    private class DirectoryAttributes_ extends ExistingFileAttributes_ {
-
-        private final Lazy<Set<FileEntry>> entrySet = null;
-
-        DirectoryAttributes_(final BasicFileAttributes backing) {
-            super(backing);
-//            this.entrySet = Lazy.init(() -> {
-//                try (final Stream<Path> stream = Files.list(path())) {
-//                    return stream.map(path -> new FileEntry(path, Normality.DEFINITE, null))
-//                                 .map(entry -> isDistinct() ? entry : entry.resolved())
-//                                 .collect(Collectors.toCollection(() -> new TreeSet<>(ENTRY_ORDER)));
-//                } catch (final IOException caught) {
-//                    // TODO?: problems.add(caught);
-//                    return Collections.emptySet();
-//                }
-//            });
-        }
-
-        @Override
-        public Stream<FileEntry> entries() {
-            return entrySet.get().stream();
-        }
-    }
-
-    private final class DirectoryAttributes extends ExistingFileAttributes {
-
-        private final Lazy<Set<FileEntry>> lazyEntries;
+        private final Lazy<List<FileEntry>> lazyEntries;
 
         private DirectoryAttributes(final BasicFileAttributes backing) {
             super(backing);
             this.lazyEntries = Lazy.init(this::newEntries);
         }
 
-        @Override
-        final Stream<FileType> newTypes() {
-            return FileType.matching(backing);
-        }
-
-        private Set<FileEntry> newEntries() {
+        private List<FileEntry> newEntries() {
             try (final Stream<Path> stream = Files.list(path)) {
                 return stream.map(childPath -> new FileEntry(childPath, Normality.DEFINITE))
-                             .collect(Collectors.toCollection(() -> new TreeSet<>(ENTRY_ORDER)));
+                             .sorted(ENTRY_ORDER)
+                             .toList();
             } catch (final IOException caught) {
                 problems.add(caught);
-                return Collections.emptySet();
+                return List.of();
             }
         }
 
         @Override
-        final Stream<FileEntry> entries() {
+        public final Stream<FileEntry> entries() {
             return lazyEntries.get().stream();
         }
     }
 
-    private final class PlainAttributes extends ExistingFileAttributes {
+    private final class PlainAttributes extends ExistingFileAttributes implements Resolved {
 
         private PlainAttributes(final BasicFileAttributes backing) {
             super(backing);
         }
 
         @Override
-        final Stream<FileType> newTypes() {
-            return FileType.matching(backing);
-        }
-
-        @Override
-        final Stream<FileEntry> entries() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
+        public final Stream<FileEntry> entries() {
+            throw new UnsupportedOperationException(format(ENTRIES_NOT_AVAILABLE, path));
         }
     }
 
-    private class MissingFileAttributes extends Attributes {
+    private class MissingFileAttributes implements Resolved {
 
-        @Override
-        final Set<FileType> types() {
-            return NO_TYPES;
+        private UnsupportedOperationException rejected() {
+            return new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
         }
 
         @Override
-        final long size() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
+        public final Set<FileType> types() {
+            return EMPTY_TYPES;
         }
 
         @Override
-        final Stream<FileEntry> entries() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
+        public final long size() {
+            throw rejected();
         }
 
         @Override
-        final Instant lastAccess() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
+        public final Stream<FileEntry> entries() {
+            throw rejected();
         }
 
         @Override
-        final Instant creation() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
+        public final Instant lastAccess() {
+            throw rejected();
         }
 
         @Override
-        final Instant lastModified() {
-            throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
+        public final Instant creation() {
+            throw rejected();
+        }
+
+        @Override
+        public final Instant lastModified() {
+            throw rejected();
         }
     }
 
@@ -555,12 +419,12 @@ public class FileEntry {
         }
 
         @Override
-        final Stream<FileType> newTypes() {
-            return Stream.concat(FileType.matching(backing), resolved.types().stream());
+        public final Attributes resolved() {
+            return resolved;
         }
 
         @Override
-        final Stream<FileEntry> entries() {
+        public final Stream<FileEntry> entries() {
             return resolved.entries();
         }
     }
