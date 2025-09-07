@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,82 +51,43 @@ class SymbolicLinkTest {
     }
 
     @Test
-    final void linkRegularPrimary() {
+    final void linkRegular() {
         final FileEntry result = FileEntry.of(regLinkPath);
-        assertEquals(FileType.SYMBOLIC_LINK, result.types());
+        assertEquals(Set.of(FileType.SYMBOLIC_LINK, FileType.REGULAR_FILE), result.types());
         assertTrue(result.isSymbolicLink());
-        assertFalse(result.isRegularFile());
-    }
-
-    @Test
-    final void linkRegularEvaluated() {
-        final FileEntry result = FileEntry.of(regLinkPath); //.resolved();
-        assertEquals(FileType.REGULAR_FILE, result.types());
-        assertFalse(result.isSymbolicLink());
         assertTrue(result.isRegularFile());
     }
 
     @Test
-    final void linkDirectoryPrimary() {
+    final void linkDirectory() {
         final FileEntry result = FileEntry.of(dirLinkPath);
-        assertEquals(FileType.SYMBOLIC_LINK, result.types());
+        assertEquals(Set.of(FileType.SYMBOLIC_LINK, FileType.DIRECTORY), result.types());
         assertTrue(result.isSymbolicLink());
-        assertFalse(result.isDirectory());
-    }
-
-    @Test
-    final void linkDirectoryEvaluated() {
-        final FileEntry result = FileEntry.of(dirLinkPath); //.resolved();
-        assertEquals(FileType.DIRECTORY, result.types());
-        assertFalse(result.isSymbolicLink());
         assertTrue(result.isDirectory());
     }
 
     @Test
-    final void linkMissingPrimary() {
+    final void linkMissing() {
         final FileEntry result = FileEntry.of(missingLinkPath);
-        assertEquals(FileType.SYMBOLIC_LINK, result.types());
+        assertEquals(Set.of(FileType.SYMBOLIC_LINK), result.types());
         assertTrue(result.isSymbolicLink());
+        assertTrue(result.isBroken());
         assertFalse(result.isMissing());
     }
 
     @Test
-    final void linkMissingEvaluated() {
-        final FileEntry result = FileEntry.of(missingLinkPath); //.resolved();
-        assertEquals(FileType.MISSING, result.types());
-        assertFalse(result.isSymbolicLink());
-        assertTrue(result.isMissing());
-    }
-
-    @Test
-    final void linkSpecialPrimary() {
+    final void linkSpecial() {
         final FileEntry result = FileEntry.of(specLinkPath);
-        assertEquals(FileType.SYMBOLIC_LINK, result.types());
+        assertEquals(Set.of(FileType.SYMBOLIC_LINK, FileType.SPECIAL), result.types());
         assertTrue(result.isSymbolicLink());
-        assertFalse(result.isSpecial());
-    }
-
-    @Test
-    final void linkSpecialEvaluated() {
-        final FileEntry result = FileEntry.of(specLinkPath); //.resolved();
-        assertEquals(FileType.SPECIAL, result.types());
-        assertFalse(result.isSymbolicLink());
         assertTrue(result.isSpecial());
     }
 
     @Test
-    final void linkLinkRegularPrimary() {
+    final void linkLinkRegular() {
         final FileEntry result = FileEntry.of(linkLinkPath);
-        assertEquals(FileType.SYMBOLIC_LINK, result.types());
+        assertEquals(Set.of(FileType.SYMBOLIC_LINK, FileType.REGULAR_FILE), result.types());
         assertTrue(result.isSymbolicLink());
-        assertFalse(result.isRegularFile());
-    }
-
-    @Test
-    final void linkLinkRegularEvaluated() {
-        final FileEntry result = FileEntry.of(linkLinkPath); //.resolved();
-        assertEquals(FileType.REGULAR_FILE, result.types());
-        assertFalse(result.isSymbolicLink());
         assertTrue(result.isRegularFile());
     }
 }

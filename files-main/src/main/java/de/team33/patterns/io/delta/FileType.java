@@ -4,8 +4,8 @@ import de.team33.patterns.enums.pan.Values;
 
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * Symbolizes different file types
@@ -50,9 +50,8 @@ public enum FileType {
                      .orElse(MISSING);
     }
 
-    static Set<FileType> matching(final BasicFileAttributes attributes) {
-        return Set.copyOf(VALUES.stream()
-                                .filter(fileType -> fileType.filter.test(attributes))
-                                .toList());
+    static Stream<FileType> matching(final BasicFileAttributes attributes) {
+        return VALUES.stream()
+                     .filter(fileType -> fileType.filter.test(attributes));
     }
 }

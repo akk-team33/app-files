@@ -45,35 +45,29 @@ public class FileEntry {
     @SuppressWarnings("StaticCollection") // Set is immutable
     private static final Set<FileType> NO_TYPES = Set.of();
 
-    private final Path path;
-    private final FileEntry distinct;
-    private final Lazy<FileAttributes> lazyAttributes_;
-    private final Lazy<FileType> lazyType;
-
     private final List<Exception> problems = new LinkedList<>();
+    private final Path path;
     private final Lazy<Attributes> lazyAttributes;
 
-    private FileEntry(final Path path, final Normality normality, final FileEntry distinct, final LinkOption[] options) {
+    private FileEntry(final Path path, final Normality normality) {
         this.path = normality.apply(path);
-        this.distinct = distinct;
-        this.lazyAttributes_ = Lazy.init(this::newAttributes_);
-        this.lazyType = Lazy.init(this::newType);
-
-        this.lazyAttributes = Lazy.init(() -> newAttributes(options));
+        this.lazyAttributes = Lazy.init(() -> newAttributes(DISTINCTIVE));
     }
 
     /**
      * Returns a new {@link FileEntry} based on a given {@link Path}.
      */
     public static FileEntry of(final Path path) {
-        return new FileEntry(path, Normality.UNKNOWN, null, DISTINCTIVE);
+        return new FileEntry(path, Normality.UNKNOWN);
     }
 
     private Attributes newAttributes(final LinkOption[] options) {
         try {
             final BasicFileAttributes backing =
                     Files.readAttributes(path, BasicFileAttributes.class, options);
-            if (backing.isDirectory()) {
+            if (backing.isSymbolicLink()) {
+                return new LinkAttributes(backing);
+            } else if (backing.isDirectory()) {
                 return new DirectoryAttributes(backing);
             } else {
                 return new PlainAttributes(backing);
@@ -88,27 +82,8 @@ public class FileEntry {
         return lazyAttributes.get();
     }
 
-    private FileAttributes newAttributes_() {
-        try {
-            final BasicFileAttributes backing =
-                    Files.readAttributes(path, BasicFileAttributes.class, (null == distinct) ? DISTINCTIVE : RESOLVING);
-            if (backing.isDirectory()) {
-                return new DirectoryAttributes_(backing);
-            } else {
-                return new ExistingFileAttributes_(backing);
-            }
-        } catch (final IOException e) {
-            // TODO?: problems.add(e);
-            return new MissingFileAttributes_();
-        }
-    }
-
-    private FileType newType() {
-        return FileType.map(lazyAttributes_.get());
-    }
-
-    final boolean isDistinct() {
-        return (null == distinct);
+    public final List<Exception> problems() {
+        return List.copyOf(problems);
     }
 
     /**
@@ -214,15 +189,16 @@ public class FileEntry {
      * @throws UnsupportedOperationException if the file does not exist.
      */
     public final Instant lastUpdated() {
-        if (isSymbolicLink()) {
-            throw new UnsupportedOperationException("not yet implemented");
-        } else if (isDirectory()) {
+        if (isMissing() || isSymbolicLink()) {
+            //noinspection ReturnOfNull
+            return null;
+        } else if (!isDirectory()) {
+            return lastModified();
+        } else {
             return entries().map(FileEntry::lastUpdated)
                             .filter(Objects::nonNull)
                             .reduce((left, right) -> (left.compareTo(right) < 0) ? right : left)
                             .orElse(null);
-        } else {
-            return lastModified();
         }
     }
 
@@ -267,13 +243,13 @@ public class FileEntry {
      * @throws UnsupportedOperationException if the file does not exist.
      */
     public final long effectiveSize() {
-        if (isSymbolicLink()) {
-            throw new UnsupportedOperationException("not yet implemented");
-        } else if (isDirectory()) {
+        if (isMissing() || isSymbolicLink()) {
+            return 0L;
+        } else if (!isDirectory()) {
+            return size();
+        } else {
             return entries().map(FileEntry::effectiveSize)
                             .reduce(0L, Long::sum);
-        } else {
-            return size();
         }
     }
 
@@ -317,15 +293,19 @@ public class FileEntry {
 
     private abstract static class ExistingFileAttributes extends Attributes {
 
-        private final BasicFileAttributes backing;
+        final BasicFileAttributes backing;
+        private final Lazy<Set<FileType>> lazyTypes;
 
         private ExistingFileAttributes(final BasicFileAttributes backing) {
             this.backing = backing;
+            this.lazyTypes = Lazy.init(() -> Set.copyOf(newTypes().toList()));
         }
+
+        abstract Stream<FileType> newTypes();
 
         @Override
         final Set<FileType> types() {
-            return FileType.matching(backing);
+            return lazyTypes.get();
         }
 
         @Override
@@ -494,9 +474,14 @@ public class FileEntry {
             this.lazyEntries = Lazy.init(this::newEntries);
         }
 
+        @Override
+        final Stream<FileType> newTypes() {
+            return FileType.matching(backing);
+        }
+
         private Set<FileEntry> newEntries() {
             try (final Stream<Path> stream = Files.list(path)) {
-                return stream.map(childPath -> new FileEntry(childPath, Normality.DEFINITE, null, DISTINCTIVE))
+                return stream.map(childPath -> new FileEntry(childPath, Normality.DEFINITE))
                              .collect(Collectors.toCollection(() -> new TreeSet<>(ENTRY_ORDER)));
             } catch (final IOException caught) {
                 problems.add(caught);
@@ -514,6 +499,11 @@ public class FileEntry {
 
         private PlainAttributes(final BasicFileAttributes backing) {
             super(backing);
+        }
+
+        @Override
+        final Stream<FileType> newTypes() {
+            return FileType.matching(backing);
         }
 
         @Override
@@ -552,6 +542,26 @@ public class FileEntry {
         @Override
         final Instant lastModified() {
             throw new UnsupportedOperationException(format(PROPERTY_NOT_AVAILABLE, path));
+        }
+    }
+
+    private final class LinkAttributes extends ExistingFileAttributes {
+
+        private final Attributes resolved;
+
+        private LinkAttributes(final BasicFileAttributes backing) {
+            super(backing);
+            this.resolved = newAttributes(RESOLVING);
+        }
+
+        @Override
+        final Stream<FileType> newTypes() {
+            return Stream.concat(FileType.matching(backing), resolved.types().stream());
+        }
+
+        @Override
+        final Stream<FileEntry> entries() {
+            return resolved.entries();
         }
     }
 }
