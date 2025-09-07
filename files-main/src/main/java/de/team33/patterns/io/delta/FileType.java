@@ -3,7 +3,6 @@ package de.team33.patterns.io.delta;
 import de.team33.patterns.enums.pan.Values;
 
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -11,11 +10,6 @@ import java.util.stream.Stream;
  * Symbolizes different file types
  */
 public enum FileType {
-
-    /**
-     * Symbolizes a missing file.
-     */
-    MISSING(Objects::isNull),
 
     /**
      * Symbolizes a regular file.
@@ -43,11 +37,6 @@ public enum FileType {
 
     FileType(final Predicate<BasicFileAttributes> filter) {
         this.filter = filter;
-    }
-
-    static FileType map(final BasicFileAttributes attributes) {
-        return VALUES.findAny(fileType -> fileType.filter.test(attributes))
-                     .orElse(MISSING);
     }
 
     static Stream<FileType> matching(final BasicFileAttributes attributes) {
