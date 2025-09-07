@@ -1,6 +1,6 @@
 package de.team33.files.ui;
 
-import de.team33.patterns.io.phobos.FileEntry;
+import de.team33.patterns.io.delta.FileEntry;
 import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.gamma.table.CellRenderer;
@@ -371,7 +371,6 @@ public final class FileTable {
 
         private void onSetPath(final Path path) {
             this.entries = FileEntry.of(path)
-                                    .resolved()
                                     .entries()
                                     .toList();
             fireTableDataChanged();

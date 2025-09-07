@@ -1,7 +1,7 @@
 package de.team33.files.ui;
 
 import de.team33.patterns.expiry.tethys.Recent;
-import de.team33.patterns.io.phobos.FileEntry;
+import de.team33.patterns.io.delta.FileEntry;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JTrees;
@@ -215,7 +215,7 @@ public final class FileTree {
         private final FileEntry entry;
 
         private FileNode(final Path path) {
-            this(FileEntry.of(path).resolved());
+            this(FileEntry.of(path));
         }
 
         private FileNode(final FileEntry entry) {
