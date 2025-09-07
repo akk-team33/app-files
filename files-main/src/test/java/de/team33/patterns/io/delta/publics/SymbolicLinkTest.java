@@ -6,20 +6,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SymbolicLinkTest {
 
     private static final Path BASE_PATH = Paths.get("target", "testing", SymbolicLinkTest.class.getSimpleName())
                                                .toAbsolutePath()
                                                .normalize();
+    @SuppressWarnings("HardcodedFileSeparator")
     private static final Path SPECIAL_PATH = Paths.get("/dev/null");
 
     private Path regLinkPath;
@@ -42,7 +43,7 @@ class SymbolicLinkTest {
         missingLinkPath = testPath.resolve("missing.link");
 
         Files.createDirectories(dirPath);
-        Files.write(regularPath, UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
+        Files.writeString(regularPath, UUID.randomUUID().toString());
         Files.createSymbolicLink(regLinkPath, regularPath.getFileName());
         Files.createSymbolicLink(dirLinkPath, dirPath.getFileName());
         Files.createSymbolicLink(missingLinkPath, missingPath.getFileName());
@@ -71,8 +72,7 @@ class SymbolicLinkTest {
         final FileEntry result = FileEntry.of(missingLinkPath);
         assertEquals(Set.of(FileType.SYMBOLIC_LINK), result.types());
         assertTrue(result.isSymbolicLink());
-        assertTrue(result.isBroken());
-        assertFalse(result.isMissing());
+        assertTrue(result.isMissing());
     }
 
     @Test

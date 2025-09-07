@@ -120,8 +120,8 @@ class FileEntryTest {
     @MethodSource("paths")
     final void lastUpdated(final Path path) {
         final FileEntry entry = FileEntry.of(path);
-        if (entry.isBroken()) {
-            assertThrows(UnsupportedOperationException.class, entry::lastUpdated);
+        if (entry.isMissing() || (entry.isDirectory() && entry.entries().findAny().isEmpty())) {
+            assertNull(entry.lastUpdated());
         } else {
             assertNotNull(entry.lastUpdated());
         }
@@ -162,13 +162,13 @@ class FileEntryTest {
 
     @ParameterizedTest
     @MethodSource("paths")
-    final void effectiveSize(final Path path) throws IOException {
+    final void dataSize(final Path path) throws IOException {
         final FileEntry entry = FileEntry.of(path);
         if (entry.isMissing()) {
-            assertThrows(UnsupportedOperationException.class, entry::effectiveSize);
+            assertEquals(0L, entry.dataSize());
         } else {
             //noinspection ObviousNullCheck
-            assertNotNull(entry.effectiveSize());
+            assertNotNull(entry.dataSize());
         }
     }
 

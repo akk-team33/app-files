@@ -23,7 +23,6 @@ import static java.util.Comparator.comparing;
  * Therefore, an instance should be short-lived. The longer an instance "lives", the more likely it is
  * that the meta information is out of date because the underlying file may have been changed in the meantime.
  */
-@SuppressWarnings("ClassWithTooManyMethods")
 public final class FileEntry {
 
     private static final String PROPERTY_NOT_AVAILABLE =
@@ -153,16 +152,8 @@ public final class FileEntry {
      * Determines if the represented file is actually missing.
      * This is especially the case if {@link #types()} is empty or contains only {@link FileType#SYMBOLIC_LINK}.
      */
-    public final boolean isBroken() {
-        return types().isEmpty() || types().equals(BROKEN_LINK);
-    }
-
-    /**
-     * Determines if the represented file is physically missing.
-     * This is especially the case if {@link #types()} is empty.
-     */
     public final boolean isMissing() {
-        return types().isEmpty();
+        return types().isEmpty() || types().equals(BROKEN_LINK);
     }
 
     /**
@@ -175,29 +166,28 @@ public final class FileEntry {
     }
 
     /**
-     * Returns the effective timestamp of the last update of the represented file as an {@link Instant}.
+     * Returns the effective timestamp of the last update of data contained by the represented file as an
+     * {@link Instant}.
      * <p>
-     * If <em>this</em> {@link #isSymbolicLink()} returns the effective timestamp of the linked file.*
+     * If <em>this</em> {@link #isSymbolicLink()} or {@link #isRegularFile()} or {@link #isSpecial()}
+     * returns the same value as {@link #lastModified()}.
      * <p>
-     * Else if <em>this</em> {@link #isDirectory()} returns the latest effective timestamp of the directory's content.**
+     * Else if <em>this</em> {@link #isDirectory()} returns the latest effective timestamp of the directory's content
+     * or {@code null} if empty.
      * <p>
-     * Else returns the same value as {@link #lastModified()}.
-     * <p>
-     * If (*) <em>this</em> {@link #isBroken()} or if (**) a directory is empty returns {@code null}.
-     *
-     * @throws UnsupportedOperationException if the file does not exist.
+     * Else returns {@code null}.
      */
+    @SuppressWarnings("ReturnOfNull")
     public final Instant lastUpdated() {
-        if (isMissing() || isSymbolicLink()) {
-            //noinspection ReturnOfNull
-            return null;
-        } else if (!isDirectory()) {
+        if (isSymbolicLink() || isRegularFile() || isSpecial()) {
             return lastModified();
-        } else {
+        } else if (isDirectory()) {
             return entries().map(FileEntry::lastUpdated)
                             .filter(Objects::nonNull)
                             .reduce((left, right) -> (left.compareTo(right) < 0) ? right : left)
                             .orElse(null);
+        } else {
+            return null;
         }
     }
 
@@ -229,27 +219,25 @@ public final class FileEntry {
     }
 
     /**
-     * Returns the effective size of the represented file.
+     * Returns the effective data size of the represented file (not disk space!).
      * <p>
-     * If <em>this</em> {@link #isSymbolicLink()} returns the effective size of the linked file.*
+     * If <em>this</em> {@link #isSymbolicLink()} returns {@code zero}.
      * <p>
-     * Else if <em>this</em> {@link #isDirectory()} returns the summarized effective size of the directory's content.**
+     * Else if <em>this</em> {@link #isRegularFile()} returns the same value as {@link #size()}.
      * <p>
-     * Else returns the same value as {@link #size()}.
+     * Else if <em>this</em> {@link #isDirectory()} returns the summarized effective data size of the
+     * directory's content or {@code zero} if empty.
      * <p>
-     * If (*) <em>this</em> {@link #isBroken()} or if (**) a directory is empty returns {@code zero}.
-     *
-     * @throws UnsupportedOperationException if the file does not exist.
+     * Else returns {@code zero}.
      */
-    public final long effectiveSize() {
-        if (isMissing() || isSymbolicLink()) {
+    public final long dataSize() {
+        if (isSymbolicLink() || isSpecial() || isMissing())
             return 0L;
-        } else if (!isDirectory()) {
-            return size();
-        } else {
-            return entries().map(FileEntry::effectiveSize)
+        else if (isDirectory())
+            return entries().map(FileEntry::dataSize)
                             .reduce(0L, Long::sum);
-        }
+        else
+            return size();
     }
 
     /**
