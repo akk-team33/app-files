@@ -19,13 +19,14 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.nio.file.Path;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -35,15 +36,12 @@ import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 import static java.util.function.Predicate.not;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
 
+@SuppressWarnings("ClassWithTooManyFields")
 public final class FileTable {
 
     private static final int MARGIN = 8;
     private static final Locale LOCALE = Locale.getDefault();
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
-    private static final Comparator<FileEntry> ENTRY_SIZE =
-            Comparator.comparing(FileEntry::size, Long::compareTo);
-    private static final Comparator<FileEntry> ENTRY_LAST_MODIFIED =
-            Comparator.comparing(FileEntry::lastModified, Instant::compareTo);
     private static final Comparator<String> STRING_IGNORE_CASE =
             String::compareToIgnoreCase;
     private static final Comparator<String> STRING_RESPECT_CASE =
@@ -161,13 +159,19 @@ public final class FileTable {
         Column NAME = new FinalColumn<>("Name", Name.class, SwingConstants.LEADING, Name::new);
         Column PATH = new ProColumn<>("Path", RelPath.class, SwingConstants.LEADING, RelPath::new);
         Column PARENT = new ProColumn<>("Location", RelLocation.class, SwingConstants.LEADING, RelLocation::new);
-        Column UPDATE = new FinalColumn<>("Last Modified", DateTime.class, SwingConstants.CENTER, DateTime::new);
-        Column UPDATE_DATE = new FinalColumn<>("Last Mod. Date", Date.class, SwingConstants.CENTER, Date::new);
-        Column UPDATE_TIME = new FinalColumn<>("Last Mod. Time", Time.class, SwingConstants.CENTER, Time::new);
+        Column LAST_MODIFIED = new FinalColumn<>("Last Modified", LastModified.class,
+                                                 SwingConstants.CENTER, LastModified::new);
+        Column LAST_MODIFIED_DATE = new FinalColumn<>("Last Mod. Date", LastModifiedDate.class,
+                                                      SwingConstants.CENTER, LastModifiedDate::new);
+        Column LAST_MODIFIED_TIME = new FinalColumn<>("Last Mod. Time", LastModifiedTime.class,
+                                                      SwingConstants.CENTER, LastModifiedTime::new);
+        Column LAST_UPDATE = new FinalColumn<>("Last Update", LastUpdate.class,
+                                               SwingConstants.CENTER, LastUpdate::new);
         Column SIZE = new FinalColumn<>("Size", Size.class, SwingConstants.TRAILING, Size::new);
+        Column DATA_SIZE = new FinalColumn<>("Data Size", DataSize.class, SwingConstants.TRAILING, DataSize::new);
 
         @SuppressWarnings({"StaticCollection", "StaticMethodOnlyUsedInOneClass"}) // List is immutable!
-        List<Column> VALUES = List.of(NAME, PATH, PARENT, UPDATE, UPDATE_DATE, UPDATE_TIME, SIZE);
+        List<Column> VALUES = List.of(NAME, PATH, PARENT, LAST_MODIFIED, LAST_MODIFIED_DATE, LAST_MODIFIED_TIME, LAST_UPDATE, SIZE, DATA_SIZE);
 
         @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
         static List<? extends Column> using(final Gettable<Path> cwd, final List<? extends Column> origin) {
@@ -258,17 +262,17 @@ public final class FileTable {
         }
     }
 
-    private static final class DateTime extends MyProperty<DateTime> {
+    private static final class LastModified extends MyProperty<LastModified> {
 
         private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
                                                                             .withLocale(LOCALE);
-        private static final Comparator<DateTime> ORDER = Comparator.comparing(MyProperty::entry,
-                                                                               ENTRY_LAST_MODIFIED);
+        private static final Comparator<FileEntry> LAST_MODIFIED = Comparator.comparing(FileEntry::lastModified);
+        private static final Comparator<LastModified> ORDER = Comparator.comparing(MyProperty::entry, LAST_MODIFIED);
 
         private final LocalDateTime dateTime;
 
-        private DateTime(final FileEntry entry) {
-            super(entry, DateTime.class, ORDER);
+        private LastModified(final FileEntry entry) {
+            super(entry, LastModified.class, ORDER);
             this.dateTime = LocalDateTime.ofInstant(entry().lastModified(), ZONE_ID);
         }
 
@@ -278,18 +282,40 @@ public final class FileTable {
         }
     }
 
-    private static final class Date extends MyProperty<Date> {
+    private static final class LastUpdate extends MyProperty<LastUpdate> {
+
+        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                                                                            .withLocale(LOCALE);
+        private static final Comparator<FileEntry> LAST_MODIFIED = Comparator.comparing(FileEntry::lastUpdated);
+        private static final Comparator<LastUpdate> ORDER = Comparator.comparing(MyProperty::entry, LAST_MODIFIED);
+
+        private final LocalDateTime dateTime;
+
+        private LastUpdate(final FileEntry entry) {
+            super(entry, LastUpdate.class, ORDER);
+            this.dateTime = Optional.ofNullable(entry().lastUpdated())
+                                    .map(instant -> LocalDateTime.ofInstant(instant, ZONE_ID))
+                                    .orElse(null);
+        }
+
+        @Override
+        public final String toString() {
+            return (null == dateTime) ? Objects.toString(null) : dateTime.format(FORMATTER);
+        }
+    }
+
+    private static final class LastModifiedDate extends MyProperty<LastModifiedDate> {
 
         private static final DateTimeFormatter FORMATTER =
                 DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
                                  .withLocale(LOCALE);
-        private static final Comparator<Date> ORDER =
-                Comparator.comparing(MyProperty::entry, ENTRY_LAST_MODIFIED);
+        private static final Comparator<LastModifiedDate> ORDER =
+                Comparator.comparing(MyProperty::entry, LastModified.LAST_MODIFIED);
 
         private final LocalDate date;
 
-        private Date(final FileEntry entry) {
-            super(entry, Date.class, ORDER);
+        private LastModifiedDate(final FileEntry entry) {
+            super(entry, LastModifiedDate.class, ORDER);
             this.date = LocalDate.ofInstant(entry().lastModified(), ZONE_ID);
         }
 
@@ -299,18 +325,18 @@ public final class FileTable {
         }
     }
 
-    private static final class Time extends MyProperty<Time> {
+    private static final class LastModifiedTime extends MyProperty<LastModifiedTime> {
 
         private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM)
                                                                             .withLocale(LOCALE);
-        private static final Comparator<Time> ORDER = Comparator.comparing((Time ft) -> ft.time,
-                                                                           LocalTime::compareTo)
-                                                                .thenComparing(MyProperty::entry,
-                                                                               ENTRY_LAST_MODIFIED);
+        private static final Comparator<LastModifiedTime> ORDER = Comparator.comparing((LastModifiedTime ft) -> ft.time,
+                                                                                       LocalTime::compareTo)
+                                                                            .thenComparing(MyProperty::entry,
+                                                                                           LastModified.LAST_MODIFIED);
         private final LocalTime time;
 
-        private Time(final FileEntry entry) {
-            super(entry, Time.class, ORDER);
+        private LastModifiedTime(final FileEntry entry) {
+            super(entry, LastModifiedTime.class, ORDER);
             this.time = LocalTime.ofInstant(entry().lastModified(), ZONE_ID);
         }
 
@@ -322,6 +348,7 @@ public final class FileTable {
 
     private static final class Size extends MyProperty<Size> {
 
+        private static final Comparator<FileEntry> ENTRY_SIZE = Comparator.comparing(FileEntry::size);
         private static final Comparator<Size> ORDER = Comparator.comparing(MyProperty::entry, ENTRY_SIZE);
 
         private Size(final FileEntry entry) {
@@ -331,6 +358,21 @@ public final class FileTable {
         @Override
         public final String toString() {
             return "%,d".formatted(entry().size());
+        }
+    }
+
+    private static final class DataSize extends MyProperty<DataSize> {
+
+        private static final Comparator<FileEntry> DATA_SIZE = Comparator.comparing(FileEntry::dataSize);
+        private static final Comparator<DataSize> ORDER = Comparator.comparing(MyProperty::entry, DATA_SIZE);
+
+        private DataSize(final FileEntry entry) {
+            super(entry, DataSize.class, ORDER);
+        }
+
+        @Override
+        public final String toString() {
+            return "%,d".formatted(entry().dataSize());
         }
     }
 
