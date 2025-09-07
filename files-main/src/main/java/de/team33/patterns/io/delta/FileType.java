@@ -4,6 +4,7 @@ import de.team33.patterns.enums.pan.Values;
 
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -47,5 +48,11 @@ public enum FileType {
     static FileType map(final BasicFileAttributes attributes) {
         return VALUES.findAny(fileType -> fileType.filter.test(attributes))
                      .orElse(MISSING);
+    }
+
+    static Set<FileType> matching(final BasicFileAttributes attributes) {
+        return Set.copyOf(VALUES.stream()
+                                .filter(fileType -> fileType.filter.test(attributes))
+                                .toList());
     }
 }
