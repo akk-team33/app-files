@@ -30,6 +30,9 @@ final class RowModelTrial extends SwingTrial {
     private final FileTree.Context context = new Context();
     private final TableModel model = new FileModel(context.cwd());
     private final JTable fileTable = JTables.builder(model)
+                                            .setDefaultRenderer(Property.class, new MyCellRenderer())
+                                            .setup(jTable -> jTable.getTableHeader()
+                                                                   .setDefaultRenderer(new MyHeadRenderer()))
                                             .setAutoCreateRowSorter(true)
                                             .setAutoResizeMode(AUTO_RESIZE_OFF)
                                             .build();
@@ -53,7 +56,7 @@ final class RowModelTrial extends SwingTrial {
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    private interface Column extends RowModel.Column<File>, CellProperty.Column<File> {
+    private interface Column extends RowModel.Column<File>, CellProperty.Column<File>, CellRenderer.Column {
 
         Column NAME = new ColumnImpl("Name", LEFT, Columns::nameProperty, Columns::nameToString, Columns.NAME_ORDER);
         Column LAST_MODIFIED = new ColumnImpl("Last Modified", CENTER, Columns::lastModifiedProperty,
@@ -70,16 +73,16 @@ final class RowModelTrial extends SwingTrial {
         private static final Comparator<File> LAST_MODIFIED_ORDER = Comparator.comparing(File::lastModified);
         private static final Comparator<File> SIZE_ORDER = Comparator.comparing(File::length);
 
-        private static CellProperty<File, Column> nameProperty(final File file) {
-            return new CellProperty<>(file, Column.NAME);
+        private static Property nameProperty(final File file) {
+            return new Property(file, Column.NAME);
         }
 
-        private static CellProperty<File, Column> lastModifiedProperty(final File file) {
-            return new CellProperty<>(file, Column.LAST_MODIFIED);
+        private static Property lastModifiedProperty(final File file) {
+            return new Property(file, Column.LAST_MODIFIED);
         }
 
-        private static CellProperty<File, Column> sizeProperty(final File file) {
-            return new CellProperty<>(file, Column.SIZE);
+        private static Property sizeProperty(final File file) {
+            return new Property(file, Column.SIZE);
         }
 
         private static String nameToString(final File file) {
@@ -97,7 +100,7 @@ final class RowModelTrial extends SwingTrial {
 
     private record ColumnImpl(String title,
                               int horizontalAlignment,
-                              Function<File, CellProperty<File, Column>> propertyFunction,
+                              Function<File, Property> propertyFunction,
                               Function<File, String> toStringFunction,
                               Comparator<File> order)
             implements Column {
@@ -109,17 +112,24 @@ final class RowModelTrial extends SwingTrial {
 
         @Override
         public final Class<?> type() {
-            return CellProperty.class;
+            return Property.class;
         }
 
         @Override
-        public final CellProperty<File, Column> map(final File file) {
+        public final Property map(final File file) {
             return propertyFunction.apply(file);
         }
 
         @Override
         public final String toString() {
             return title;
+        }
+    }
+
+    private static final class Property extends CellProperty<File, Column> {
+
+        private Property(final File rowContent, final RowModelTrial.Column column) {
+            super(rowContent, column);
         }
     }
 
@@ -146,6 +156,31 @@ final class RowModelTrial extends SwingTrial {
         @Override
         protected final List<RowModelTrial.Column> columns() {
             return COLUMNS;
+        }
+    }
+
+    private static final class MyHeadRenderer extends HeadRenderer<Column> {
+
+        @Override
+        protected List<RowModelTrial.Column> columns() {
+            return COLUMNS;
+        }
+    }
+
+    private static final class MyCellRenderer extends CellRenderer<Property, Column> {
+
+        private MyCellRenderer() {
+            super(Property.class);
+        }
+
+        @Override
+        protected final List<RowModelTrial.Column> columns() {
+            return COLUMNS;
+        }
+
+        @Override
+        protected final void setup(final JLabel result, final Property value, final RowModelTrial.Column column) {
+            // preliminary nothing to do
         }
     }
 }

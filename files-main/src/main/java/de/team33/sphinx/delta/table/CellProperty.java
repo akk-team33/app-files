@@ -46,6 +46,10 @@ public class CellProperty<R, C extends CellProperty.Column<R>> implements Compar
         }
     }
 
+    public final R rowContent() {
+        return rowContent;
+    }
+
     /**
      * Returns a constant that identifies the table column <em>this</em> property belongs to.
      */
