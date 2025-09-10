@@ -46,6 +46,9 @@ public class CellProperty<R, C extends CellProperty.Column<R>> implements Compar
         }
     }
 
+    /**
+     * Returns the content of the table row <em>this</em> cell belongs to.
+     */
     public final R rowContent() {
         return rowContent;
     }
@@ -83,7 +86,7 @@ public class CellProperty<R, C extends CellProperty.Column<R>> implements Compar
     }
 
     /**
-     * Represents and identifies a table column in the context of a {@link CellProperty}.
+     * Represents a table column description and identification to be used in the context of a {@link CellProperty}.
      *
      * @param <R> The type that represents the content of a table row;
      */
