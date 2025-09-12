@@ -54,7 +54,7 @@ public class CellProperty<R, C extends CellProperty.Column<R>> implements Compar
     }
 
     /**
-     * Returns a constant that identifies the table column <em>this</em> property belongs to.
+     * Returns a constant that identifies and describes the table column <em>this</em> property belongs to.
      */
     @SuppressWarnings("WeakerAccess")
     public final C column() {
@@ -80,6 +80,11 @@ public class CellProperty<R, C extends CellProperty.Column<R>> implements Compar
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This implementation delivers the text to be displayed within a table cell.
+     */
     @Override
     public final String toString() {
         return column.toString(rowContent);
@@ -90,7 +95,7 @@ public class CellProperty<R, C extends CellProperty.Column<R>> implements Compar
      *
      * @param <R> The type that represents the content of a table row;
      */
-    @SuppressWarnings("InterfaceNeverImplemented")
+    @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
     public interface Column<R> {
 
         /**

@@ -1,9 +1,13 @@
-package de.team33.sphinx.delta.table;
+package de.team33.sphinx.delta.table.publics;
 
 import de.team33.files.testing.SwingTrial;
 import de.team33.files.ui.Context;
 import de.team33.files.ui.FileTree;
 import de.team33.patterns.serving.alpha.Retrievable;
+import de.team33.sphinx.delta.table.CellProperty;
+import de.team33.sphinx.delta.table.CellRenderer;
+import de.team33.sphinx.delta.table.HeadRenderer;
+import de.team33.sphinx.delta.table.RowModel;
 import de.team33.sphinx.metis.JSplitPanes;
 import de.team33.sphinx.metis.JTables;
 
@@ -58,44 +62,10 @@ final class RowModelTrial extends SwingTrial {
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
     private interface Column extends RowModel.Column<File>, CellProperty.Column<File>, CellRenderer.Column {
 
-        Column NAME = new ColumnImpl("Name", LEFT, Columns::nameProperty, Columns::nameToString, Columns.NAME_ORDER);
-        Column LAST_MODIFIED = new ColumnImpl("Last Modified", CENTER, Columns::lastModifiedProperty,
-                                              Columns::lastModifiedToString, Columns.LAST_MODIFIED_ORDER);
-        Column SIZE = new ColumnImpl("Size", RIGHT, Columns::sizeProperty, Columns::sizeToString, Columns.SIZE_ORDER);
-    }
-
-    private static class Columns {
-
-        private static final Comparator<String> IGNORE_CASE = String::compareToIgnoreCase;
-        private static final Comparator<String> RESPECT_CASE = String::compareTo;
-        private static final Comparator<String> STRING_ORDER = IGNORE_CASE.thenComparing(RESPECT_CASE);
-        private static final Comparator<File> NAME_ORDER = Comparator.comparing(File::getName, STRING_ORDER);
-        private static final Comparator<File> LAST_MODIFIED_ORDER = Comparator.comparing(File::lastModified);
-        private static final Comparator<File> SIZE_ORDER = Comparator.comparing(File::length);
-
-        private static Property nameProperty(final File file) {
-            return new Property(file, Column.NAME);
-        }
-
-        private static Property lastModifiedProperty(final File file) {
-            return new Property(file, Column.LAST_MODIFIED);
-        }
-
-        private static Property sizeProperty(final File file) {
-            return new Property(file, Column.SIZE);
-        }
-
-        private static String nameToString(final File file) {
-            return file.getName();
-        }
-
-        private static String lastModifiedToString(final File file) {
-            return Instant.ofEpochMilli(file.lastModified()).toString();
-        }
-
-        private static String sizeToString(final File file) {
-            return "%,d".formatted(file.length());
-        }
+        Column NAME = new ColumnImpl("Name", LEFT, Property::byName, Property::nameToString, Property.NAME_ORDER);
+        Column LAST_MODIFIED = new ColumnImpl("Last Modified", CENTER, Property::byLastModified,
+                                              Property::lastModifiedToString, Property.LAST_MODIFIED_ORDER);
+        Column SIZE = new ColumnImpl("Size", RIGHT, Property::bySize, Property::sizeToString, Property.SIZE_ORDER);
     }
 
     private record ColumnImpl(String title,
@@ -128,8 +98,39 @@ final class RowModelTrial extends SwingTrial {
 
     private static final class Property extends CellProperty<File, Column> {
 
+        private static final Comparator<String> IGNORE_CASE = String::compareToIgnoreCase;
+        private static final Comparator<String> RESPECT_CASE = String::compareTo;
+        private static final Comparator<String> STRING_ORDER = IGNORE_CASE.thenComparing(RESPECT_CASE);
+        private static final Comparator<File> NAME_ORDER = Comparator.comparing(File::getName, STRING_ORDER);
+        private static final Comparator<File> LAST_MODIFIED_ORDER = Comparator.comparing(File::lastModified);
+        private static final Comparator<File> SIZE_ORDER = Comparator.comparing(File::length);
+
         private Property(final File rowContent, final RowModelTrial.Column column) {
             super(rowContent, column);
+        }
+
+        private static Property byName(final File file) {
+            return new Property(file, RowModelTrial.Column.NAME);
+        }
+
+        private static Property byLastModified(final File file) {
+            return new Property(file, RowModelTrial.Column.LAST_MODIFIED);
+        }
+
+        private static Property bySize(final File file) {
+            return new Property(file, RowModelTrial.Column.SIZE);
+        }
+
+        private static String nameToString(final File file) {
+            return file.getName();
+        }
+
+        private static String lastModifiedToString(final File file) {
+            return Instant.ofEpochMilli(file.lastModified()).toString();
+        }
+
+        private static String sizeToString(final File file) {
+            return "%,d".formatted(file.length());
         }
     }
 

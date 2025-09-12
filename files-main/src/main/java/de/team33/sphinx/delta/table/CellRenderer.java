@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * Basic {@link TableCellRenderer} implementation that assumes that the value of a table cell is represented
- * by a certain type and is rendered by a JLabel.
+ * by a certain type {@code <V>} and is rendered via {@link Object#toString()} and displayed by a {@link JLabel}.
  *
  * @param <V> The type of values to be rendered.
  * @param <C> A type that represents a {@linkplain Column column descriptor}.
@@ -47,8 +47,8 @@ public abstract class CellRenderer<V, C extends CellRenderer.Column> implements 
 
     private JLabel charged(final JLabel result, final V value, final C column) {
         return JLabels.charger(result)
-                      .setup(label -> setup(label, value, column))
                       .setHorizontalAlignment(column.horizontalAlignment())
+                      .setup(label -> setup(label, value, column))
                       .charged();
     }
 
@@ -57,7 +57,7 @@ public abstract class CellRenderer<V, C extends CellRenderer.Column> implements 
     /**
      * Represents a table column description to be used in the context of a {@link CellRenderer}.
      */
-    @SuppressWarnings({"InterfaceMayBeAnnotatedFunctional", "InterfaceNeverImplemented"})
+    @SuppressWarnings({"InterfaceMayBeAnnotatedFunctional", "InterfaceWithOnlyOneDirectInheritor"})
     public interface Column {
 
         /**

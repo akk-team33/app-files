@@ -4,10 +4,11 @@ import javax.swing.*;
 import javax.swing.table.TableCellRenderer;
 
 /**
- * Basic {@link TableCellRenderer} implementation for a table header that is rendered by a JLabel.
+ * Basic {@link TableCellRenderer} implementation for a table header that is displayed by a {@link JLabel}.
  *
  * @param <C> A type that represents a {@linkplain CellRenderer.Column column descriptor}.
  */
+@SuppressWarnings("AbstractClassWithOnlyOneDirectInheritor")
 public abstract class HeadRenderer<C extends CellRenderer.Column> extends CellRenderer<String, C> {
 
     /**
