@@ -23,7 +23,7 @@ import static java.util.Comparator.comparing;
  * Therefore, an instance should be short-lived. The longer an instance "lives", the more likely it is
  * that the meta information is out of date because the underlying file may have been changed in the meantime.
  */
-public final class FileEntry {
+public class FileEntry {
 
     private static final String PROPERTY_NOT_AVAILABLE =
             "property not available because the file does not exist:%n%n" +
@@ -45,6 +45,14 @@ public final class FileEntry {
     private final List<Exception> problems = new LinkedList<>();
     private final Path path;
     private final Lazy<Attributes> lazyAttributes;
+
+    /**
+     * Copy-constructor:
+     * Initializes a new {@link FileEntry} based on a given {@link FileEntry}.
+     */
+    public FileEntry(final FileEntry entry) {
+        this(entry.path, Normality.DEFINITE);
+    }
 
     private FileEntry(final Path path, final Normality normality) {
         this.path = normality.apply(path);

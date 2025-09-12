@@ -28,9 +28,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+import static java.util.function.Predicate.not;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
 
 @SuppressWarnings("ClassWithTooManyFields")
@@ -134,7 +136,7 @@ public final class FileTable {
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    public interface Column extends RowModel.Column<FileEntry>, CellProperty.Column<FileEntry>, CellRenderer.Column {
+    public interface Column extends RowModel.Column<Entry>, CellProperty.Column<Entry>, CellRenderer.Column {
 
         @Override
         default Class<?> type() {
@@ -142,25 +144,25 @@ public final class FileTable {
         }
 
         Column NAME = new ColumnImpl("Name", Property::byName,
-                                     Property.NAME_ORDER, Property::nameToString, SwingConstants.LEADING);
+                                     Entry.NAME_ORDER, Entry::nameToString, SwingConstants.LEADING);
         Column PATH = new ColumnImpl("Path", Property::byPath,
-                                     Property.FINAL_ORDER, Property::pathToString, SwingConstants.LEADING);
+                                     Entry.FINAL_ORDER, Entry::pathToString, SwingConstants.LEADING);
         Column LOCATION = new ColumnImpl("Location", Property::byLocation,
-                                         Property.FINAL_ORDER, Property::locationToString, SwingConstants.LEADING);
+                                         Entry.FINAL_ORDER, Entry::locationToString, SwingConstants.LEADING);
         Column LAST_MODIFIED = new ColumnImpl("Last Modified", Property::byLastModified,
-                                              Property.LAST_MODIFIED_ORDER, Property::lastModifiedToString,
+                                              Entry.LAST_MODIFIED_ORDER, Entry::lastModifiedToString,
                                               SwingConstants.CENTER);
         // Column LAST_MODIFIED_DATE = new FinalColumn<>("Last Mod. Date", LastModifiedDate.class,
         //                                               SwingConstants.CENTER, LastModifiedDate::new);
         // Column LAST_MODIFIED_TIME = new FinalColumn<>("Last Mod. Time", LastModifiedTime.class,
         //                                               SwingConstants.CENTER, LastModifiedTime::new);
         Column LAST_UPDATE = new ColumnImpl("Last Update", Property::byLastUpdate,
-                                            Property.LAST_UPDATE_ORDER, Property::lastUpdateToString,
+                                            Entry.LAST_UPDATE_ORDER, Entry::lastUpdateToString,
                                             SwingConstants.CENTER);
         Column SIZE = new ColumnImpl("Size", Property::bySize,
-                                     Property.SIZE_ORDER, Property::sizeToString, SwingConstants.TRAILING);
+                                     Entry.SIZE_ORDER, Entry::sizeToString, SwingConstants.TRAILING);
         Column DATA_SIZE = new ColumnImpl("Data Size", Property::byDataSize,
-                                          Property.DATA_SIZE_ORDER, Property::dataSizeToString, SwingConstants.TRAILING);
+                                          Entry.DATA_SIZE_ORDER, Entry::dataSizeToString, SwingConstants.TRAILING);
 
         @SuppressWarnings({"StaticCollection", "StaticMethodOnlyUsedInOneClass"}) // List is immutable!
         List<Column> VALUES = List.of(NAME, PATH, LOCATION, LAST_MODIFIED, /*LAST_MODIFIED_DATE, LAST_MODIFIED_TIME,*/
@@ -169,108 +171,85 @@ public final class FileTable {
 
     }
 
-    private record ColumnImpl(String title, Function<FileEntry, ?> mapping,
-                              Comparator<FileEntry> order, Function<FileEntry, String> toStringFunction,
-                              int horizontalAlignment
-    )
+    private record ColumnImpl(String title, Function<Entry, ?> mapping,
+                              Comparator<Entry> order, Function<Entry, String> toStringFunction,
+                              int horizontalAlignment)
             implements Column {
 
         @Override
-        public Object map(final FileEntry element) {
-            return mapping.apply(element);
+        public Object map(final Entry entry) {
+            return mapping.apply(entry);
         }
 
         @Override
-        public String toString(final FileEntry rowContent) {
-            return toStringFunction.apply(rowContent);
+        public String toString(final Entry entry) {
+            return toStringFunction.apply(entry);
         }
     }
 
     @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
-    private static final class Property extends CellProperty<FileEntry, Column> {
+    private static final class Property extends CellProperty<Entry, Column> {
+
+        private Property(final Entry entry, final FileTable.Column column) {
+            super(entry, column);
+        }
+
+        static Property byName(final Entry entry) {
+            return new Property(entry, FileTable.Column.NAME);
+        }
+
+        static Property byPath(final Entry entry) {
+            return new Property(entry, FileTable.Column.PATH);
+        }
+
+        static Property byLocation(final Entry entry) {
+            return new Property(entry, FileTable.Column.LOCATION);
+        }
+
+        static Property byLastModified(final Entry entry) {
+            return new Property(entry, FileTable.Column.LAST_MODIFIED);
+        }
+
+        static Property byLastUpdate(final Entry entry) {
+            return new Property(entry, FileTable.Column.LAST_UPDATE);
+        }
+
+        static Property bySize(final Entry entry) {
+            return new Property(entry, FileTable.Column.SIZE);
+        }
+
+        static Property byDataSize(final Entry entry) {
+            return new Property(entry, FileTable.Column.DATA_SIZE);
+        }
+
+    }
+
+    private static final class Entry extends FileEntry {
 
         private static final DateTimeFormatter DATE_TIME_FORMATTER =
                 DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
                                  .withLocale(LOCALE);
-
         private static final Comparator<String> IGNORE_CASE = String::compareToIgnoreCase;
         private static final Comparator<String> RESPECT_CASE = String::compareTo;
         private static final Comparator<String> STRING_ORDER = IGNORE_CASE.thenComparing(RESPECT_CASE);
         private static final Comparator<Path> PATH_ORDER = Comparator.comparing(Path::toString, STRING_ORDER);
-        static final Comparator<FileEntry> FINAL_ORDER = Comparator.comparing(FileEntry::path, PATH_ORDER);
-        static final Comparator<FileEntry> NAME_ORDER = Comparator.comparing(FileEntry::name, STRING_ORDER)
-                                                                  .thenComparing(FINAL_ORDER);
-        static final Comparator<FileEntry> LAST_MODIFIED_ORDER = Comparator.comparing(FileEntry::lastModified)
-                                                                           .thenComparing(FINAL_ORDER);
-        static final Comparator<FileEntry> LAST_UPDATE_ORDER = Comparator.comparing(FileEntry::lastUpdated)
-                                                                         .thenComparing(FINAL_ORDER);
-        static final Comparator<FileEntry> SIZE_ORDER = Comparator.comparing(FileEntry::size)
-                                                                  .thenComparing(FINAL_ORDER);
-        static final Comparator<FileEntry> DATA_SIZE_ORDER = Comparator.comparing(FileEntry::dataSize)
+        static final Comparator<Entry> FINAL_ORDER = Comparator.comparing(Entry::path, PATH_ORDER);
+        static final Comparator<Entry> NAME_ORDER = Comparator.comparing(Entry::name, STRING_ORDER)
+                                                              .thenComparing(FINAL_ORDER);
+        static final Comparator<Entry> LAST_MODIFIED_ORDER = Comparator.comparing(Entry::lastModified)
                                                                        .thenComparing(FINAL_ORDER);
+        static final Comparator<Entry> LAST_UPDATE_ORDER = Comparator.comparing(Entry::lastUpdated)
+                                                                     .thenComparing(FINAL_ORDER);
+        static final Comparator<Entry> SIZE_ORDER = Comparator.comparing(Entry::size)
+                                                              .thenComparing(FINAL_ORDER);
+        static final Comparator<Entry> DATA_SIZE_ORDER = Comparator.comparing(Entry::dataSize)
+                                                                   .thenComparing(FINAL_ORDER);
 
-        private Property(final FileEntry rowContent, final FileTable.Column column) {
-            super(rowContent, column);
-        }
+        private final Supplier<? extends Path> cwd;
 
-        static Property byName(final FileEntry entry) {
-            return new Property(entry, FileTable.Column.NAME);
-        }
-
-        static String nameToString(final FileEntry entry) {
-            return entry.name();
-        }
-
-        static Property byPath(final FileEntry entry) {
-            return new Property(entry, FileTable.Column.PATH);
-        }
-
-        static String pathToString(final FileEntry entry) {
-            // TODO: use CWD relative path
-            return entry.path().toString();
-        }
-
-        static Property byLocation(final FileEntry entry) {
-            return new Property(entry, FileTable.Column.LOCATION);
-        }
-
-        static String locationToString(final FileEntry entry) {
-            // TODO: use CWD relative path
-            return Optional.ofNullable(entry.path().getParent())
-                           .map(Path::toString)
-                           .orElse("<null>");
-        }
-
-        static Property byLastModified(final FileEntry entry) {
-            return new Property(entry, FileTable.Column.LAST_MODIFIED);
-        }
-
-        static String lastModifiedToString(final FileEntry entry) {
-            return dateTimeToString(localDateTime(entry.lastModified()));
-        }
-
-        static Property byLastUpdate(final FileEntry entry) {
-            return new Property(entry, FileTable.Column.LAST_UPDATE);
-        }
-
-        static String lastUpdateToString(final FileEntry entry) {
-            return dateTimeToString(localDateTime(entry.lastUpdated()));
-        }
-
-        static Property bySize(final FileEntry entry) {
-            return new Property(entry, FileTable.Column.SIZE);
-        }
-
-        static String sizeToString(final FileEntry entry) {
-            return longToString(entry.size());
-        }
-
-        static Property byDataSize(final FileEntry entry) {
-            return new Property(entry, FileTable.Column.DATA_SIZE);
-        }
-
-        static String dataSizeToString(final FileEntry entry) {
-            return longToString(entry.dataSize());
+        private Entry(final Supplier<? extends Path> cwd, final FileEntry entry) {
+            super(entry);
+            this.cwd = cwd;
         }
 
         @SuppressWarnings("TypeMayBeWeakened")
@@ -285,35 +264,37 @@ public final class FileTable {
         private static String longToString(final long l) {
             return "%,d".formatted(l);
         }
-    }
 
-    private final class Model extends RowModel<FileEntry> {
-
-        private volatile List<FileEntry> entries = List.of();
-
-        private Model(final Retrievable<? extends Path> cwd) {
-            cwd.subscribe(INIT, this::onSetPath);
+        final String nameToString() {
+            return name();
         }
 
-        private void onSetPath(final Path path) {
-            this.entries = FileEntry.of(path)
-                                    .entries()
-                                    .toList();
-            fireTableDataChanged();
+        final String pathToString() {
+            return cwd.get().relativize(path()).toString();
         }
 
-        @Override
-        protected final List<FileEntry> rows() {
-            // Already IS immutable ...
-            // noinspection AssignmentOrReturnOfFieldWithMutableType
-            return entries;
+        final String locationToString() {
+            return Optional.ofNullable(path().getParent())
+                           .map(path -> cwd.get().relativize(path))
+                           .map(Path::toString)
+                           .filter(not(String::isBlank))
+                           .orElse(".");
         }
 
-        @Override
-        protected final List<? extends FileTable.Column> columns() {
-            // Already IS immutable ...
-            // noinspection AssignmentOrReturnOfFieldWithMutableType
-            return columns;
+        final String lastModifiedToString() {
+            return dateTimeToString(localDateTime(lastModified()));
+        }
+
+        final String lastUpdateToString() {
+            return dateTimeToString(localDateTime(lastUpdated()));
+        }
+
+        final String sizeToString() {
+            return longToString(size());
+        }
+
+        final String dataSizeToString() {
+            return longToString(dataSize());
         }
     }
 
@@ -370,6 +351,39 @@ public final class FileTable {
 //                                           .setToolTipText("Set file order")
 //                                           .build())
                            .build();
+        }
+    }
+
+    private final class Model extends RowModel<Entry> {
+
+        private final Retrievable<? extends Path> cwd;
+        private volatile List<Entry> entries = List.of();
+
+        private Model(final Retrievable<? extends Path> cwd) {
+            this.cwd = cwd;
+            cwd.subscribe(INIT, this::onSetPath);
+        }
+
+        private void onSetPath(final Path path) {
+            this.entries = FileEntry.of(path)
+                                    .entries()
+                                    .map(entry -> new Entry(cwd, entry))
+                                    .toList();
+            fireTableDataChanged();
+        }
+
+        @Override
+        protected final List<Entry> rows() {
+            // Already IS immutable ...
+            // noinspection AssignmentOrReturnOfFieldWithMutableType
+            return entries;
+        }
+
+        @Override
+        protected final List<? extends FileTable.Column> columns() {
+            // Already IS immutable ...
+            // noinspection AssignmentOrReturnOfFieldWithMutableType
+            return columns;
         }
     }
 }
