@@ -12,7 +12,6 @@ import java.util.List;
  *
  * @param <E> The type of list elements, each of which is represented as a table row.
  */
-@SuppressWarnings("AbstractClassWithOnlyOneDirectInheritor")
 public abstract class RowModel<E> extends AbstractTableModel {
 
     /**
@@ -68,7 +67,6 @@ public abstract class RowModel<E> extends AbstractTableModel {
      *
      * @param <E> The type of list elements, each of which is represented as a table row.
      */
-    @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
     public interface Column<E> {
 
         /**

@@ -19,6 +19,7 @@ import java.util.Comparator;
  * Note: this class has a natural ordering that is inconsistent with equals.
  *
  * @param <R> The type that represents the content of a table row;
+ * @param <C> The final type of {@link CellProperty.Column}.
  * @see #equals(CellProperty, Object)
  */
 public class CellProperty<R, C extends CellProperty.Column<R>> implements Comparable<CellProperty<R, C>> {

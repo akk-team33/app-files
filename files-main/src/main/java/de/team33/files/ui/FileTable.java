@@ -1,12 +1,11 @@
 package de.team33.files.ui;
 
 import de.team33.patterns.io.delta.FileEntry;
-import de.team33.patterns.serving.alpha.Gettable;
 import de.team33.patterns.serving.alpha.Retrievable;
-import de.team33.sphinx.gamma.table.CellRenderer;
-import de.team33.sphinx.gamma.table.HeadRenderer;
-import de.team33.sphinx.gamma.table.Property;
-import de.team33.sphinx.gamma.table.RowModel;
+import de.team33.sphinx.delta.table.CellProperty;
+import de.team33.sphinx.delta.table.CellRenderer;
+import de.team33.sphinx.delta.table.HeadRenderer;
+import de.team33.sphinx.delta.table.RowModel;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JButtons;
 import de.team33.sphinx.metis.JPanels;
@@ -19,21 +18,19 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.nio.file.Path;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Comparator;
 import java.util.List;
-import java.util.*;
-import java.util.function.BiFunction;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
-import static java.util.function.Predicate.not;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
 
 @SuppressWarnings("ClassWithTooManyFields")
@@ -42,18 +39,6 @@ public final class FileTable {
     private static final int MARGIN = 8;
     private static final Locale LOCALE = Locale.getDefault();
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
-    private static final Comparator<String> STRING_IGNORE_CASE =
-            String::compareToIgnoreCase;
-    private static final Comparator<String> STRING_RESPECT_CASE =
-            String::compareTo;
-    private static final Comparator<String> STRING_NORMAL =
-            STRING_IGNORE_CASE.thenComparing(STRING_RESPECT_CASE);
-    private static final Comparator<FileEntry> ENTRY_NAME =
-            Comparator.comparing(FileEntry::name, STRING_NORMAL);
-    private static final Comparator<Path> PATH_NORMAL =
-            Comparator.comparing(Path::toString, STRING_NORMAL);
-    private static final Comparator<FileEntry> ENTRY_PATH =
-            Comparator.comparing(FileEntry::path, PATH_NORMAL);
 
     private final List<? extends Column> columns;
     private final Icons icons;
@@ -61,13 +46,13 @@ public final class FileTable {
     private final Component component;
 
     private FileTable(final Retrievable<Path> cwd,
-                      final List<Column> columns,
+                      final List<? extends Column> columns,
                       final Icons icons) {
-        this.columns = Column.using(cwd, columns);
+        this.columns = columns;
         this.icons = icons;
         this.table = JTables.builder()
                             .setModel(new Model(cwd))
-                            .setDefaultRenderer(MyProperty.class, new MyCellRenderer())
+                            .setDefaultRenderer(Property.class, new MyCellRenderer())
                             .setup(jTable -> jTable.getTableHeader()
                                                    .setDefaultRenderer(new MyHeadRenderer()))
                             .setShowGrid(false)
@@ -90,10 +75,6 @@ public final class FileTable {
 
     public static FileTable by(final Context context) {
         return new FileTable(context.cwd(), context.columns(), context.icons());
-    }
-
-    private static <P> Comparator<P> neutralOrder() {
-        return (left, right) -> 0;
     }
 
     private void onMouseClicked(final MouseEvent event) {
@@ -152,254 +133,157 @@ public final class FileTable {
         Icon parentFolder();
     }
 
-    @SuppressWarnings("ClassNameSameAsAncestorName")
-    public interface Column extends RowModel.Column<FileEntry>,
-                                    CellRenderer.Column {
+    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
+    public interface Column extends RowModel.Column<FileEntry>, CellProperty.Column<FileEntry>, CellRenderer.Column {
 
-        Column NAME = new FinalColumn<>("Name", Name.class, SwingConstants.LEADING, Name::new);
-        Column PATH = new ProColumn<>("Path", RelPath.class, SwingConstants.LEADING, RelPath::new);
-        Column PARENT = new ProColumn<>("Location", RelLocation.class, SwingConstants.LEADING, RelLocation::new);
-        Column LAST_MODIFIED = new FinalColumn<>("Last Modified", LastModified.class,
-                                                 SwingConstants.CENTER, LastModified::new);
-        Column LAST_MODIFIED_DATE = new FinalColumn<>("Last Mod. Date", LastModifiedDate.class,
-                                                      SwingConstants.CENTER, LastModifiedDate::new);
-        Column LAST_MODIFIED_TIME = new FinalColumn<>("Last Mod. Time", LastModifiedTime.class,
-                                                      SwingConstants.CENTER, LastModifiedTime::new);
-        Column LAST_UPDATE = new FinalColumn<>("Last Update", LastUpdate.class,
-                                               SwingConstants.CENTER, LastUpdate::new);
-        Column SIZE = new FinalColumn<>("Size", Size.class, SwingConstants.TRAILING, Size::new);
-        Column DATA_SIZE = new FinalColumn<>("Data Size", DataSize.class, SwingConstants.TRAILING, DataSize::new);
+        @Override
+        default Class<?> type() {
+            return Property.class;
+        }
+
+        Column NAME = new ColumnImpl("Name", Property::byName,
+                                     Property.NAME_ORDER, Property::nameToString, SwingConstants.LEADING);
+        Column PATH = new ColumnImpl("Path", Property::byPath,
+                                     Property.FINAL_ORDER, Property::pathToString, SwingConstants.LEADING);
+        Column LOCATION = new ColumnImpl("Location", Property::byLocation,
+                                         Property.FINAL_ORDER, Property::locationToString, SwingConstants.LEADING);
+        Column LAST_MODIFIED = new ColumnImpl("Last Modified", Property::byLastModified,
+                                              Property.LAST_MODIFIED_ORDER, Property::lastModifiedToString,
+                                              SwingConstants.CENTER);
+        // Column LAST_MODIFIED_DATE = new FinalColumn<>("Last Mod. Date", LastModifiedDate.class,
+        //                                               SwingConstants.CENTER, LastModifiedDate::new);
+        // Column LAST_MODIFIED_TIME = new FinalColumn<>("Last Mod. Time", LastModifiedTime.class,
+        //                                               SwingConstants.CENTER, LastModifiedTime::new);
+        Column LAST_UPDATE = new ColumnImpl("Last Update", Property::byLastUpdate,
+                                            Property.LAST_UPDATE_ORDER, Property::lastUpdateToString,
+                                            SwingConstants.CENTER);
+        Column SIZE = new ColumnImpl("Size", Property::bySize,
+                                     Property.SIZE_ORDER, Property::sizeToString, SwingConstants.TRAILING);
+        Column DATA_SIZE = new ColumnImpl("Data Size", Property::byDataSize,
+                                          Property.DATA_SIZE_ORDER, Property::dataSizeToString, SwingConstants.TRAILING);
 
         @SuppressWarnings({"StaticCollection", "StaticMethodOnlyUsedInOneClass"}) // List is immutable!
-        List<Column> VALUES = List.of(NAME, PATH, PARENT, LAST_MODIFIED, LAST_MODIFIED_DATE, LAST_MODIFIED_TIME, LAST_UPDATE, SIZE, DATA_SIZE);
+        List<Column> VALUES = List.of(NAME, PATH, LOCATION, LAST_MODIFIED, /*LAST_MODIFIED_DATE, LAST_MODIFIED_TIME,*/
+                                      LAST_UPDATE, SIZE, DATA_SIZE);
 
-        @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
-        static List<? extends Column> using(final Gettable<Path> cwd, final List<? extends Column> origin) {
-            return origin.stream()
-                         .map(column -> column.using(cwd))
-                         .toList();
-        }
 
-        Column using(Gettable<Path> cwd);
     }
 
-    private record ProColumn<P>(String title, Class<P> type, int horizontalAlignment,
-                                BiFunction<Gettable<Path>, FileEntry, P> biMapping) implements Column {
-        @Override
-        public Column using(final Gettable<Path> cwd) {
-            return new FinalColumn<>(title, type, horizontalAlignment, fileEntry -> biMapping.apply(cwd, fileEntry));
-        }
+    private record ColumnImpl(String title, Function<FileEntry, ?> mapping,
+                              Comparator<FileEntry> order, Function<FileEntry, String> toStringFunction,
+                              int horizontalAlignment
+    )
+            implements Column {
 
         @Override
-        public P map(final FileEntry element) {
-            throw new UnsupportedOperationException("Context <cwd> is missing - use using(cwd)");
-        }
-    }
-
-    private record FinalColumn<P>(String title, Class<P> type, int horizontalAlignment,
-                                  Function<FileEntry, P> mapping) implements Column {
-        @Override
-        public Column using(final Gettable<Path> cwd) {
-            return this;
-        }
-
-        @Override
-        public P map(final FileEntry element) {
+        public Object map(final FileEntry element) {
             return mapping.apply(element);
         }
-    }
-
-    private static final class Name extends MyProperty<Name> {
-
-        private static final Comparator<Name> ORDER = Comparator.comparing(MyProperty::entry, ENTRY_NAME);
-
-        private Name(final FileEntry entry) {
-            super(entry, Name.class, ORDER);
-        }
 
         @Override
-        public final String toString() {
-            return entry().name();
+        public String toString(final FileEntry rowContent) {
+            return toStringFunction.apply(rowContent);
         }
     }
 
-    private static final class RelPath extends MyProperty<RelPath> {
+    @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
+    private static final class Property extends CellProperty<FileEntry, Column> {
 
-        private static final Comparator<RelPath> ORDER = neutralOrder();
-
-        private final Path relative;
-
-        private RelPath(final Supplier<Path> cwd, final FileEntry entry) {
-            super(entry, RelPath.class, ORDER);
-            this.relative = cwd.get().relativize(entry.path());
-        }
-
-        @Override
-        public final String toString() {
-            return relative.toString();
-        }
-    }
-
-    private static final class RelLocation extends MyProperty<RelLocation> {
-
-        private static final Comparator<RelLocation> ORDER = neutralOrder();
-
-        @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-        private final Optional<Path> parent;
-
-        private RelLocation(final Supplier<Path> cwd, final FileEntry entry) {
-            super(entry, RelLocation.class, ORDER);
-            this.parent = Optional.ofNullable(entry.path().getParent())
-                                  .map(p -> cwd.get()
-                                               .relativize(p));
-        }
-
-        @Override
-        public final String toString() {
-            return parent.map(Path::toString)
-                         .filter(not(String::isBlank))
-                         .orElse(".");
-        }
-    }
-
-    private static final class LastModified extends MyProperty<LastModified> {
-
-        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                                                                            .withLocale(LOCALE);
-        private static final Comparator<FileEntry> LAST_MODIFIED = Comparator.comparing(FileEntry::lastModified);
-        private static final Comparator<LastModified> ORDER = Comparator.comparing(MyProperty::entry, LAST_MODIFIED);
-
-        private final LocalDateTime dateTime;
-
-        private LastModified(final FileEntry entry) {
-            super(entry, LastModified.class, ORDER);
-            this.dateTime = LocalDateTime.ofInstant(entry().lastModified(), ZONE_ID);
-        }
-
-        @Override
-        public final String toString() {
-            return dateTime.format(FORMATTER);
-        }
-    }
-
-    private static final class LastUpdate extends MyProperty<LastUpdate> {
-
-        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                                                                            .withLocale(LOCALE);
-        private static final Comparator<FileEntry> LAST_MODIFIED = Comparator.comparing(FileEntry::lastUpdated);
-        private static final Comparator<LastUpdate> ORDER = Comparator.comparing(MyProperty::entry, LAST_MODIFIED);
-
-        private final LocalDateTime dateTime;
-
-        private LastUpdate(final FileEntry entry) {
-            super(entry, LastUpdate.class, ORDER);
-            this.dateTime = Optional.ofNullable(entry().lastUpdated())
-                                    .map(instant -> LocalDateTime.ofInstant(instant, ZONE_ID))
-                                    .orElse(null);
-        }
-
-        @Override
-        public final String toString() {
-            return (null == dateTime) ? Objects.toString(null) : dateTime.format(FORMATTER);
-        }
-    }
-
-    private static final class LastModifiedDate extends MyProperty<LastModifiedDate> {
-
-        private static final DateTimeFormatter FORMATTER =
-                DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+        private static final DateTimeFormatter DATE_TIME_FORMATTER =
+                DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
                                  .withLocale(LOCALE);
-        private static final Comparator<LastModifiedDate> ORDER =
-                Comparator.comparing(MyProperty::entry, LastModified.LAST_MODIFIED);
 
-        private final LocalDate date;
+        private static final Comparator<String> IGNORE_CASE = String::compareToIgnoreCase;
+        private static final Comparator<String> RESPECT_CASE = String::compareTo;
+        private static final Comparator<String> STRING_ORDER = IGNORE_CASE.thenComparing(RESPECT_CASE);
+        private static final Comparator<Path> PATH_ORDER = Comparator.comparing(Path::toString, STRING_ORDER);
+        static final Comparator<FileEntry> FINAL_ORDER = Comparator.comparing(FileEntry::path, PATH_ORDER);
+        static final Comparator<FileEntry> NAME_ORDER = Comparator.comparing(FileEntry::name, STRING_ORDER)
+                                                                  .thenComparing(FINAL_ORDER);
+        static final Comparator<FileEntry> LAST_MODIFIED_ORDER = Comparator.comparing(FileEntry::lastModified)
+                                                                           .thenComparing(FINAL_ORDER);
+        static final Comparator<FileEntry> LAST_UPDATE_ORDER = Comparator.comparing(FileEntry::lastUpdated)
+                                                                         .thenComparing(FINAL_ORDER);
+        static final Comparator<FileEntry> SIZE_ORDER = Comparator.comparing(FileEntry::size)
+                                                                  .thenComparing(FINAL_ORDER);
+        static final Comparator<FileEntry> DATA_SIZE_ORDER = Comparator.comparing(FileEntry::dataSize)
+                                                                       .thenComparing(FINAL_ORDER);
 
-        private LastModifiedDate(final FileEntry entry) {
-            super(entry, LastModifiedDate.class, ORDER);
-            this.date = LocalDate.ofInstant(entry().lastModified(), ZONE_ID);
+        private Property(final FileEntry rowContent, final FileTable.Column column) {
+            super(rowContent, column);
         }
 
-        @Override
-        public final String toString() {
-            return date.format(FORMATTER);
-        }
-    }
-
-    private static final class LastModifiedTime extends MyProperty<LastModifiedTime> {
-
-        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM)
-                                                                            .withLocale(LOCALE);
-        private static final Comparator<LastModifiedTime> ORDER = Comparator.comparing((LastModifiedTime ft) -> ft.time,
-                                                                                       LocalTime::compareTo)
-                                                                            .thenComparing(MyProperty::entry,
-                                                                                           LastModified.LAST_MODIFIED);
-        private final LocalTime time;
-
-        private LastModifiedTime(final FileEntry entry) {
-            super(entry, LastModifiedTime.class, ORDER);
-            this.time = LocalTime.ofInstant(entry().lastModified(), ZONE_ID);
+        static Property byName(final FileEntry entry) {
+            return new Property(entry, FileTable.Column.NAME);
         }
 
-        @Override
-        public final String toString() {
-            return time.format(FORMATTER);
-        }
-    }
-
-    private static final class Size extends MyProperty<Size> {
-
-        private static final Comparator<FileEntry> ENTRY_SIZE = Comparator.comparing(FileEntry::size);
-        private static final Comparator<Size> ORDER = Comparator.comparing(MyProperty::entry, ENTRY_SIZE);
-
-        private Size(final FileEntry entry) {
-            super(entry, Size.class, ORDER);
+        static String nameToString(final FileEntry entry) {
+            return entry.name();
         }
 
-        @Override
-        public final String toString() {
-            return "%,d".formatted(entry().size());
-        }
-    }
-
-    private static final class DataSize extends MyProperty<DataSize> {
-
-        private static final Comparator<FileEntry> DATA_SIZE = Comparator.comparing(FileEntry::dataSize);
-        private static final Comparator<DataSize> ORDER = Comparator.comparing(MyProperty::entry, DATA_SIZE);
-
-        private DataSize(final FileEntry entry) {
-            super(entry, DataSize.class, ORDER);
+        static Property byPath(final FileEntry entry) {
+            return new Property(entry, FileTable.Column.PATH);
         }
 
-        @Override
-        public final String toString() {
-            return "%,d".formatted(entry().dataSize());
-        }
-    }
-
-    private abstract static class MyProperty<P extends MyProperty<P>> extends Property<P> {
-
-        private final FileEntry entry;
-
-        private MyProperty(final FileEntry entry, final Class<P> pClass, final Comparator<P> primaryOrder) {
-            super(pClass, primaryOrder.thenComparing(MyProperty::entry, ENTRY_PATH));
-            this.entry = entry;
+        static String pathToString(final FileEntry entry) {
+            // TODO: use CWD relative path
+            return entry.path().toString();
         }
 
-        final FileEntry entry() {
-            return entry;
+        static Property byLocation(final FileEntry entry) {
+            return new Property(entry, FileTable.Column.LOCATION);
         }
 
-        @Override
-        public final boolean equals(final Object other) {
-            // consistently with <compareTo()> ...
-            return Property.equals(this, other);
+        static String locationToString(final FileEntry entry) {
+            // TODO: use CWD relative path
+            return Optional.ofNullable(entry.path().getParent())
+                           .map(Path::toString)
+                           .orElse("<null>");
         }
 
-        @Override
-        public final int hashCode() {
-            // consistently with <equals()> and <compareTo()>:
-            // final order depends on file entry path (see constructor) ...
-            return entry.path().hashCode();
+        static Property byLastModified(final FileEntry entry) {
+            return new Property(entry, FileTable.Column.LAST_MODIFIED);
+        }
+
+        static String lastModifiedToString(final FileEntry entry) {
+            return dateTimeToString(localDateTime(entry.lastModified()));
+        }
+
+        static Property byLastUpdate(final FileEntry entry) {
+            return new Property(entry, FileTable.Column.LAST_UPDATE);
+        }
+
+        static String lastUpdateToString(final FileEntry entry) {
+            return dateTimeToString(localDateTime(entry.lastUpdated()));
+        }
+
+        static Property bySize(final FileEntry entry) {
+            return new Property(entry, FileTable.Column.SIZE);
+        }
+
+        static String sizeToString(final FileEntry entry) {
+            return longToString(entry.size());
+        }
+
+        static Property byDataSize(final FileEntry entry) {
+            return new Property(entry, FileTable.Column.DATA_SIZE);
+        }
+
+        static String dataSizeToString(final FileEntry entry) {
+            return longToString(entry.dataSize());
+        }
+
+        @SuppressWarnings("TypeMayBeWeakened")
+        private static String dateTimeToString(final LocalDateTime dateTime) {
+            return dateTime.format(DATE_TIME_FORMATTER);
+        }
+
+        private static LocalDateTime localDateTime(final Instant instant) {
+            return LocalDateTime.ofInstant(instant, ZONE_ID);
+        }
+
+        private static String longToString(final long l) {
+            return "%,d".formatted(l);
         }
     }
 
@@ -443,11 +327,10 @@ public final class FileTable {
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    private final class MyCellRenderer extends CellRenderer<MyProperty, Column> {
+    private final class MyCellRenderer extends CellRenderer<Property, Column> {
 
         private MyCellRenderer() {
-            super(MyProperty.class);
+            super(Property.class);
         }
 
         @Override
@@ -458,12 +341,12 @@ public final class FileTable {
         }
 
         @Override
-        protected void setup(final JLabel result, final MyProperty value, final FileTable.Column column) {
+        protected void setup(final JLabel result, final Property value, final FileTable.Column column) {
             result.setIcon(column == columns().get(0) ? icon(value) : null);
         }
 
-        private Icon icon(final MyProperty value) {
-            return value.entry().isDirectory() ? icons.stdFolder() : icons.stdFile();
+        private Icon icon(final Property value) {
+            return value.rowContent().isDirectory() ? icons.stdFolder() : icons.stdFile();
         }
     }
 
