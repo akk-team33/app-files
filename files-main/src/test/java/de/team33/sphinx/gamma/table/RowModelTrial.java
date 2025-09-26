@@ -1,15 +1,15 @@
 package de.team33.sphinx.gamma.table;
 
-import de.team33.files.testing.SwingTrial;
 import de.team33.files.ui.Context;
 import de.team33.files.ui.FileTree;
 import de.team33.patterns.serving.alpha.Retrievable;
+import de.team33.sphinx.lambda.SwingApp;
+import de.team33.sphinx.metis.JFrames;
 import de.team33.sphinx.metis.JSplitPanes;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
 import javax.swing.table.TableModel;
-import java.awt.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -20,7 +20,7 @@ import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
 import static javax.swing.SwingConstants.*;
 
-final class RowModelTrial extends SwingTrial {
+final class RowModelTrial extends SwingApp {
 
     @SuppressWarnings("StaticCollection")
     private static final List<FileColumn<?>> COLUMNS = List.of(
@@ -36,20 +36,18 @@ final class RowModelTrial extends SwingTrial {
                                             .build();
 
     public static void main(final String[] args) {
-        run(new RowModelTrial());
+        start(new RowModelTrial());
     }
 
     @Override
-    protected Container contentPane() {
-        return JSplitPanes.builder()
-                          .setLeftComponent(FileTree.by(context).component())
-                          .setRightComponent(new JScrollPane(fileTable))
-                          .build();
-    }
-
-    @Override
-    protected void setupFrame(final JFrame jFrame) {
-        context.cwd().subscribe(INIT, path -> jFrame.setTitle(path.toString()));
+    protected JFrame newFrame() {
+        return JFrames.builder(getClass().getCanonicalName())
+                      .setContentPane(JSplitPanes.builder()
+                                                 .setLeftComponent(FileTree.by(context).component())
+                                                 .setRightComponent(new JScrollPane(fileTable))
+                                                 .build())
+                      .setup(jFrame -> context.cwd().subscribe(INIT, path -> jFrame.setTitle(path.toString())))
+                      .build();
     }
 
     private record FileColumn<C>(String title, Class<C> type, int horizontalAlignment, Function<File, C> mapping)
