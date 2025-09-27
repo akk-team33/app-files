@@ -5,7 +5,7 @@ import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.delta.table.CellProperty;
 import de.team33.sphinx.delta.table.CellRenderer;
 import de.team33.sphinx.delta.table.HeadRenderer;
-import de.team33.sphinx.delta.table.RowModel;
+import de.team33.sphinx.delta.table.RowColumnModel;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JButtons;
 import de.team33.sphinx.metis.JPanels;
@@ -136,7 +136,7 @@ public final class FileTable {
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    public interface Column extends RowModel.Column<Entry>, CellProperty.Column<Entry>, CellRenderer.Column {
+    public interface Column extends RowColumnModel.Column<Entry>, CellProperty.Column<Entry>, CellRenderer.Column {
 
         @Override
         default Class<?> type() {
@@ -354,7 +354,7 @@ public final class FileTable {
         }
     }
 
-    private final class Model extends RowModel<Entry> {
+    private final class Model extends RowColumnModel<Entry> {
 
         private final Retrievable<? extends Path> cwd;
         private volatile List<Entry> entries = List.of();

@@ -6,7 +6,7 @@ import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.delta.table.CellProperty;
 import de.team33.sphinx.delta.table.CellRenderer;
 import de.team33.sphinx.delta.table.HeadRenderer;
-import de.team33.sphinx.delta.table.RowModel;
+import de.team33.sphinx.delta.table.RowColumnModel;
 import de.team33.sphinx.lambda.SwingApp;
 import de.team33.sphinx.metis.JFrames;
 import de.team33.sphinx.metis.JSplitPanes;
@@ -58,7 +58,7 @@ final class RendererTrial extends SwingApp {
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    private interface Column extends RowModel.Column<File>, CellProperty.Column<File>, CellRenderer.Column {
+    private interface Column extends RowColumnModel.Column<File>, CellProperty.Column<File>, CellRenderer.Column {
 
         Column NAME = new ColumnImpl("Name", LEFT, Property::byName, Property::nameToString, Property.NAME_ORDER);
         Column LAST_MODIFIED = new ColumnImpl("Last Modified", CENTER, Property::byLastModified,
@@ -132,7 +132,7 @@ final class RendererTrial extends SwingApp {
         }
     }
 
-    private static class FileModel extends RowModel<File> {
+    private static class FileModel extends RowColumnModel<File> {
 
         private volatile List<File> files = List.of();
 

@@ -4,6 +4,8 @@ import de.team33.files.ui.Context;
 import de.team33.files.ui.FileTree;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.delta.table.CellProperty;
+import de.team33.sphinx.delta.table.CellRenderer;
+import de.team33.sphinx.delta.table.HeadRenderer;
 import de.team33.sphinx.delta.table.RowColumnModel;
 import de.team33.sphinx.lambda.SwingApp;
 import de.team33.sphinx.metis.JFrames;
@@ -21,22 +23,25 @@ import java.util.function.Function;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
+import static javax.swing.SwingConstants.*;
 
-final class CellPropertyTrial extends SwingApp {
+final class RowColumnModelCellPropertyCellRendererTrial extends SwingApp {
 
     @SuppressWarnings("StaticCollection")
-    private static final List<Column> COLUMNS = List.of(
-            Column.NAME, Column.LAST_MODIFIED, Column.SIZE);
+    private static final List<Column> COLUMNS = List.of(Column.values());
 
     private final FileTree.Context context = new Context();
     private final TableModel model = new FileModel(context.cwd());
     private final JTable fileTable = JTables.builder(model)
+                                            .setDefaultRenderer(Property.class, new MyCellRenderer())
+                                            .setup(jTable -> jTable.getTableHeader()
+                                                                   .setDefaultRenderer(new MyHeadRenderer()))
                                             .setAutoCreateRowSorter(true)
                                             .setAutoResizeMode(AUTO_RESIZE_OFF)
                                             .build();
 
     public static void main(final String[] args) {
-        start(new CellPropertyTrial());
+        start(new RowColumnModelCellPropertyCellRendererTrial());
     }
 
     @Override
@@ -51,39 +56,55 @@ final class CellPropertyTrial extends SwingApp {
                       .build();
     }
 
-    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    private interface Column extends RowColumnModel.Column<File>, CellProperty.Column<File> {
+    @SuppressWarnings("ClassNameSameAsAncestorName")
+    private enum Column implements RowColumnModel.Column<File>, CellProperty.Column<File>, CellRenderer.Column {
 
-        Column NAME = new ColumnImpl("Name", Property::byName, Property::nameToString, Property.NAME_ORDER);
-        Column LAST_MODIFIED = new ColumnImpl("Last Modified", Property::byLastModified,
-                                              Property::lastModifiedToString, Property.LAST_MODIFIED_ORDER);
-        Column SIZE = new ColumnImpl("Size", Property::bySize, Property::sizeToString, Property.SIZE_ORDER);
-    }
+        NAME(new Backing("Name", LEFT, Property::nameOf, Property::nameToString, Property.NAME_ORDER)),
+        LAST_MODIFIED(new Backing("Last Modified", CENTER, Property::lastModifiedOf,
+                                  Property::lastModifiedToString, Property.LAST_MODIFIED_ORDER)),
+        SIZE(new Backing("Size", RIGHT, Property::sizeOf, Property::sizeToString, Property.SIZE_ORDER));
 
-    private record ColumnImpl(String title,
-                              Function<File, Property> propertyFunction,
-                              Function<File, String> toStringFunction,
-                              Comparator<File> order)
-            implements Column {
+        private final Backing backing;
 
-        @Override
-        public final String toString(final File file) {
-            return toStringFunction.apply(file);
+        Column(final Backing backing) {
+            this.backing = backing;
         }
 
         @Override
-        public final Class<?> type() {
+        public Comparator<File> order() {
+            return backing.order;
+        }
+
+        @Override
+        public String toString(final File rowContent) {
+            return backing.toStringFunction.apply(rowContent);
+        }
+
+        @Override
+        public int horizontalAlignment() {
+            return backing.horizontalAlignment;
+        }
+
+        @Override
+        public String title() {
+            return backing.title;
+        }
+
+        @Override
+        public Class<?> type() {
             return Property.class;
         }
 
         @Override
-        public final Property map(final File file) {
-            return propertyFunction.apply(file);
+        public Object map(final File element) {
+            return backing.mapFunction.apply(element);
         }
 
-        @Override
-        public final String toString() {
-            return title;
+        private record Backing(String title,
+                               int horizontalAlignment,
+                               Function<File, Property> mapFunction,
+                               Function<File, String> toStringFunction,
+                               Comparator<File> order) {
         }
     }
 
@@ -96,20 +117,20 @@ final class CellPropertyTrial extends SwingApp {
         private static final Comparator<File> LAST_MODIFIED_ORDER = Comparator.comparing(File::lastModified);
         private static final Comparator<File> SIZE_ORDER = Comparator.comparing(File::length);
 
-        private Property(final File rowContent, final CellPropertyTrial.Column column) {
+        private Property(final File rowContent, final RowColumnModelCellPropertyCellRendererTrial.Column column) {
             super(rowContent, column);
         }
 
-        private static Property byName(final File file) {
-            return new Property(file, CellPropertyTrial.Column.NAME);
+        private static Property nameOf(final File file) {
+            return new Property(file, RowColumnModelCellPropertyCellRendererTrial.Column.NAME);
         }
 
-        private static Property byLastModified(final File file) {
-            return new Property(file, CellPropertyTrial.Column.LAST_MODIFIED);
+        private static Property lastModifiedOf(final File file) {
+            return new Property(file, RowColumnModelCellPropertyCellRendererTrial.Column.LAST_MODIFIED);
         }
 
-        private static Property bySize(final File file) {
-            return new Property(file, CellPropertyTrial.Column.SIZE);
+        private static Property sizeOf(final File file) {
+            return new Property(file, RowColumnModelCellPropertyCellRendererTrial.Column.SIZE);
         }
 
         private static String nameToString(final File file) {
@@ -146,8 +167,33 @@ final class CellPropertyTrial extends SwingApp {
         }
 
         @Override
-        protected final List<CellPropertyTrial.Column> columns() {
+        protected final List<RowColumnModelCellPropertyCellRendererTrial.Column> columns() {
             return COLUMNS;
+        }
+    }
+
+    private static final class MyHeadRenderer extends HeadRenderer<Column> {
+
+        @Override
+        protected List<RowColumnModelCellPropertyCellRendererTrial.Column> columns() {
+            return COLUMNS;
+        }
+    }
+
+    private static final class MyCellRenderer extends CellRenderer<Property, Column> {
+
+        private MyCellRenderer() {
+            super(Property.class);
+        }
+
+        @Override
+        protected final List<RowColumnModelCellPropertyCellRendererTrial.Column> columns() {
+            return COLUMNS;
+        }
+
+        @Override
+        protected final void setup(final JLabel result, final Property value, final RowColumnModelCellPropertyCellRendererTrial.Column column) {
+            // preliminary nothing to do
         }
     }
 }

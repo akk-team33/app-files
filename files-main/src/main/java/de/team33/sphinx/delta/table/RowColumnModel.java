@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @param <E> The type of list elements, each of which is represented as a table row.
  */
-public abstract class RowModel<E> extends AbstractTableModel {
+public abstract class RowColumnModel<E> extends AbstractTableModel {
 
     /**
      * Returns the currently valid {@link List} of elements that should be displayed as one table row each.
@@ -63,7 +63,7 @@ public abstract class RowModel<E> extends AbstractTableModel {
     }
 
     /**
-     * Represents a table column description to be used in the context of a {@link RowModel}.
+     * Represents a table column description to be used in the context of a {@link RowColumnModel}.
      *
      * @param <E> The type of list elements, each of which is represented as a table row.
      */

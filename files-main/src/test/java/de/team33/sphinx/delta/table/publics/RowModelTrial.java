@@ -3,7 +3,7 @@ package de.team33.sphinx.delta.table.publics;
 import de.team33.files.ui.Context;
 import de.team33.files.ui.FileTree;
 import de.team33.patterns.serving.alpha.Retrievable;
-import de.team33.sphinx.delta.table.RowModel;
+import de.team33.sphinx.delta.table.RowColumnModel;
 import de.team33.sphinx.lambda.SwingApp;
 import de.team33.sphinx.metis.JFrames;
 import de.team33.sphinx.metis.JSplitPanes;
@@ -50,7 +50,7 @@ final class RowModelTrial extends SwingApp {
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    private interface Column extends RowModel.Column<File> {
+    private interface Column extends RowColumnModel.Column<File> {
 
         Column NAME = new ColumnImpl<>("Name", String.class, File::getName);
         Column LAST_MODIFIED = new ColumnImpl<>("Last Modified", Instant.class,
@@ -74,7 +74,7 @@ final class RowModelTrial extends SwingApp {
         }
     }
 
-    private static class FileModel extends RowModel<File> {
+    private static class FileModel extends RowColumnModel<File> {
 
         private volatile List<File> files = List.of();
 
