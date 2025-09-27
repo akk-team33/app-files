@@ -20,11 +20,10 @@ import java.util.function.Function;
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
 
-final class RowModelTrial extends SwingApp {
+final class RowColumnModelTrial extends SwingApp {
 
     @SuppressWarnings("StaticCollection")
-    private static final List<Column> COLUMNS = List.of(
-            Column.NAME, Column.LAST_MODIFIED, Column.SIZE);
+    private static final List<Column> COLUMNS = List.of(Column.values());
 
     private final FileTree.Context context = new Context();
     private final TableModel model = new FileModel(context.cwd());
@@ -34,7 +33,7 @@ final class RowModelTrial extends SwingApp {
                                             .build();
 
     public static void main(final String[] args) {
-        start(new RowModelTrial());
+        start(new RowColumnModelTrial());
     }
 
     @Override
@@ -49,28 +48,37 @@ final class RowModelTrial extends SwingApp {
                       .build();
     }
 
-    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    private interface Column extends RowColumnModel.Column<File> {
+    @SuppressWarnings("ClassNameSameAsAncestorName")
+    private enum Column implements RowColumnModel.Column<File> {
 
-        Column NAME = new ColumnImpl<>("Name", String.class, File::getName);
-        Column LAST_MODIFIED = new ColumnImpl<>("Last Modified", Instant.class,
-                                                file -> Instant.ofEpochMilli(file.lastModified()));
-        Column SIZE = new ColumnImpl<>("Size", Long.class, File::length);
-    }
+        NAME(new Backing<>("Name", String.class, File::getName)),
+        LAST_MODIFIED(new Backing<>("Last Modified", Instant.class, file -> Instant.ofEpochMilli(file.lastModified()))),
+        SIZE(new Backing<>("Size", Long.class, File::length));
 
-    private record ColumnImpl<T>(String title,
-                                 Class<T> type,
-                                 Function<File, T> propertyFunction)
-            implements Column {
+        private final Backing<?> backing;
 
-        @Override
-        public final T map(final File file) {
-            return propertyFunction.apply(file);
+        <T> Column(final Backing<T> backing) {
+            this.backing = backing;
         }
 
         @Override
-        public final String toString() {
-            return title;
+        public String title() {
+            return backing.title;
+        }
+
+        @Override
+        public Class<?> type() {
+            return backing.type;
+        }
+
+        @Override
+        public Object map(final File element) {
+            return backing.mapFunction.apply(element);
+        }
+
+        private record Backing<T>(String title,
+                                  Class<T> type,
+                                  Function<File, T> mapFunction) {
         }
     }
 
@@ -95,7 +103,7 @@ final class RowModelTrial extends SwingApp {
         }
 
         @Override
-        protected final List<RowModelTrial.Column> columns() {
+        protected final List<RowColumnModelTrial.Column> columns() {
             return COLUMNS;
         }
     }
