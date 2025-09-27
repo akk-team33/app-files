@@ -1,0 +1,150 @@
+package de.team33.sphinx.delta.table.publics;
+
+import de.team33.files.ui.Context;
+import de.team33.files.ui.FileTree;
+import de.team33.patterns.serving.alpha.Retrievable;
+import de.team33.sphinx.delta.table.CellRenderer;
+import de.team33.sphinx.delta.table.HeadRenderer;
+import de.team33.sphinx.delta.table.RowColumnModel;
+import de.team33.sphinx.lambda.SwingApp;
+import de.team33.sphinx.metis.JFrames;
+import de.team33.sphinx.metis.JSplitPanes;
+import de.team33.sphinx.metis.JTables;
+
+import javax.swing.*;
+import javax.swing.table.TableModel;
+import java.io.File;
+import java.nio.file.Path;
+import java.time.Instant;
+import java.util.List;
+import java.util.function.Function;
+
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+import static javax.swing.JTable.AUTO_RESIZE_OFF;
+import static javax.swing.SwingConstants.*;
+
+final class CellRendererTrial extends SwingApp {
+
+    @SuppressWarnings("StaticCollection")
+    private static final List<Column> COLUMNS = List.of(Column.values());
+
+    private final FileTree.Context context = new Context();
+    private final TableModel model = new FileModel(context.cwd());
+    private final JTable fileTable = JTables.builder(model)
+                                            .setDefaultRenderer(String.class, new MyCellRenderer<>(String.class))
+                                            .setDefaultRenderer(Instant.class, new MyCellRenderer<>(Instant.class))
+                                            .setDefaultRenderer(Long.class, new MyCellRenderer<>(Long.class))
+                                            .setup(jTable -> jTable.getTableHeader()
+                                                                   .setDefaultRenderer(new MyHeadRenderer()))
+                                            .setAutoCreateRowSorter(true)
+                                            .setAutoResizeMode(AUTO_RESIZE_OFF)
+                                            .build();
+
+    public static void main(final String[] args) {
+        start(new CellRendererTrial());
+    }
+
+    @Override
+    protected JFrame newFrame() {
+        return JFrames.builder(getClass().getCanonicalName())
+                      .setContentPane(JSplitPanes.builder()
+                                                 //.setOrientation(JSplitPane.VERTICAL_SPLIT)
+                                                 .setLeftComponent(FileTree.by(context).component())
+                                                 .setRightComponent(new JScrollPane(fileTable))
+                                                 .build())
+                      .setup(jFrame -> context.cwd().subscribe(INIT, path -> jFrame.setTitle(path.toString())))
+                      .build();
+    }
+
+    @SuppressWarnings("ClassNameSameAsAncestorName")
+    private enum Column implements RowColumnModel.Column<File>, CellRenderer.Column {
+
+        NAME(new Backing<>("Name", LEFT, String.class, File::getName)),
+        LAST_MODIFIED(new Backing<>("Last Modified", CENTER, Instant.class,
+                                    file -> Instant.ofEpochMilli(file.lastModified()))),
+        SIZE(new Backing<>("Size", RIGHT, Long.class, File::length));
+
+        private final Backing<?> backing;
+
+        <T> Column(final Backing<T> backing) {
+            this.backing = backing;
+        }
+
+        @Override
+        public int horizontalAlignment() {
+            return backing.horizontalAlignment;
+        }
+
+        @Override
+        public String title() {
+            return backing.title;
+        }
+
+        @Override
+        public Class<?> type() {
+            return backing.type;
+        }
+
+        @Override
+        public Object map(final File element) {
+            return backing.mapFunction.apply(element);
+        }
+
+        private record Backing<T>(String title,
+                                  int horizontalAlignment,
+                                  Class<T> type,
+                                  Function<File, T> mapFunction) {
+        }
+    }
+
+    private static class FileModel extends RowColumnModel<File> {
+
+        private volatile List<File> files = List.of();
+
+        FileModel(final Retrievable<? extends Path> cwd) {
+            cwd.subscribe(INIT, this::onSetCWD);
+        }
+
+        private void onSetCWD(final Path path) {
+            this.files = List.of(path.toFile().listFiles());
+            fireTableDataChanged();
+        }
+
+        @Override
+        protected final List<? extends File> rows() {
+            // Already is an immutable List ...
+            // noinspection AssignmentOrReturnOfFieldWithMutableType
+            return files;
+        }
+
+        @Override
+        protected final List<CellRendererTrial.Column> columns() {
+            return COLUMNS;
+        }
+    }
+
+    private static final class MyHeadRenderer extends HeadRenderer<Column> {
+
+        @Override
+        protected List<CellRendererTrial.Column> columns() {
+            return COLUMNS;
+        }
+    }
+
+    private static final class MyCellRenderer<T> extends CellRenderer<T, Column> {
+
+        private MyCellRenderer(final Class<? extends T> tClass) {
+            super(tClass);
+        }
+
+        @Override
+        protected final List<CellRendererTrial.Column> columns() {
+            return COLUMNS;
+        }
+
+        @Override
+        protected final void setup(final JLabel result, final T value, final CellRendererTrial.Column column) {
+            // preliminary nothing to do
+        }
+    }
+}

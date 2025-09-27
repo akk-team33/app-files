@@ -25,7 +25,7 @@ import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
 import static javax.swing.SwingConstants.*;
 
-final class RowColumnModelCellPropertyCellRendererTrial extends SwingApp {
+final class ModelPropertyRendererTrial extends SwingApp {
 
     @SuppressWarnings("StaticCollection")
     private static final List<Column> COLUMNS = List.of(Column.values());
@@ -41,7 +41,7 @@ final class RowColumnModelCellPropertyCellRendererTrial extends SwingApp {
                                             .build();
 
     public static void main(final String[] args) {
-        start(new RowColumnModelCellPropertyCellRendererTrial());
+        start(new ModelPropertyRendererTrial());
     }
 
     @Override
@@ -117,20 +117,20 @@ final class RowColumnModelCellPropertyCellRendererTrial extends SwingApp {
         private static final Comparator<File> LAST_MODIFIED_ORDER = Comparator.comparing(File::lastModified);
         private static final Comparator<File> SIZE_ORDER = Comparator.comparing(File::length);
 
-        private Property(final File rowContent, final RowColumnModelCellPropertyCellRendererTrial.Column column) {
+        private Property(final File rowContent, final ModelPropertyRendererTrial.Column column) {
             super(rowContent, column);
         }
 
         private static Property nameOf(final File file) {
-            return new Property(file, RowColumnModelCellPropertyCellRendererTrial.Column.NAME);
+            return new Property(file, ModelPropertyRendererTrial.Column.NAME);
         }
 
         private static Property lastModifiedOf(final File file) {
-            return new Property(file, RowColumnModelCellPropertyCellRendererTrial.Column.LAST_MODIFIED);
+            return new Property(file, ModelPropertyRendererTrial.Column.LAST_MODIFIED);
         }
 
         private static Property sizeOf(final File file) {
-            return new Property(file, RowColumnModelCellPropertyCellRendererTrial.Column.SIZE);
+            return new Property(file, ModelPropertyRendererTrial.Column.SIZE);
         }
 
         private static String nameToString(final File file) {
@@ -167,7 +167,7 @@ final class RowColumnModelCellPropertyCellRendererTrial extends SwingApp {
         }
 
         @Override
-        protected final List<RowColumnModelCellPropertyCellRendererTrial.Column> columns() {
+        protected final List<ModelPropertyRendererTrial.Column> columns() {
             return COLUMNS;
         }
     }
@@ -175,7 +175,7 @@ final class RowColumnModelCellPropertyCellRendererTrial extends SwingApp {
     private static final class MyHeadRenderer extends HeadRenderer<Column> {
 
         @Override
-        protected List<RowColumnModelCellPropertyCellRendererTrial.Column> columns() {
+        protected List<ModelPropertyRendererTrial.Column> columns() {
             return COLUMNS;
         }
     }
@@ -187,12 +187,12 @@ final class RowColumnModelCellPropertyCellRendererTrial extends SwingApp {
         }
 
         @Override
-        protected final List<RowColumnModelCellPropertyCellRendererTrial.Column> columns() {
+        protected final List<ModelPropertyRendererTrial.Column> columns() {
             return COLUMNS;
         }
 
         @Override
-        protected final void setup(final JLabel result, final Property value, final RowColumnModelCellPropertyCellRendererTrial.Column column) {
+        protected final void setup(final JLabel result, final Property value, final ModelPropertyRendererTrial.Column column) {
             // preliminary nothing to do
         }
     }
