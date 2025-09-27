@@ -25,8 +25,7 @@ import static javax.swing.JTable.AUTO_RESIZE_OFF;
 final class CellPropertyTrial extends SwingApp {
 
     @SuppressWarnings("StaticCollection")
-    private static final List<Column> COLUMNS = List.of(
-            Column.NAME, Column.LAST_MODIFIED, Column.SIZE);
+    private static final List<Column> COLUMNS = List.of(Column.values());
 
     private final FileTree.Context context = new Context();
     private final TableModel model = new FileModel(context.cwd());
@@ -51,39 +50,49 @@ final class CellPropertyTrial extends SwingApp {
                       .build();
     }
 
-    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    private interface Column extends RowColumnModel.Column<File>, CellProperty.Column<File> {
+    @SuppressWarnings("ClassNameSameAsAncestorName")
+    private enum Column implements RowColumnModel.Column<File>, CellProperty.Column<File> {
 
-        Column NAME = new ColumnImpl("Name", Property::byName, Property::nameToString, Property.NAME_ORDER);
-        Column LAST_MODIFIED = new ColumnImpl("Last Modified", Property::byLastModified,
-                                              Property::lastModifiedToString, Property.LAST_MODIFIED_ORDER);
-        Column SIZE = new ColumnImpl("Size", Property::bySize, Property::sizeToString, Property.SIZE_ORDER);
-    }
+        NAME(new Backing("Name", Property::nameOf, Property::nameToString, Property.NAME_ORDER)),
+        LAST_MODIFIED(new Backing("Last Modified", Property::lastModifiedOf,
+                                  Property::lastModifiedToString, Property.LAST_MODIFIED_ORDER)),
+        SIZE(new Backing("Size", Property::sizeOf, Property::sizeToString, Property.SIZE_ORDER));
 
-    private record ColumnImpl(String title,
-                              Function<File, Property> propertyFunction,
-                              Function<File, String> toStringFunction,
-                              Comparator<File> order)
-            implements Column {
+        private final Backing backing;
 
-        @Override
-        public final String toString(final File file) {
-            return toStringFunction.apply(file);
+        Column(final Backing backing) {
+            this.backing = backing;
         }
 
         @Override
-        public final Class<?> type() {
+        public Comparator<File> order() {
+            return backing.order;
+        }
+
+        @Override
+        public String toString(final File rowContent) {
+            return backing.toStringFunction.apply(rowContent);
+        }
+
+        @Override
+        public String title() {
+            return backing.title;
+        }
+
+        @Override
+        public Class<?> type() {
             return Property.class;
         }
 
         @Override
-        public final Property map(final File file) {
-            return propertyFunction.apply(file);
+        public Object map(final File element) {
+            return backing.mapFunction.apply(element);
         }
 
-        @Override
-        public final String toString() {
-            return title;
+        private record Backing(String title,
+                               Function<File, Property> mapFunction,
+                               Function<File, String> toStringFunction,
+                               Comparator<File> order) {
         }
     }
 
@@ -100,15 +109,15 @@ final class CellPropertyTrial extends SwingApp {
             super(rowContent, column);
         }
 
-        private static Property byName(final File file) {
+        private static Property nameOf(final File file) {
             return new Property(file, CellPropertyTrial.Column.NAME);
         }
 
-        private static Property byLastModified(final File file) {
+        private static Property lastModifiedOf(final File file) {
             return new Property(file, CellPropertyTrial.Column.LAST_MODIFIED);
         }
 
-        private static Property bySize(final File file) {
+        private static Property sizeOf(final File file) {
             return new Property(file, CellPropertyTrial.Column.SIZE);
         }
 
