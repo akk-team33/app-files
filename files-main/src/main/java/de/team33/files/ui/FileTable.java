@@ -1,14 +1,12 @@
 package de.team33.files.ui;
 
 import de.team33.patterns.io.delta.FileEntry;
-import de.team33.patterns.serving.alpha.Retrievable;
+import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.delta.table.CellProperty;
 import de.team33.sphinx.delta.table.CellRenderer;
 import de.team33.sphinx.delta.table.HeadRenderer;
 import de.team33.sphinx.delta.table.RowColumnModel;
 import de.team33.sphinx.luna.Channel;
-import de.team33.sphinx.metis.JButtons;
-import de.team33.sphinx.metis.JPanels;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
@@ -42,18 +40,20 @@ public final class FileTable {
     private static final Locale LOCALE = Locale.getDefault();
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
-    private final List<? extends Column> columns;
+    private final Variable<Path> cwd;
+    private final List<Column> columns;
     private final Icons icons;
     private final JTable table;
     private final Component component;
 
-    private FileTable(final Retrievable<Path> cwd,
-                      final List<? extends Column> columns,
+    private FileTable(final Variable<Path> cwd,
+                      final List<Column> columns,
                       final Icons icons) {
+        this.cwd = cwd;
         this.columns = columns;
         this.icons = icons;
         this.table = JTables.builder()
-                            .setModel(new Model(cwd))
+                            .setModel(new Model())
                             .setDefaultRenderer(Property.class, new MyCellRenderer())
                             .setup(jTable -> jTable.getTableHeader()
                                                    .setDefaultRenderer(new MyHeadRenderer()))
@@ -62,24 +62,34 @@ public final class FileTable {
                             .setColumnSelectionAllowed(false)
                             .setAutoCreateRowSorter(true)
                             .setAutoResizeMode(AUTO_RESIZE_OFF)
+                            .subscribe(Channel.MOUSE_CLICKED, this::onMouseClickedInBody)
 //                            .on(Event.MOUSE_CLICKED, new InfoTable.MOUSE_LISTENER(context)::mouseClicked)
 //                            .setup(table -> table.getSelectionModel()
 //                                                 .addListSelectionListener(new InfoTable.SelectionListener(table)))
 //                            .setup(table -> FS.getRegister().add(new InfoTable.LSTNR_UPDINFO(table, context)))
                             .build();
-        this.component = JPanels.builder()
-                                .setLayout(new BorderLayout())
-                                .add(new Controls().panel, BorderLayout.PAGE_START)
-                                .add(new JScrollPane(table), BorderLayout.CENTER)
-                                .build();
-        Channel.MOUSE_CLICKED.subscribe(table.getTableHeader(), this::onMouseClicked);
+        this.component = new JScrollPane(table);
+        Channel.MOUSE_CLICKED.subscribe(table.getTableHeader(), this::onMouseClickedInHeader);
     }
 
     public static FileTable by(final Context context) {
         return new FileTable(context.cwd(), context.columns(), context.icons());
     }
 
-    private void onMouseClicked(final MouseEvent event) {
+    private void onMouseClickedInBody(final MouseEvent event) {
+        if (event.getComponent() == table) {
+            if (event.getClickCount() == 2) {
+                final int row = table.rowAtPoint(event.getPoint());
+                final Property property = (Property) table.getValueAt(row, 0);
+                final Entry entry = property.rowContent();
+                if (entry.isDirectory()) {
+                    cwd.set(entry.path());
+                }
+            }
+        }
+    }
+
+    private void onMouseClickedInHeader(final MouseEvent event) {
         if ((event.getComponent() instanceof final JTableHeader header) && (table == header.getTable())) {
             if (SwingUtilities.isLeftMouseButton(event)) {
                 final int viewColIndex = header.columnAtPoint(event.getPoint());
@@ -115,13 +125,72 @@ public final class FileTable {
         return component;
     }
 
-    public interface Context {
+    @SuppressWarnings("ClassNameSameAsAncestorName")
+    public enum Column implements RowColumnModel.Column<Entry>, CellProperty.Column<Entry>, CellRenderer.Column {
 
-        Icons icons();
+        NAME(new Backing("Name", FileTable.Property::byName,
+                         Entry.NAME_ORDER, Entry::nameToString, SwingConstants.LEADING)),
+        PATH(new Backing("Path", FileTable.Property::byPath,
+                         Entry.FINAL_ORDER, Entry::pathToString, SwingConstants.LEADING)),
+        LOCATION(new Backing("Location", FileTable.Property::byLocation,
+                             Entry.FINAL_ORDER, Entry::locationToString, SwingConstants.LEADING)),
+        LAST_MODIFIED(new Backing("Last Modified", FileTable.Property::byLastModified,
+                                  Entry.LAST_MODIFIED_ORDER, Entry::lastModifiedToString,
+                                  SwingConstants.CENTER)),
+        // Column LAST_MODIFIED_DATE = new FinalColumn<>("Last Mod. Date", LastModifiedDate.class,
+        //                                               SwingConstants.CENTER, LastModifiedDate::new);
+        // Column LAST_MODIFIED_TIME = new FinalColumn<>("Last Mod. Time", LastModifiedTime.class,
+        //                                               SwingConstants.CENTER, LastModifiedTime::new);
+        LAST_UPDATE(new Backing("Last Update", FileTable.Property::byLastUpdate,
+                                Entry.LAST_UPDATE_ORDER, Entry::lastUpdateToString,
+                                SwingConstants.CENTER)),
+        SIZE(new Backing("Size", FileTable.Property::bySize,
+                         Entry.SIZE_ORDER, Entry::sizeToString, SwingConstants.TRAILING)),
+        DATA_SIZE(new Backing("Data Size", FileTable.Property::byDataSize,
+                              Entry.DATA_SIZE_ORDER, Entry::dataSizeToString, SwingConstants.TRAILING));
 
-        List<Column> columns();
+        private final Backing backing;
 
-        Retrievable<Path> cwd();
+        Column(final Backing backing) {
+            this.backing = backing;
+        }
+
+        @Override
+        public Comparator<Entry> order() {
+            return backing.order;
+        }
+
+        @Override
+        public String toString(final Entry rowContent) {
+            return backing.toStringFunction.apply(rowContent);
+        }
+
+        @Override
+        public int horizontalAlignment() {
+            return backing.horizontalAlignment;
+        }
+
+        @Override
+        public String title() {
+            return backing.title;
+        }
+
+        @Override
+        public Class<?> type() {
+            return FileTable.Property.class;
+        }
+
+        @Override
+        public Object map(final Entry element) {
+            return backing.mapping().apply(element);
+        }
+
+        private record Backing(String title,
+                               Function<Entry, ?> mapping,
+                               Comparator<Entry> order,
+                               Function<Entry, String> toStringFunction,
+                               int horizontalAlignment) {
+        }
     }
 
     public interface Icons {
@@ -135,56 +204,13 @@ public final class FileTable {
         Icon parentFolder();
     }
 
-    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    public interface Column extends RowColumnModel.Column<Entry>, CellProperty.Column<Entry>, CellRenderer.Column {
+    public interface Context {
 
-        @Override
-        default Class<?> type() {
-            return Property.class;
-        }
+        Icons icons();
 
-        Column NAME = new ColumnImpl("Name", Property::byName,
-                                     Entry.NAME_ORDER, Entry::nameToString, SwingConstants.LEADING);
-        Column PATH = new ColumnImpl("Path", Property::byPath,
-                                     Entry.FINAL_ORDER, Entry::pathToString, SwingConstants.LEADING);
-        Column LOCATION = new ColumnImpl("Location", Property::byLocation,
-                                         Entry.FINAL_ORDER, Entry::locationToString, SwingConstants.LEADING);
-        Column LAST_MODIFIED = new ColumnImpl("Last Modified", Property::byLastModified,
-                                              Entry.LAST_MODIFIED_ORDER, Entry::lastModifiedToString,
-                                              SwingConstants.CENTER);
-        // Column LAST_MODIFIED_DATE = new FinalColumn<>("Last Mod. Date", LastModifiedDate.class,
-        //                                               SwingConstants.CENTER, LastModifiedDate::new);
-        // Column LAST_MODIFIED_TIME = new FinalColumn<>("Last Mod. Time", LastModifiedTime.class,
-        //                                               SwingConstants.CENTER, LastModifiedTime::new);
-        Column LAST_UPDATE = new ColumnImpl("Last Update", Property::byLastUpdate,
-                                            Entry.LAST_UPDATE_ORDER, Entry::lastUpdateToString,
-                                            SwingConstants.CENTER);
-        Column SIZE = new ColumnImpl("Size", Property::bySize,
-                                     Entry.SIZE_ORDER, Entry::sizeToString, SwingConstants.TRAILING);
-        Column DATA_SIZE = new ColumnImpl("Data Size", Property::byDataSize,
-                                          Entry.DATA_SIZE_ORDER, Entry::dataSizeToString, SwingConstants.TRAILING);
+        List<Column> columns();
 
-        @SuppressWarnings({"StaticCollection", "StaticMethodOnlyUsedInOneClass"}) // List is immutable!
-        List<Column> VALUES = List.of(NAME, PATH, LOCATION, LAST_MODIFIED, /*LAST_MODIFIED_DATE, LAST_MODIFIED_TIME,*/
-                                      LAST_UPDATE, SIZE, DATA_SIZE);
-
-
-    }
-
-    private record ColumnImpl(String title, Function<Entry, ?> mapping,
-                              Comparator<Entry> order, Function<Entry, String> toStringFunction,
-                              int horizontalAlignment)
-            implements Column {
-
-        @Override
-        public Object map(final Entry entry) {
-            return mapping.apply(entry);
-        }
-
-        @Override
-        public String toString(final Entry entry) {
-            return toStringFunction.apply(entry);
-        }
+        Variable<Path> cwd();
     }
 
     @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
@@ -224,7 +250,7 @@ public final class FileTable {
 
     }
 
-    private static final class Entry extends FileEntry {
+    public static final class Entry extends FileEntry {
 
         private static final DateTimeFormatter DATE_TIME_FORMATTER =
                 DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
@@ -301,66 +327,41 @@ public final class FileTable {
     private final class MyHeadRenderer extends HeadRenderer<Column> {
 
         @Override
-        protected List<? extends FileTable.Column> columns() {
+        protected List<FileTable.Column> columns() {
             // Already IS immutable ...
             // noinspection AssignmentOrReturnOfFieldWithMutableType
             return columns;
         }
     }
 
-    private final class MyCellRenderer extends CellRenderer<Property, Column> {
+    private final class MyCellRenderer extends CellRenderer<FileTable.Property, Column> {
 
         private MyCellRenderer() {
-            super(Property.class);
+            super(FileTable.Property.class);
         }
 
         @Override
-        protected List<? extends FileTable.Column> columns() {
+        protected List<FileTable.Column> columns() {
             // Already IS immutable ...
             // noinspection AssignmentOrReturnOfFieldWithMutableType
             return columns;
         }
 
         @Override
-        protected void setup(final JLabel result, final Property value, final FileTable.Column column) {
+        protected void setup(final JLabel result, final FileTable.Property value, final FileTable.Column column) {
             result.setIcon(column == columns().get(0) ? icon(value) : null);
         }
 
-        private Icon icon(final Property value) {
+        private Icon icon(final FileTable.Property value) {
             return value.rowContent().isDirectory() ? icons.stdFolder() : icons.stdFile();
-        }
-    }
-
-    private final class Controls {
-
-        private final JPanel panel;
-
-        private Controls() {
-            panel = JPanels.builder()
-                           .setLayout(new GridBagLayout())
-                           .add(JButtons.builder()
-                                        .setIcon(icons.parentFolder())
-                                        .setToolTipText("Switch to parent directory")
-                                        .build())
-                           .add(JButtons.builder()
-                                        .setIcon(icons.optWidth())
-                                        .setToolTipText("Optimize column width")
-                                        .build())
-//                           .add(JComboBoxes.builder(ComboListModel.of(Column.class))
-//                                           //.setIcon(icons.stdFolder()) // TODO!
-//                                           .setToolTipText("Set file order")
-//                                           .build())
-                           .build();
         }
     }
 
     private final class Model extends RowColumnModel<Entry> {
 
-        private final Retrievable<? extends Path> cwd;
         private volatile List<Entry> entries = List.of();
 
-        private Model(final Retrievable<? extends Path> cwd) {
-            this.cwd = cwd;
+        private Model() {
             cwd.subscribe(INIT, this::onSetPath);
         }
 
@@ -380,7 +381,7 @@ public final class FileTable {
         }
 
         @Override
-        protected final List<? extends FileTable.Column> columns() {
+        protected final List<FileTable.Column> columns() {
             // Already IS immutable ...
             // noinspection AssignmentOrReturnOfFieldWithMutableType
             return columns;
