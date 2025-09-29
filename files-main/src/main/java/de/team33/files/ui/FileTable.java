@@ -21,10 +21,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Comparator;
 import java.util.List;
-import java.util.*;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
@@ -37,14 +40,17 @@ public final class FileTable {
     private static final int MARGIN = 8;
     private static final Locale LOCALE = Locale.getDefault();
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
+    private static final UnaryOperator<List<Column>> COPY_COLUMNS = List::copyOf;
 
     private final Variable<Path> cwd;
     private final Icons icons;
     private final Model model;
     private final JTable table;
-    private final Component component;
+    private final JScrollPane panel;
 
-    private volatile List<Column> columns = List.of(Column.NAME, Column.LAST_MODIFIED, Column.SIZE);
+    private final Variable<List<Column>> columns = new de.team33.patterns.serving.alpha.Component<>(COPY_COLUMNS, List.of(Column.NAME, Column.LAST_MODIFIED, Column.SIZE));
+
+    //private volatile List<Column> columns = List.of(Column.NAME, Column.LAST_MODIFIED, Column.SIZE);
 
     private FileTable(final Variable<Path> cwd,
                       final Icons icons) {
@@ -67,7 +73,7 @@ public final class FileTable {
 //                                                 .addListSelectionListener(new InfoTable.SelectionListener(table)))
 //                            .setup(table -> FS.getRegister().add(new InfoTable.LSTNR_UPDINFO(table, context)))
                             .build();
-        this.component = new JScrollPane(table);
+        this.panel = new JScrollPane(table);
         Channel.MOUSE_CLICKED.subscribe(table.getTableHeader(), this::onMouseClickedInHeader);
     }
 
@@ -119,21 +125,13 @@ public final class FileTable {
         return cell.getPreferredSize().width;
     }
 
-    public final Component component() {
+    public final JScrollPane panel() {
         DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.FULL);
-        return component;
+        return panel;
     }
 
-    public final List<Column> columns() {
-        // already is immutable ...
-        // noinspection AssignmentOrReturnOfFieldWithMutableType
+    public final Variable<List<Column>> columns() {
         return columns;
-    }
-
-    public final FileTable setColumns(final Collection<Column> columns) {
-        this.columns = List.copyOf(columns);
-        model.fireTableStructureChanged();
-        return this;
     }
 
     @SuppressWarnings("ClassNameSameAsAncestorName")
@@ -337,9 +335,7 @@ public final class FileTable {
 
         @Override
         protected List<FileTable.Column> columns() {
-            // Already IS immutable ...
-            // noinspection AssignmentOrReturnOfFieldWithMutableType
-            return columns;
+            return columns.get();
         }
     }
 
@@ -351,9 +347,7 @@ public final class FileTable {
 
         @Override
         protected List<FileTable.Column> columns() {
-            // Already IS immutable ...
-            // noinspection AssignmentOrReturnOfFieldWithMutableType
-            return columns;
+            return columns.get();
         }
 
         @Override
@@ -372,6 +366,11 @@ public final class FileTable {
 
         private Model() {
             cwd.subscribe(INIT, this::onSetPath);
+            columns.subscribe(this::onSetColumns);
+        }
+
+        private void onSetColumns(final List<FileTable.Column> ignored) {
+            fireTableStructureChanged();
         }
 
         private void onSetPath(final Path path) {
@@ -391,9 +390,7 @@ public final class FileTable {
 
         @Override
         protected final List<FileTable.Column> columns() {
-            // Already IS immutable ...
-            // noinspection AssignmentOrReturnOfFieldWithMutableType
-            return columns;
+            return columns.get();
         }
     }
 }
