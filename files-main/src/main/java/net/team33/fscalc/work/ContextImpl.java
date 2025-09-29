@@ -1,6 +1,5 @@
 package net.team33.fscalc.work;
 
-import de.team33.files.ui.FileTable;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.patterns.serving.alpha.Variable;
@@ -67,11 +66,6 @@ public class ContextImpl extends Sender<Message<Context>> implements Context {
         this.tasks = new Component<>(List.of());
 
         this.path.subscribe(INIT, p -> startCalculation(p.toFile()));
-    }
-
-    @Override
-    public final List<FileTable.Column> columns() {
-        throw new UnsupportedOperationException("not yet implemented");
     }
 
     @Override

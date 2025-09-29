@@ -21,10 +21,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -41,19 +39,20 @@ public final class FileTable {
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
     private final Variable<Path> cwd;
-    private final List<Column> columns;
     private final Icons icons;
+    private final Model model;
     private final JTable table;
     private final Component component;
 
+    private volatile List<Column> columns = List.of(Column.NAME, Column.LAST_MODIFIED, Column.SIZE);
+
     private FileTable(final Variable<Path> cwd,
-                      final List<Column> columns,
                       final Icons icons) {
         this.cwd = cwd;
-        this.columns = columns;
         this.icons = icons;
+        this.model = new Model();
         this.table = JTables.builder()
-                            .setModel(new Model())
+                            .setModel(model)
                             .setDefaultRenderer(Property.class, new MyCellRenderer())
                             .setup(jTable -> jTable.getTableHeader()
                                                    .setDefaultRenderer(new MyHeadRenderer()))
@@ -73,7 +72,7 @@ public final class FileTable {
     }
 
     public static FileTable by(final Context context) {
-        return new FileTable(context.cwd(), context.columns(), context.icons());
+        return new FileTable(context.cwd(), context.icons());
     }
 
     private void onMouseClickedInBody(final MouseEvent event) {
@@ -123,6 +122,18 @@ public final class FileTable {
     public final Component component() {
         DateTimeFormatter.ofLocalizedDateTime(FormatStyle.FULL, FormatStyle.FULL);
         return component;
+    }
+
+    public final List<Column> columns() {
+        // already is immutable ...
+        // noinspection AssignmentOrReturnOfFieldWithMutableType
+        return columns;
+    }
+
+    public final FileTable setColumns(final Collection<Column> columns) {
+        this.columns = List.copyOf(columns);
+        model.fireTableStructureChanged();
+        return this;
     }
 
     @SuppressWarnings("ClassNameSameAsAncestorName")
@@ -207,8 +218,6 @@ public final class FileTable {
     public interface Context {
 
         Icons icons();
-
-        List<Column> columns();
 
         Variable<Path> cwd();
     }

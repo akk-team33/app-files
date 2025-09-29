@@ -6,7 +6,6 @@ import net.team33.fscalc.ui.rsrc.Ico;
 
 import javax.swing.*;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.function.UnaryOperator;
 
 @SuppressWarnings("ClassNameSameAsAncestorName")
@@ -21,11 +20,6 @@ public class Context implements FileTree.Context, FileTable.Context {
     @Override
     public final Icons icons() {
         return ICONS;
-    }
-
-    @Override
-    public final List<FileTable.Column> columns() {
-        return List.of(FileTable.Column.values());
     }
 
     @Override
