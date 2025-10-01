@@ -1,7 +1,7 @@
 package net.team33.fscalc.work;
 
-import de.team33.files.ui.FileTable;
-import de.team33.files.ui.FileTree;
+import de.team33.files.alpha.ui.FileTable;
+import de.team33.files.alpha.ui.FileTree;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.patterns.serving.alpha.Variable;
 import net.team33.fscalc.info.FileInfo;

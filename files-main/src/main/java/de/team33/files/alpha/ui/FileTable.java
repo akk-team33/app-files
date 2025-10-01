@@ -1,4 +1,4 @@
-package de.team33.files.ui;
+package de.team33.files.alpha.ui;
 
 import de.team33.patterns.io.delta.FileEntry;
 import de.team33.patterns.serving.alpha.Variable;

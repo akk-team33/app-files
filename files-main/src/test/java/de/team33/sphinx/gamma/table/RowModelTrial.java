@@ -1,7 +1,7 @@
 package de.team33.sphinx.gamma.table;
 
-import de.team33.files.ui.Context;
-import de.team33.files.ui.FileTree;
+import de.team33.files.alpha.ui.Context;
+import de.team33.files.alpha.ui.FileTree;
 import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.lambda.SwingApp;
 import de.team33.sphinx.metis.JFrames;

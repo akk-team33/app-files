@@ -1,6 +1,6 @@
 package net.team33.fscalc;
 
-import de.team33.files.ui.MainFrame;
+import de.team33.files.alpha.ui.MainFrame;
 import net.team33.application.Log;
 import net.team33.application.logging.Level;
 import net.team33.application.logging.TargetStream;

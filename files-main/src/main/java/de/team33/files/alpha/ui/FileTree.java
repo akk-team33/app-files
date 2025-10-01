@@ -1,4 +1,4 @@
-package de.team33.files.ui;
+package de.team33.files.alpha.ui;
 
 import de.team33.patterns.expiry.tethys.Recent;
 import de.team33.patterns.io.delta.FileEntry;

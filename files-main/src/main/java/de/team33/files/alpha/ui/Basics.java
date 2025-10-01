@@ -1,4 +1,4 @@
-package de.team33.files.ui;
+package de.team33.files.alpha.ui;
 
 import net.team33.fscalc.ui.rsrc.Ico;
 
