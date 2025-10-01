@@ -12,7 +12,7 @@ public final class FilesStatus {
         return new FilesStatus(context);
     }
 
-    public Component main() {
+    public Component ui() {
         // TODO, preliminary ...
         return new JLabel(getClass().getSimpleName());
     }

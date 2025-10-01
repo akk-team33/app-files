@@ -15,8 +15,7 @@ public class Files extends SwingApp {
 
     @Override
     protected final JFrame newFrame() {
-        return FilesFrame.with(context)
-                         .main();
+        return FilesFrame.with(context).ui();
     }
 
 }
