@@ -39,6 +39,9 @@ public final class FilesFrame {
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    public interface Context extends CWDInput.Context, FileTree.Context, FileTable.Context, FilesStatus.Context {
+    public interface Context extends CWDInput.Context,
+                                     FileTree.Context,
+                                     FileTable.Context,
+                                     FilesStatus.Context {
     }
 }
