@@ -30,6 +30,6 @@ public class SwingApp {
      */
     @SuppressWarnings("DesignForExtension")
     protected JFrame newFrame() {
-        return new JFrame();
+        return new JFrame(getClass().getCanonicalName());
     }
 }
