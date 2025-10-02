@@ -39,9 +39,16 @@ public final class FilesFrame {
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
+    public interface Icons extends FileTree.Icons, FileTable.Icons {
+    }
+
+    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
     public interface Context extends CWDInput.Context,
                                      FileTree.Context,
                                      FileTable.Context,
                                      FilesStatus.Context {
+
+        @Override
+        Icons icons();
     }
 }
