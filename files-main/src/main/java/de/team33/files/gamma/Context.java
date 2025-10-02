@@ -9,10 +9,16 @@ import java.nio.file.Path;
 @SuppressWarnings("ClassNameSameAsAncestorName")
 class Context implements FilesFrame.Context {
 
+    private final Icons icons = new Icons();
     private final Service service = new Service();
 
     @Override
-    public Variable<Path> cwd() {
+    public final Icons icons() {
+        return icons;
+    }
+
+    @Override
+    public final Variable<Path> cwd() {
         return service.cwd();
     }
 }
