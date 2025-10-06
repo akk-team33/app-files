@@ -19,7 +19,7 @@ public final class FilesFrame {
                            .add(CWDInput.with(context).ui(), BorderLayout.PAGE_START)
                            .add(JSplitPanes.builder()
                                            .setLeftComponent(FileTree.with(context).ui())
-                                           .setRightComponent(FileTable.with(context).ui())
+                                           .setRightComponent(FileTablePanel.with(context).ui())
                                            .build(), BorderLayout.CENTER)
                            .add(FilesStatus.with(context).ui(), BorderLayout.PAGE_END)
                            .build();
@@ -45,7 +45,7 @@ public final class FilesFrame {
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
     public interface Context extends CWDInput.Context,
                                      FileTree.Context,
-                                     FileTable.Context,
+                                     FileTablePanel.Context,
                                      FilesStatus.Context {
 
         @Override

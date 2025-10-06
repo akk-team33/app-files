@@ -11,9 +11,6 @@ import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
 import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -28,7 +25,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import java.util.stream.IntStream;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 import static java.util.function.Predicate.not;
@@ -37,7 +33,6 @@ import static javax.swing.JTable.AUTO_RESIZE_OFF;
 @SuppressWarnings("ClassWithTooManyFields")
 public final class FileTable {
 
-    private static final int MARGIN = 8;
     private static final Locale LOCALE = Locale.getDefault();
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
     private static final UnaryOperator<List<Column>> COPY_COLUMNS = List::copyOf;
@@ -91,29 +86,10 @@ public final class FileTable {
                 final int viewColIndex = header.columnAtPoint(event.getPoint());
                 if (0 <= viewColIndex) {
                     final int colIndex = table.convertColumnIndexToModel(viewColIndex);
-                    resizeColumn(colIndex);
+                    JTables.resizeColumn(table, colIndex);
                 }
             }
         }
-    }
-
-    private void resizeColumn(final int colIndex) {
-        final TableColumn column = table.getColumnModel().getColumn(colIndex);
-        final TableCellRenderer headRenderer = Optional.ofNullable(column.getHeaderRenderer())
-                                                       .orElseGet(() -> table.getTableHeader()
-                                                                             .getDefaultRenderer());
-        final Component head = headRenderer.getTableCellRendererComponent(
-                table, column.getHeaderValue(), false, false, 0, colIndex);
-        final int maxWidth = IntStream.range(0, table.getRowCount())
-                                      .map(rowIndex -> preferredWidth(colIndex, rowIndex))
-                                      .reduce(head.getPreferredSize().width, Math::max);
-        column.setPreferredWidth(maxWidth + MARGIN);
-    }
-
-    private int preferredWidth(final int colIndex, final int rowIndex) {
-        final TableCellRenderer cellRenderer = table.getCellRenderer(rowIndex, colIndex);
-        final Component cell = table.prepareRenderer(cellRenderer, rowIndex, colIndex);
-        return cell.getPreferredSize().width;
     }
 
     public final JScrollPane ui() {
@@ -239,7 +215,6 @@ public final class FileTable {
         static Property byDataSize(final Entry entry) {
             return new Property(entry, FileTable.Column.DATA_SIZE);
         }
-
     }
 
     @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
