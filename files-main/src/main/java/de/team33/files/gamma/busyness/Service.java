@@ -16,6 +16,10 @@ public class Service {
     private final Executor executor = new SimpleAsyncExecutor();
     private final Component<Path> cwd = new Component<>(executor, NORMALIZER, Path.of("."));
 
+    public final Executor executor() {
+        return executor;
+    }
+
     public final Variable<Path> cwd() {
         return cwd;
     }

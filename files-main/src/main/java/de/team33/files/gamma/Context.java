@@ -7,12 +7,18 @@ import net.team33.fscalc.ui.rsrc.Ico;
 
 import javax.swing.*;
 import java.nio.file.Path;
+import java.util.concurrent.Executor;
 
 @SuppressWarnings("ClassNameSameAsAncestorName")
 class Context implements FilesFrame.Context {
 
     private final FilesFrame.Icons icons = new Icons();
     private final Service service = new Service();
+
+    @Override
+    public final Executor executor() {
+        return service.executor();
+    }
 
     @Override
     public final FilesFrame.Icons icons() {

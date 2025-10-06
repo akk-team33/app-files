@@ -1,6 +1,8 @@
 package de.team33.files.gamma.ui;
 
-import de.team33.patterns.io.delta.FileEntry;
+import de.team33.files.gamma.ui.table.Entry;
+import de.team33.files.gamma.ui.table.Model;
+import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.delta.table.CellProperty;
 import de.team33.sphinx.delta.table.CellRenderer;
@@ -13,39 +15,34 @@ import javax.swing.*;
 import javax.swing.table.JTableHeader;
 import java.awt.event.MouseEvent;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
-import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
-import static java.util.function.Predicate.not;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
 
-@SuppressWarnings("ClassWithTooManyFields")
 public final class FileTable {
 
-    private static final Locale LOCALE = Locale.getDefault();
-    private static final ZoneId ZONE_ID = ZoneId.systemDefault();
     private static final UnaryOperator<List<Column>> COPY_COLUMNS = List::copyOf;
 
+    private final Variable<List<Column>> columns;
     private final Variable<Path> cwd;
     private final Icons icons;
     private final JTable table;
     private final JScrollPane panel;
 
-    private final Variable<List<Column>> columns = new de.team33.patterns.serving.alpha.Component<>(COPY_COLUMNS, List.of(Column.NAME, Column.LAST_MODIFIED, Column.SIZE));
-
     private FileTable(final Context context) {
+        this.columns = new Component<>(context.executor(), COPY_COLUMNS,
+                                       List.of(Column.NAME, Column.LAST_MODIFIED, Column.SIZE));
         this.cwd = context.cwd();
         this.icons = context.icons();
         this.table = JTables.builder()
-                            .setModel(new Model())
+                            .setModel(new Model(context.cwd(), columns))
                             .setDefaultRenderer(Property.class, new MyCellRenderer())
                             .setup(jTable -> jTable.getTableHeader()
                                                    .setDefaultRenderer(new MyHeadRenderer()))
@@ -101,6 +98,10 @@ public final class FileTable {
     @SuppressWarnings({"WeakerAccess", "MethodMayBeStatic"})
     public final Set<Column> availableColumns() {
         return Set.of(Column.values());
+    }
+
+    public final void resizeColumns() {
+        JTables.resizeColumns(table);
     }
 
     @SuppressWarnings("ClassNameSameAsAncestorName")
@@ -178,6 +179,8 @@ public final class FileTable {
     @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
     public interface Context {
 
+        Executor executor();
+
         Icons icons();
 
         Variable<Path> cwd();
@@ -219,81 +222,6 @@ public final class FileTable {
         }
     }
 
-    @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
-    public static final class Entry extends FileEntry {
-
-        private static final DateTimeFormatter DATE_TIME_FORMATTER =
-                DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                                 .withLocale(LOCALE);
-        private static final Comparator<String> IGNORE_CASE = String::compareToIgnoreCase;
-        private static final Comparator<String> RESPECT_CASE = String::compareTo;
-        private static final Comparator<String> STRING_ORDER = IGNORE_CASE.thenComparing(RESPECT_CASE);
-        private static final Comparator<Path> PATH_ORDER = Comparator.comparing(Path::toString, STRING_ORDER);
-        static final Comparator<Entry> FINAL_ORDER = Comparator.comparing(Entry::path, PATH_ORDER);
-        static final Comparator<Entry> NAME_ORDER = Comparator.comparing(Entry::name, STRING_ORDER)
-                                                              .thenComparing(FINAL_ORDER);
-        static final Comparator<Entry> LAST_MODIFIED_ORDER = Comparator.comparing(Entry::lastModified)
-                                                                       .thenComparing(FINAL_ORDER);
-        static final Comparator<Entry> LAST_UPDATE_ORDER = Comparator.comparing(Entry::lastUpdated)
-                                                                     .thenComparing(FINAL_ORDER);
-        static final Comparator<Entry> SIZE_ORDER = Comparator.comparing(Entry::size)
-                                                              .thenComparing(FINAL_ORDER);
-        static final Comparator<Entry> DATA_SIZE_ORDER = Comparator.comparing(Entry::dataSize)
-                                                                   .thenComparing(FINAL_ORDER);
-
-        private final Supplier<? extends Path> cwd;
-
-        private Entry(final Supplier<? extends Path> cwd, final FileEntry entry) {
-            super(entry);
-            this.cwd = cwd;
-        }
-
-        @SuppressWarnings("TypeMayBeWeakened")
-        private static String dateTimeToString(final LocalDateTime dateTime) {
-            return dateTime.format(DATE_TIME_FORMATTER);
-        }
-
-        private static LocalDateTime localDateTime(final Instant instant) {
-            return LocalDateTime.ofInstant(instant, ZONE_ID);
-        }
-
-        private static String longToString(final long l) {
-            return "%,d".formatted(l);
-        }
-
-        final String nameToString() {
-            return name();
-        }
-
-        final String pathToString() {
-            return cwd.get().relativize(path()).toString();
-        }
-
-        final String locationToString() {
-            return Optional.ofNullable(path().getParent())
-                           .map(path -> cwd.get().relativize(path))
-                           .map(Path::toString)
-                           .filter(not(String::isBlank))
-                           .orElse(".");
-        }
-
-        final String lastModifiedToString() {
-            return dateTimeToString(localDateTime(lastModified()));
-        }
-
-        final String lastUpdateToString() {
-            return dateTimeToString(localDateTime(lastUpdated()));
-        }
-
-        final String sizeToString() {
-            return longToString(size());
-        }
-
-        final String dataSizeToString() {
-            return longToString(dataSize());
-        }
-    }
-
     private final class MyHeadRenderer extends HeadRenderer<Column> {
 
         @Override
@@ -320,40 +248,6 @@ public final class FileTable {
 
         private Icon icon(final Property value) {
             return value.rowContent().isDirectory() ? icons.stdFolder() : icons.stdFile();
-        }
-    }
-
-    private final class Model extends RowColumnModel<Entry> {
-
-        private volatile List<Entry> entries = List.of();
-
-        private Model() {
-            cwd.subscribe(INIT, this::onSetPath);
-            columns.subscribe(this::onSetColumns);
-        }
-
-        private void onSetColumns(final List<FileTable.Column> ignored) {
-            fireTableStructureChanged();
-        }
-
-        private void onSetPath(final Path path) {
-            this.entries = FileEntry.of(path)
-                                    .entries()
-                                    .map(entry -> new Entry(cwd, entry))
-                                    .toList();
-            fireTableDataChanged();
-        }
-
-        @Override
-        protected final List<Entry> rows() {
-            // Already IS immutable ...
-            // noinspection AssignmentOrReturnOfFieldWithMutableType
-            return entries;
-        }
-
-        @Override
-        protected final List<FileTable.Column> columns() {
-            return columns.get();
         }
     }
 }
