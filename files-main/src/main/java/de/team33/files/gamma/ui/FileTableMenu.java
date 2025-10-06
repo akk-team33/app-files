@@ -1,5 +1,7 @@
 package de.team33.files.gamma.ui;
 
+import de.team33.patterns.streamable.galatea.Streamable;
+import de.team33.sphinx.metis.JCheckBoxMenuItems;
 import de.team33.sphinx.metis.JMenuBars;
 import de.team33.sphinx.metis.JMenuItems;
 import de.team33.sphinx.metis.JMenus;
@@ -11,16 +13,16 @@ public final class FileTableMenu {
 
     private final JMenuBar bar;
 
-    private FileTableMenu(final Context context) {
+    private FileTableMenu(final FileTable table, final Context context) {
+        final Streamable<JMenuItem> columnItems =
+                () -> table.availableColumns().stream()
+                           .map(column -> JCheckBoxMenuItems.builder()
+                                                            .setText(column.title())
+                                                            .build());
         this.bar = JMenuBars.builder()
                             .add(JMenus.builder()
                                        .setText("Columns")
-                                       .add(JMenuItems.builder().setText("Item1")
-                                                      .build())
-                                       .add(JMenuItems.builder().setText("Item2")
-                                                      .build())
-                                       .add(JMenuItems.builder().setText("Item3")
-                                                      .build())
+                                       .forEach(columnItems, JMenus.Setup::add)
                                        .build())
                             .add(JMenus.builder()
                                        .setText("Actions")
@@ -34,8 +36,8 @@ public final class FileTableMenu {
                             .build();
     }
 
-    public static FileTableMenu with(final Context context) {
-        return new FileTableMenu(context);
+    public static FileTableMenu with(final FileTable table, final Context context) {
+        return new FileTableMenu(table, context);
     }
 
     public Component ui() {

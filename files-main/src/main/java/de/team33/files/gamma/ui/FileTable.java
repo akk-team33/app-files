@@ -18,10 +18,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -99,6 +96,11 @@ public final class FileTable {
 
     public final Variable<List<Column>> columns() {
         return columns;
+    }
+
+    @SuppressWarnings({"WeakerAccess", "MethodMayBeStatic"})
+    public final Set<Column> availableColumns() {
+        return Set.of(Column.values());
     }
 
     @SuppressWarnings("ClassNameSameAsAncestorName")

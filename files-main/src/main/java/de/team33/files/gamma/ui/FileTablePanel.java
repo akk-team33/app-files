@@ -10,9 +10,11 @@ public final class FileTablePanel {
     private final JPanel panel;
 
     private FileTablePanel(final Context context) {
+        final FileTable table = FileTable.with(context);
+        final FileTableMenu menu = FileTableMenu.with(table, context);
         this.panel = JPanels.builder(new BorderLayout())
-                            .add(FileTableMenu.with(context).ui(), BorderLayout.PAGE_START)
-                            .add(FileTable.with(context).ui(), BorderLayout.CENTER)
+                            .add(menu.ui(), BorderLayout.PAGE_START)
+                            .add(table.ui(), BorderLayout.CENTER)
                             .build();
     }
 
@@ -24,7 +26,7 @@ public final class FileTablePanel {
         return panel;
     }
 
-    @SuppressWarnings("ClassNameSameAsAncestorName")
+    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
     public interface Context extends FileTable.Context, FileTableMenu.Context {
     }
 }
