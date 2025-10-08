@@ -1,7 +1,6 @@
 package de.team33.files.luna.ui;
 
 import de.team33.files.eris.ui.CWDInput;
-import de.team33.files.eris.ui.FileTree;
 import de.team33.sphinx.metis.JFrames;
 
 import javax.swing.*;
@@ -36,14 +35,7 @@ public final class FilesFrame {
         return frame;
     }
 
-    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor", "MarkerInterface"})
-    public interface Icons extends FileTree.Icons {
-    }
-
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
     public interface Context extends CWDInput.Context, CenterPane.Context, FilesStatus.Context {
-
-        @Override
-        Icons icons();
     }
 }

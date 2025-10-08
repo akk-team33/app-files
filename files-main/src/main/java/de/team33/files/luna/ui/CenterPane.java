@@ -25,7 +25,10 @@ public final class CenterPane {
         return splitPane;
     }
 
-    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceNeverImplemented"})
+    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
     public interface Context extends FileTree.Context, TablePane.Context {
+
+        @Override
+        FilesIcons icons();
     }
 }

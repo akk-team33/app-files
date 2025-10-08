@@ -2,12 +2,14 @@ package de.team33.files.luna;
 
 import de.team33.files.luna.busyness.Backend;
 import de.team33.files.luna.ui.FilesFrame;
+import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.lambda.SwingApp;
 import net.team33.fscalc.ui.rsrc.Ico;
 
 import javax.swing.*;
 import java.nio.file.Path;
+import java.util.concurrent.Executor;
 
 public class Files extends SwingApp {
 
@@ -25,7 +27,7 @@ public class Files extends SwingApp {
     }
 
     @SuppressWarnings("ClassNameSameAsAncestorName")
-    private static class Icons implements FilesFrame.Icons {
+    private static class Icons implements FilesIcons {
 
         @Override
         public final Icon stdFolder() {
@@ -45,6 +47,11 @@ public class Files extends SwingApp {
 
     @SuppressWarnings("ClassNameSameAsAncestorName")
     private class Context implements FilesFrame.Context {
+
+        @Override
+        public final Executor executor() {
+            return backend.executor();
+        }
 
         @Override
         public final Variable<Path> cwd() {
