@@ -1,10 +1,10 @@
 package de.team33.files.eris.ui;
 
+import de.team33.files.eris.ui.table.Model;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
-import java.awt.*;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
 
@@ -14,7 +14,7 @@ public final class FileTable {
     private final JScrollPane scrollPane;
 
     private FileTable(final Context context) {
-        this.table = JTables.builder()
+        this.table = JTables.builder(new Model(context))
                             .build();
         this.scrollPane = new JScrollPane(table);
     }
@@ -23,7 +23,7 @@ public final class FileTable {
         return new FileTable(context);
     }
 
-    public Component ui() {
+    public JComponent ui() {
         return scrollPane;
     }
 
