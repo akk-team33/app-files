@@ -1,12 +1,13 @@
 package de.team33.files.luna.ui;
 
+import de.team33.files.eris.ui.CWDInput;
 import de.team33.sphinx.metis.JFrames;
 import de.team33.sphinx.metis.JSplitPanes;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class FilesFrame {
+public final class FilesFrame {
 
     private final JFrame frame;
 
@@ -14,13 +15,17 @@ public class FilesFrame {
         this.frame = JFrames.builder()
                             .setLayout(new BorderLayout())
                             .add(CWDInput.by(context).ui(), BorderLayout.PAGE_START)
-                            .add(JSplitPanes.builder()
-                                            .setLeftComponent(FileTree.by(context).ui())
-                                            .setRightComponent(FileTablePanel.by(context).ui())
-                                            .build(), BorderLayout.CENTER)
+                            .add(centerPane(context), BorderLayout.CENTER)
                             .add(FilesStatus.by(context).ui(), BorderLayout.PAGE_END)
                             .build();
         // context.cwd().subscribe(INIT, this::onSetSWD);
+    }
+
+    private static JSplitPane centerPane(final Context context) {
+        return JSplitPanes.builder()
+                          .setLeftComponent(FileTree.by(context).ui())
+                          .setRightComponent(FileTablePanel.by(context).ui())
+                          .build();
     }
 
     public static FilesFrame by(final Context context) {
@@ -31,6 +36,7 @@ public class FilesFrame {
         return frame;
     }
 
+    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
     public interface Context extends CWDInput.Context, FileTree.Context, FileTablePanel.Context, FilesStatus.Context {
 
     }
