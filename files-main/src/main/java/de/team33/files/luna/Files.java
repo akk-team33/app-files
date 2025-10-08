@@ -11,8 +11,9 @@ import java.nio.file.Path;
 
 public class Files extends SwingApp {
 
+    private final Icons icons = new Icons();
     private final Backend backend = new Backend();
-    private final Context context = new Context();
+    private final FilesFrame.Context context = new Context();
 
     public static void main(final String[] args) {
         start(new Files());
@@ -23,6 +24,7 @@ public class Files extends SwingApp {
         return FilesFrame.by(context).ui();
     }
 
+    @SuppressWarnings("ClassNameSameAsAncestorName")
     private static class Icons implements FilesFrame.Icons {
 
         @Override
@@ -44,16 +46,14 @@ public class Files extends SwingApp {
     @SuppressWarnings("ClassNameSameAsAncestorName")
     private class Context implements FilesFrame.Context {
 
-        private final Icons icons = new Icons();
-
         @Override
-        public Variable<Path> cwd() {
+        public final Variable<Path> cwd() {
             return backend.cwd();
         }
 
         @Override
-        public Icons icons() {
-            return this.icons;
+        public final Icons icons() {
+            return icons;
         }
     }
 }

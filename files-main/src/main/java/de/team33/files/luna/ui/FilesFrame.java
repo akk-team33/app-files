@@ -3,10 +3,12 @@ package de.team33.files.luna.ui;
 import de.team33.files.eris.ui.CWDInput;
 import de.team33.files.eris.ui.FileTree;
 import de.team33.sphinx.metis.JFrames;
-import de.team33.sphinx.metis.JSplitPanes;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Path;
+
+import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 
 public final class FilesFrame {
 
@@ -16,17 +18,14 @@ public final class FilesFrame {
         this.frame = JFrames.builder()
                             .setLayout(new BorderLayout())
                             .add(CWDInput.by(context).ui(), BorderLayout.PAGE_START)
-                            .add(centerPane(context), BorderLayout.CENTER)
+                            .add(CenterPane.by(context).ui(), BorderLayout.CENTER)
                             .add(FilesStatus.by(context).ui(), BorderLayout.PAGE_END)
                             .build();
-        // context.cwd().subscribe(INIT, this::onSetSWD);
+        context.cwd().subscribe(INIT, this::onSetCWD);
     }
 
-    private static JSplitPane centerPane(final Context context) {
-        return JSplitPanes.builder()
-                          .setLeftComponent(FileTree.by(context).ui())
-                          .setRightComponent(FileTablePanel.by(context).ui())
-                          .build();
+    private void onSetCWD(final Path path) {
+        frame.setTitle("%s - Files".formatted(path.getFileName()));
     }
 
     public static FilesFrame by(final Context context) {
@@ -37,12 +36,12 @@ public final class FilesFrame {
         return frame;
     }
 
-    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
+    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor", "MarkerInterface"})
     public interface Icons extends FileTree.Icons {
     }
 
     @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    public interface Context extends CWDInput.Context, FileTree.Context, FileTablePanel.Context, FilesStatus.Context {
+    public interface Context extends CWDInput.Context, CenterPane.Context, FilesStatus.Context {
 
         @Override
         Icons icons();

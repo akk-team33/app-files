@@ -3,13 +3,13 @@ package de.team33.files.luna.ui;
 import javax.swing.*;
 import java.awt.*;
 
-public final class FileTablePanel {
+public final class TableMenu {
 
-    private FileTablePanel(final Context context) {
+    private TableMenu(final Context context) {
     }
 
-    public static FileTablePanel by(final Context context) {
-        return new FileTablePanel(context);
+    public static TableMenu by(final Context context) {
+        return new TableMenu(context);
     }
 
     public Component ui() {
