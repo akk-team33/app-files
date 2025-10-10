@@ -3,8 +3,8 @@ package de.team33.files.eris.ui;
 import de.team33.patterns.io.delta.FileEntry;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
-import de.team33.sphinx.delta.table.RowColumnModel;
-import de.team33.sphinx.gamma.table.CellProperty;
+import de.team33.sphinx.epsilon.table.CellProperty;
+import de.team33.sphinx.epsilon.table.RowColumnModel;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;

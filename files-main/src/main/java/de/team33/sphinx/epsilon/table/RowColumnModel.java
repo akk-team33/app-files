@@ -1,4 +1,4 @@
-package de.team33.sphinx.delta.table;
+package de.team33.sphinx.epsilon.table;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;

@@ -1,4 +1,4 @@
-package de.team33.sphinx.gamma.table;
+package de.team33.sphinx.epsilon.table;
 
 import de.team33.patterns.building.anthe.SelfReferring;
 
