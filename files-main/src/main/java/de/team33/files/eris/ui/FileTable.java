@@ -9,8 +9,14 @@ import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -41,6 +47,10 @@ public final class FileTable {
 
     public static FileTable by(final Context context) {
         return new FileTable(context);
+    }
+
+    public Variable<Mode> mode() {
+        return mode;
     }
 
     public Variable<List<Column>> columns() {
@@ -154,6 +164,8 @@ public final class FileTable {
 
     private abstract static class Property<P extends Property<P>> extends CellProperty<P> {
 
+        private static final Locale LOCALE = Locale.getDefault();
+        private static final ZoneId ZONE_ID = ZoneId.systemDefault();
         private static final Comparator<String> IGNORE_CASE = String::compareToIgnoreCase;
         private static final Comparator<String> RESPECT_CASE = String::compareTo;
         private static final Comparator<String> STRING_ORDER = IGNORE_CASE.thenComparing(RESPECT_CASE);
@@ -165,6 +177,10 @@ public final class FileTable {
         Property(final Entry entry, final Class<P> finalClass, final Comparator<FileEntry> primeOrder) {
             super(finalClass, comparing(Property::fileEntry, primeOrder.thenComparing(FINAL_ORDER)));
             this.entry = entry;
+        }
+
+        static LocalDateTime localDateTime(final Instant instant) {
+            return LocalDateTime.ofInstant(instant, ZONE_ID);
         }
 
         final FileEntry fileEntry() {
@@ -218,16 +234,21 @@ public final class FileTable {
 
         private static class LastModified extends Property<LastModified> {
 
+            private static final DateTimeFormatter DATE_TIME_FORMATTER =
+                    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                                     .withLocale(LOCALE);
             private static final Comparator<FileEntry> ORDER = comparing(FileEntry::lastModified);
+
+            private final LocalDateTime dateTime;
 
             LastModified(final Entry entry) {
                 super(entry, LastModified.class, ORDER);
+                this.dateTime = localDateTime(fileEntry().lastModified());
             }
 
             @Override
             public final String toString() {
-                // TODO: LocalDateTime
-                return fileEntry().lastModified().toString();
+                return dateTime.format(DATE_TIME_FORMATTER);
             }
         }
 
