@@ -68,7 +68,7 @@ public abstract class RowColumnModel<E> extends AbstractTableModel {
      *
      * @param <E> The type of list elements, each of which is represented as a table row.
      */
-    @SuppressWarnings("InterfaceNeverImplemented")
+    @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
     public interface Column<E> {
 
         /**

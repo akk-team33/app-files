@@ -4,16 +4,21 @@ import de.team33.patterns.io.delta.FileEntry;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.delta.table.RowColumnModel;
+import de.team33.sphinx.gamma.table.CellProperty;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
+import static java.util.Comparator.comparing;
+import static java.util.function.Predicate.not;
 
 @SuppressWarnings("unused")
 public final class FileTable {
@@ -80,6 +85,7 @@ public final class FileTable {
     public enum Column implements RowColumnModel.Column<Entry> {
 
         NAME(new Backing<>("Name", Property.Name.class, Entry::name)),
+        LOCATION(new Backing<>("Location", Property.Location.class, Entry::location)),
         LAST_MODIFIED(new Backing<>("Last Modified", Property.LastModified.class, Entry::lasModified)),
         SIZE(new Backing<>("Size", Property.Size.class, Entry::size));
 
@@ -127,45 +133,116 @@ public final class FileTable {
         Variable<Path> cwd();
     }
 
-    @SuppressWarnings({"MethodMayBeStatic", "ClassCanBeRecord"})
-    private static final class Entry {
-
-        @SuppressWarnings("FieldCanBeLocal")
-        private final Variable<Path> cwd;
-        @SuppressWarnings("FieldCanBeLocal")
-        private final FileEntry entry;
-
-        private Entry(final Variable<Path> cwd, final FileEntry entry) {
-            this.cwd = cwd;
-            this.entry = entry;
-        }
+    private record Entry(Variable<Path> cwd, FileEntry entry) {
 
         private Property.Name name() {
-            return new Property.Name();
+            return new Property.Name(this);
+        }
+
+        private Property.Location location() {
+            return new Property.Location(this);
         }
 
         private Property.LastModified lasModified() {
-            return new Property.LastModified();
+            return new Property.LastModified(this);
         }
 
         private Property.Size size() {
-            return new Property.Size();
+            return new Property.Size(this);
         }
     }
 
-    @SuppressWarnings("EmptyClass")
-    private static class Property {
+    private abstract static class Property<P extends Property<P>> extends CellProperty<P> {
 
-        private static class Name {
+        private static final Comparator<String> IGNORE_CASE = String::compareToIgnoreCase;
+        private static final Comparator<String> RESPECT_CASE = String::compareTo;
+        private static final Comparator<String> STRING_ORDER = IGNORE_CASE.thenComparing(RESPECT_CASE);
+        private static final Comparator<Path> PATH_ORDER = comparing(Path::toString, STRING_ORDER);
+        private static final Comparator<FileEntry> FINAL_ORDER = comparing(FileEntry::path, PATH_ORDER);
+
+        private final Entry entry;
+
+        Property(final Entry entry, final Class<P> finalClass, final Comparator<FileEntry> primeOrder) {
+            super(finalClass, comparing(Property::fileEntry, primeOrder.thenComparing(FINAL_ORDER)));
+            this.entry = entry;
         }
 
-        private static class Location {
+        final FileEntry fileEntry() {
+            return entry.entry;
         }
 
-        private static class LastModified {
+        final Path cwd() {
+            return entry.cwd.get();
         }
 
-        private static class Size {
+        @Override
+        public final boolean equals(final Object other) {
+            return CellProperty.equals(THIS(), other);
+        }
+
+        @Override
+        public final int hashCode() {
+            return fileEntry().path().hashCode();
+        }
+
+        private static class Name extends Property<Name> {
+
+            private static final Comparator<FileEntry> PRIME_ORDER = comparing(FileEntry::name, STRING_ORDER);
+
+            Name(final Entry entry) {
+                super(entry, Name.class, PRIME_ORDER);
+            }
+
+            @Override
+            public final String toString() {
+                return fileEntry().name();
+            }
+        }
+
+        private static class Location extends Property<Location> {
+
+            private static final Comparator<FileEntry> PRIME_ORDER = (left, right) -> 0;
+
+            Location(final Entry entry) {
+                super(entry, Location.class, PRIME_ORDER);
+            }
+
+            @Override
+            public final String toString() {
+                return Optional.ofNullable(fileEntry().path().getParent())
+                               .map(parent -> cwd().relativize(parent).toString())
+                               .filter(not(String::isBlank))
+                               .orElse(".");
+            }
+        }
+
+        private static class LastModified extends Property<LastModified> {
+
+            private static final Comparator<FileEntry> ORDER = comparing(FileEntry::lastModified);
+
+            LastModified(final Entry entry) {
+                super(entry, LastModified.class, ORDER);
+            }
+
+            @Override
+            public final String toString() {
+                // TODO: LocalDateTime
+                return fileEntry().lastModified().toString();
+            }
+        }
+
+        private static class Size extends Property<Size> {
+
+            private static final Comparator<FileEntry> ORDER = comparing(FileEntry::size);
+
+            Size(final Entry entry) {
+                super(entry, Size.class, ORDER);
+            }
+
+            @Override
+            public final String toString() {
+                return "%,d".formatted(fileEntry().size());
+            }
         }
     }
 
