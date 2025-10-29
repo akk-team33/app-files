@@ -1,22 +1,20 @@
 package de.team33.files.phobos.ui;
 
+import de.team33.patterns.serving.alpha.Retrievable;
 import de.team33.sphinx.metis.JFrames;
 import de.team33.sphinx.metis.JPanels;
 import de.team33.sphinx.metis.JSplitPanes;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Path;
 
 public final class Frame {
 
     private final JFrame jFrame;
 
     private Frame(final Context context) {
-        final JPanel northPane = JPanels.builder(new BorderLayout())
-                                        .add(new JLabel("Left"), BorderLayout.WEST)
-                                        .add(new JLabel("Center"), BorderLayout.CENTER)
-                                        .add(new JLabel("Right"), BorderLayout.EAST)
-                                        .build();
+        final JPanel northPane = CWDPanel.by(context).ui();
         final JTree treeView = new JTree();
         final JScrollPane treePane = new JScrollPane(treeView);
         final JTable tableView = new JTable();
@@ -40,6 +38,11 @@ public final class Frame {
                         .add(centerPane, BorderLayout.CENTER)
                         .add(southPane, BorderLayout.SOUTH)
                         .build();
+        context.cwd().subscribe(Retrievable.Mode.INIT, this::onSetCWD);
+    }
+
+    private void onSetCWD(final Path path) {
+        jFrame.setTitle("%s - Files".formatted(path));
     }
 
     public static Frame by(final Context context) {
@@ -50,7 +53,9 @@ public final class Frame {
         return jFrame;
     }
 
-    public interface Context {
+    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
+    @FunctionalInterface
+    public interface Context extends CWDPanel.Context {
 
     }
 }
