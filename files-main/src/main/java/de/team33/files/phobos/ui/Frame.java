@@ -14,7 +14,7 @@ public final class Frame {
     private final JFrame jFrame;
 
     private Frame(final Context context) {
-        final JPanel northPane = CWDPanel.by(context).ui();
+        final CWDPanel cwdPanel = CWDPanel.by(context);
         final JTree treeView = new JTree();
         final JScrollPane treePane = new JScrollPane(treeView);
         final JTable tableView = new JTable();
@@ -34,7 +34,7 @@ public final class Frame {
                                         .build();
         jFrame = JFrames.builder("Files")
                         .setLayout(new BorderLayout())
-                        .add(northPane, BorderLayout.NORTH)
+                        .add(cwdPanel.ui(), BorderLayout.NORTH)
                         .add(centerPane, BorderLayout.CENTER)
                         .add(southPane, BorderLayout.SOUTH)
                         .build();

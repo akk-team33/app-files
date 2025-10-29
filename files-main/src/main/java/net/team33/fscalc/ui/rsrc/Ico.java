@@ -10,7 +10,7 @@ import javax.swing.*;
 public class Ico {
     public static final Icon PRED = new ImageIcon(Ico.class.getResource("pred.gif"));
     public static final Icon SUCC = new ImageIcon(Ico.class.getResource("succ.gif"));
-    public static final Icon CALC = new ImageIcon(Ico.class.getResource("calc-24.png"));
+    public static final Icon CALC = new ImageIcon(Ico.class.getResource("calc.gif"));
     public static final Icon UPDIR = new ImageIcon(Ico.class.getResource("foback.gif"));
     public static final Icon OPNDIR = new ImageIcon(Ico.class.getResource("folder_open-16.png"));
     public static final Icon CLSDIR = new ImageIcon(Ico.class.getResource("folder_close-16.png"));

@@ -11,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.nio.file.Path;
+import java.util.Objects;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 
@@ -20,10 +21,14 @@ final class CWDPanel {
     private final JTextField cwdInput;
     private final JPanel jPanel;
 
+    private volatile String lastText = "";
+
     private CWDPanel(final Context context) {
         cwd = context.cwd();
         cwdInput = JTextFields.builder()
-                              .subscribe(Channel.FOCUS_LOST, this::onInputCWD)
+                              .subscribe(Channel.FOCUS_GAINED, this::onInputFocusGained)
+                              .subscribe(Channel.FOCUS_LOST, this::onInputConfirmed)
+                              .subscribe(Channel.JTF_ACTION_PERFORMED, this::onInputConfirmed)
                               .build();
         jPanel = JPanels.builder(new BorderLayout())
                         .add(new WestPanel().ui(), BorderLayout.LINE_START)
@@ -41,9 +46,18 @@ final class CWDPanel {
         cwdInput.setText(path.toString());
     }
 
-    private void onInputCWD(final FocusEvent event) {
-        // TODO?: check consistence?
-        cwd.set(Path.of(cwdInput.getText()));
+    private void onInputFocusGained(final FocusEvent event) {
+        lastText = cwdInput.getText();
+    }
+
+    private void onInputConfirmed(final AWTEvent event) {
+        if (!Objects.equals(lastText, cwdInput.getText())) {
+            cwd.set(Path.of(cwdInput.getText()));
+            if (cwdInput.isFocusOwner()) {
+                cwdInput.transferFocus();
+                cwdInput.requestFocusInWindow();
+            }
+        }
     }
 
     final JPanel ui() {
