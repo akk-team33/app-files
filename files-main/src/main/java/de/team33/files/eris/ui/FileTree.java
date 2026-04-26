@@ -1,5 +1,6 @@
 package de.team33.files.eris.ui;
 
+import de.team33.files.luna.order.EntryOrder;
 import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.expiry.tethys.Recent;
 import de.team33.patterns.io.adrastea.FileEntry;
@@ -205,7 +206,9 @@ public final class FileTree {
 
     private static final class FileNode extends Node {
 
-        private static final FileEntry.Lister LISTER = FileEntry.lister(LinkHandling.RESOLVE);
+        private static final FileEntry.Lister LISTER = FileEntry.lister(LinkHandling.RESOLVE)
+                                                                .noOrder()
+                                                                .entryOrder(EntryOrder.BY_NAME);
 
         private final FileEntry entry;
 
