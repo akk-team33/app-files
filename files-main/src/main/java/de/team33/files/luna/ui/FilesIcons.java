@@ -10,4 +10,6 @@ public interface FilesIcons {
     Icon stdFile();
 
     Icon opnFolder();
+
+    Icon upFolder();
 }

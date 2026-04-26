@@ -26,7 +26,6 @@ public class Files extends JFrameApp {
         return FilesFrame.by(context).ui();
     }
 
-    @SuppressWarnings("ClassNameSameAsAncestorName")
     private static class Icons implements FilesIcons {
 
         @Override
@@ -42,6 +41,11 @@ public class Files extends JFrameApp {
         @Override
         public final Icon stdFile() {
             return Ico.FILE;
+        }
+
+        @Override
+        public final Icon upFolder() {
+            return Ico.UPDIR;
         }
     }
 

@@ -1,11 +1,11 @@
 package de.team33.files.eris.ui;
 
+import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JButtons;
 import de.team33.sphinx.metis.JPanels;
 import de.team33.sphinx.metis.JTextFields;
-import net.team33.fscalc.ui.rsrc.Ico;
 
 import javax.swing.*;
 import java.awt.*;
@@ -29,7 +29,7 @@ public final class CWDInput {
                                     .subscribe(Channel.FOCUS_GAINED, this::onFocusGained)
                                     .build();
         this.panel = JPanels.builder(new BorderLayout())
-                            .add(newOptions(), BorderLayout.LINE_START)
+                            .add(newOptions(context.icons()), BorderLayout.LINE_START)
                             .add(textField, BorderLayout.CENTER)
                             .build();
         cwd.subscribe(INIT, this::onSetCWD);
@@ -39,9 +39,9 @@ public final class CWDInput {
         return new CWDInput(context);
     }
 
-    private Component newOptions() {
+    private Component newOptions(final FilesIcons icons) {
         return JButtons.builder()
-                       .setIcon(Ico.UPDIR)
+                       .setIcon(icons.upFolder())
                        .subscribe(Channel.ACTION_PERFORMED, this::onDirUp)
                        .build();
     }
@@ -72,6 +72,8 @@ public final class CWDInput {
 
     @SuppressWarnings({"InterfaceMayBeAnnotatedFunctional", "InterfaceWithOnlyOneDirectInheritor"})
     public interface Context {
+
+        FilesIcons icons();
 
         Variable<Path> cwd();
     }
