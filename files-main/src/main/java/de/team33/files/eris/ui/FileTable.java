@@ -1,5 +1,6 @@
 package de.team33.files.eris.ui;
 
+import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
 import de.team33.patterns.serving.alpha.Component;
@@ -116,19 +117,11 @@ public final class FileTable {
     }
 
     @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
-    public interface Icons {
-
-        Icon stdFolder();
-
-        Icon stdFile();
-    }
-
-    @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
     public interface Context {
 
         Executor executor();
 
-        Icons icons();
+        FilesIcons icons();
 
         Variable<Path> cwd();
     }

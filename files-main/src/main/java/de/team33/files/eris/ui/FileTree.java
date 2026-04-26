@@ -1,5 +1,6 @@
 package de.team33.files.eris.ui;
 
+import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.expiry.tethys.Recent;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
@@ -91,19 +92,9 @@ public final class FileTree {
     }
 
     @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
-    public interface Icons {
-
-        Icon stdFolder();
-
-        Icon stdFile();
-
-        Icon opnFolder();
-    }
-
-    @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
     public interface Context {
 
-        Icons icons();
+        FilesIcons icons();
 
         Variable<Path> cwd();
     }
@@ -263,7 +254,7 @@ public final class FileTree {
     private static final class CellRenderer extends DefaultTreeCellRenderer {
 
         @SuppressWarnings("AssignmentToSuperclassField")
-        private CellRenderer(final Icons icons) {
+        private CellRenderer(final FilesIcons icons) {
             this.closedIcon = icons.stdFolder();
             this.openIcon = icons.opnFolder();
             this.leafIcon = icons.stdFile();
