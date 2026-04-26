@@ -263,6 +263,7 @@ public final class FileTable {
 
         private void onSetPath(final Path newPath, final Mode newMode) {
             this.entries = newMode.stream(newPath)
+                                  .map(entry -> entry.isMissing() ? entry.original() : entry)
                                   .map(entry -> new Entry(cwd, entry))
                                   .toList();
             fireTableDataChanged();
