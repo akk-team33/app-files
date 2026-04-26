@@ -3,7 +3,7 @@ package de.team33.files.phobos;
 import de.team33.files.phobos.model.History;
 import de.team33.files.phobos.ui.Frame;
 import de.team33.patterns.execution.metis.SimpleAsyncExecutor;
-import de.team33.patterns.io.delta.FileEntry;
+import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.lambda.SwingApp;
@@ -25,8 +25,8 @@ public class Files extends SwingApp {
         return Frame.by(new Context()).ui();
     }
 
-    @SuppressWarnings("ClassNameSameAsAncestorName")
-    private class Context implements Frame.Context {
+    @SuppressWarnings({"ClassNameSameAsAncestorName", "FieldHasSetterButNoGetter"})
+    private final class Context implements Frame.Context {
 
         private final Component<Path> cwd;
         private final Component<History> history;
@@ -35,11 +35,11 @@ public class Files extends SwingApp {
             cwd = new Component<>(executor, Path.of("."), Context::validPath);
             history = new Component<>(executor, new History(cwd.get()));
             cwd.subscribe(this::setHistory);
-            history.subscribe(this::getHistory);
+            history.subscribe(this::readHistory);
         }
 
         private static Path validPath(final Path path) throws Component.SetException {
-            final FileEntry entry = FileEntry.of(path);
+            final FileEntry entry = FileEntry.resolved(path);
             if (entry.isDirectory()) {
                 return entry.path();
             } else {
@@ -47,7 +47,8 @@ public class Files extends SwingApp {
             }
         }
 
-        private void getHistory(final History history) {
+        @SuppressWarnings("ParameterHidesMemberVariable")
+        private void readHistory(final History history) {
             cwd.set(history.path());
         }
 

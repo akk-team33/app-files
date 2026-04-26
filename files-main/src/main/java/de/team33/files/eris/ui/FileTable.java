@@ -1,6 +1,7 @@
 package de.team33.files.eris.ui;
 
-import de.team33.patterns.io.delta.FileEntry;
+import de.team33.patterns.io.adrastea.FileEntry;
+import de.team33.patterns.io.adrastea.LinkHandling;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.epsilon.table.CellProperty;
@@ -61,10 +62,13 @@ public final class FileTable {
         return scrollPane;
     }
 
+    private static final FileEntry.Lister LISTER = FileEntry.lister(LinkHandling.RESOLVE);
+    private static final FileEntry.Streamer STREAMER = FileEntry.streamer(LISTER);
+
     public enum Mode {
 
-        FLAT(FileEntry::entries),
-        DEEP(Mode::deep);
+        FLAT(entry -> LISTER.list(entry).stream()),
+        DEEP(STREAMER::stream);
 
         private final Function<? super FileEntry, ? extends Stream<FileEntry>> streaming;
 
@@ -72,22 +76,8 @@ public final class FileTable {
             this.streaming = streaming;
         }
 
-        private static Stream<FileEntry> deep(final FileEntry entry) {
-            return entry.entries()
-                        .flatMap(Mode::content);
-        }
-
-        private static Stream<FileEntry> content(final FileEntry entry) {
-            final Stream<FileEntry> head = Stream.of(entry);
-            if (entry.isDirectory()) {
-                return Stream.concat(head, deep(entry));
-            } else {
-                return head;
-            }
-        }
-
         private Stream<FileEntry> stream(final Path path) {
-            return streaming.apply(FileEntry.of(path));
+            return streaming.apply(FileEntry.resolved(path));
         }
     }
 
@@ -191,6 +181,7 @@ public final class FileTable {
             return entry.cwd.get();
         }
 
+        @SuppressWarnings("EqualsDoesntCheckParameterClass")
         @Override
         public final boolean equals(final Object other) {
             return CellProperty.equals(THIS(), other);

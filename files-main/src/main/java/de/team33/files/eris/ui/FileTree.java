@@ -1,7 +1,8 @@
 package de.team33.files.eris.ui;
 
 import de.team33.patterns.expiry.tethys.Recent;
-import de.team33.patterns.io.delta.FileEntry;
+import de.team33.patterns.io.adrastea.FileEntry;
+import de.team33.patterns.io.adrastea.LinkHandling;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JTrees;
@@ -214,18 +215,21 @@ public final class FileTree {
 
     private static final class FileNode extends Node {
 
+        private static final FileEntry.Lister LISTER = FileEntry.lister(LinkHandling.RESOLVE);
+
         private final FileEntry entry;
 
         private FileNode(final Path path) {
-            this(FileEntry.of(path));
+            this(FileEntry.resolved(path));
         }
 
         private FileNode(final FileEntry entry) {
-            super(() -> entry.entries()
-                             .filter(FileEntry::isDirectory)
-                             .map(FileNode::new)
-                             .map(Node.class::cast)
-                             .toList());
+            super(() -> LISTER.list(entry)
+                              .stream()
+                              .filter(FileEntry::isDirectory)
+                              .map(FileNode::new)
+                              .map(Node.class::cast)
+                              .toList());
             this.entry = entry;
         }
 
