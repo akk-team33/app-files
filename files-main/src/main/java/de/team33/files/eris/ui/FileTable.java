@@ -11,6 +11,9 @@ import de.team33.sphinx.epsilon.table.RowColumnModel;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -23,6 +26,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
@@ -47,13 +51,46 @@ public final class FileTable {
         this.mode = new Component<>(context.executor(), Mode.FLAT);
         this.columns = new Component<>(context.executor(), List.of(Column.values()));
         this.cwd = context.cwd();
-        this.table = JTables.builder(new Model())
+        final Model model = new Model();
+        this.table = JTables.builder(model)
                             .setRowSelectionAllowed(true)
                             .setColumnSelectionAllowed(false)
                             .setAutoCreateRowSorter(true)
                             .setAutoResizeMode(AUTO_RESIZE_OFF)
                             .build();
         this.scrollPane = new JScrollPane(table);
+        resizeColumns();
+        model.addTableModelListener(this::onTableModelChanged);
+    }
+
+    private void onTableModelChanged(final TableModelEvent event) {
+        if (TableModelEvent.UPDATE == event.getType()) {
+        }
+    }
+
+    private void resizeColumns() {
+        IntStream.range(0, table.getColumnCount())
+                 .map(table::convertColumnIndexToModel)
+                 .forEach(this::resizeColumn);
+    }
+
+    private void resizeColumn(final int colIndex) {
+        final TableColumn column = table.getColumnModel().getColumn(colIndex);
+        final TableCellRenderer headRenderer = Optional.ofNullable(column.getHeaderRenderer())
+                                                       .orElseGet(() -> table.getTableHeader()
+                                                                             .getDefaultRenderer());
+        final java.awt.Component head = headRenderer.getTableCellRendererComponent(
+                table, column.getHeaderValue(), false, false, 0, colIndex);
+        final int maxWidth = IntStream.range(0, table.getRowCount())
+                                      .map(rowIndex -> preferredWidth(colIndex, rowIndex))
+                                      .reduce(head.getPreferredSize().width, Math::max);
+        column.setPreferredWidth(maxWidth + 8);
+    }
+
+    private int preferredWidth(final int colIndex, final int rowIndex) {
+        final TableCellRenderer cellRenderer = table.getCellRenderer(rowIndex, colIndex);
+        final java.awt.Component cell = table.prepareRenderer(cellRenderer, rowIndex, colIndex);
+        return cell.getPreferredSize().width;
     }
 
     public static FileTable by(final Context context) {
