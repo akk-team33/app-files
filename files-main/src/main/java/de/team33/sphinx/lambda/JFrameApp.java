@@ -4,12 +4,12 @@ import de.team33.sphinx.metis.JFrames;
 
 import javax.swing.*;
 
-public class SwingApp {
+public class JFrameApp {
 
     /**
      * Starts a given <em>app</em>, typically within <em>main(args)</em>.
      */
-    protected static void start(final SwingApp app) {
+    protected static void start(final JFrameApp app) {
         SwingUtilities.invokeLater(app::run);
     }
 

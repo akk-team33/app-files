@@ -1,14 +1,14 @@
 package de.team33.sphinx.lambda.publics;
 
-import de.team33.sphinx.lambda.SwingApp;
+import de.team33.sphinx.lambda.JFrameApp;
 import de.team33.sphinx.metis.JFrames;
 
 import javax.swing.*;
 
-class SwingAppTrial extends SwingApp {
+class JFrameAppTrial extends JFrameApp {
 
     public static void main(final String[] args) {
-        start(new SwingAppTrial());
+        start(new JFrameAppTrial());
     }
 
     @Override

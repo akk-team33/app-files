@@ -4,14 +4,14 @@ import de.team33.files.luna.busyness.Backend;
 import de.team33.files.luna.ui.FilesFrame;
 import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.serving.alpha.Variable;
-import de.team33.sphinx.lambda.SwingApp;
+import de.team33.sphinx.lambda.JFrameApp;
 import net.team33.fscalc.ui.rsrc.Ico;
 
 import javax.swing.*;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
 
-public class Files extends SwingApp {
+public class Files extends JFrameApp {
 
     private final Icons icons = new Icons();
     private final Backend backend = new Backend();

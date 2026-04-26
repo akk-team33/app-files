@@ -6,13 +6,13 @@ import de.team33.patterns.execution.metis.SimpleAsyncExecutor;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
-import de.team33.sphinx.lambda.SwingApp;
+import de.team33.sphinx.lambda.JFrameApp;
 
 import javax.swing.*;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
 
-public class Files extends SwingApp {
+public class Files extends JFrameApp {
 
     private final Executor executor = new SimpleAsyncExecutor();
 
