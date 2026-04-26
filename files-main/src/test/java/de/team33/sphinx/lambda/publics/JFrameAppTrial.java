@@ -8,7 +8,7 @@ import javax.swing.*;
 class JFrameAppTrial extends JFrameApp {
 
     public static void main(final String[] args) {
-        start(new JFrameAppTrial());
+        launch(new JFrameAppTrial());
     }
 
     @Override

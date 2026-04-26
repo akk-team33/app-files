@@ -17,7 +17,7 @@ public class Files extends JFrameApp {
     private final Executor executor = new SimpleAsyncExecutor();
 
     public static void main(final String[] args) {
-        start(new Files());
+        launch(new Files());
     }
 
     @Override

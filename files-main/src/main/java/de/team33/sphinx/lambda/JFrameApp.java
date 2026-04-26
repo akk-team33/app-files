@@ -9,7 +9,7 @@ public class JFrameApp {
     /**
      * Starts a given <em>app</em>, typically within <em>main(args)</em>.
      */
-    protected static void start(final JFrameApp app) {
+    protected static void launch(final JFrameApp app) {
         SwingUtilities.invokeLater(app::run);
     }
 

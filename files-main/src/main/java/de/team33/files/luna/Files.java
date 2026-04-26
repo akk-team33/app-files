@@ -18,7 +18,7 @@ public class Files extends JFrameApp {
     private final FilesFrame.Context context = new Context();
 
     public static void main(final String[] args) {
-        start(new Files());
+        launch(new Files());
     }
 
     @Override
