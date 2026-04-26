@@ -1,5 +1,6 @@
 package de.team33.files.eris.ui;
 
+import de.team33.files.luna.order.EntryOrder;
 import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
@@ -27,9 +28,13 @@ import java.util.stream.Stream;
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
 import static java.util.Comparator.comparing;
 import static java.util.function.Predicate.not;
+import static javax.swing.JTable.AUTO_RESIZE_OFF;
 
 @SuppressWarnings("unused")
 public final class FileTable {
+
+    private static final FileEntry.Lister LISTER = FileEntry.lister(LinkHandling.RESOLVE);
+    private static final FileEntry.Streamer STREAMER = FileEntry.streamer(LISTER);
 
     private final Variable<Mode> mode;
     private final Variable<List<Column>> columns;
@@ -43,6 +48,10 @@ public final class FileTable {
         this.columns = new Component<>(context.executor(), List.of(Column.values()));
         this.cwd = context.cwd();
         this.table = JTables.builder(new Model())
+                            .setRowSelectionAllowed(true)
+                            .setColumnSelectionAllowed(false)
+                            .setAutoCreateRowSorter(true)
+                            .setAutoResizeMode(AUTO_RESIZE_OFF)
                             .build();
         this.scrollPane = new JScrollPane(table);
     }
@@ -62,9 +71,6 @@ public final class FileTable {
     public JComponent ui() {
         return scrollPane;
     }
-
-    private static final FileEntry.Lister LISTER = FileEntry.lister(LinkHandling.RESOLVE);
-    private static final FileEntry.Streamer STREAMER = FileEntry.streamer(LISTER);
 
     public enum Mode {
 
@@ -87,7 +93,7 @@ public final class FileTable {
 
         NAME(new Backing<>("Name", Property.Name.class, Entry::name)),
         LOCATION(new Backing<>("Location", Property.Location.class, Entry::location)),
-        LAST_MODIFIED(new Backing<>("Last Modified", Property.LastModified.class, Entry::lasModified)),
+        LAST_MODIFIED(new Backing<>("Last Modified", Property.LastModified.class, Entry::lastModified)),
         SIZE(new Backing<>("Size", Property.Size.class, Entry::size));
 
         private final Backing<?> backing;
@@ -136,7 +142,7 @@ public final class FileTable {
             return new Property.Location(this);
         }
 
-        private Property.LastModified lasModified() {
+        private Property.LastModified lastModified() {
             return new Property.LastModified(this);
         }
 
@@ -149,16 +155,11 @@ public final class FileTable {
 
         private static final Locale LOCALE = Locale.getDefault();
         private static final ZoneId ZONE_ID = ZoneId.systemDefault();
-        private static final Comparator<String> IGNORE_CASE = String::compareToIgnoreCase;
-        private static final Comparator<String> RESPECT_CASE = String::compareTo;
-        private static final Comparator<String> STRING_ORDER = IGNORE_CASE.thenComparing(RESPECT_CASE);
-        private static final Comparator<Path> PATH_ORDER = comparing(Path::toString, STRING_ORDER);
-        private static final Comparator<FileEntry> FINAL_ORDER = comparing(FileEntry::path, PATH_ORDER);
 
         private final Entry entry;
 
-        Property(final Entry entry, final Class<P> finalClass, final Comparator<FileEntry> primeOrder) {
-            super(finalClass, comparing(Property::fileEntry, primeOrder.thenComparing(FINAL_ORDER)));
+        Property(final Entry entry, final Class<P> finalClass, final Comparator<FileEntry> order) {
+            super(finalClass, comparing(Property::fileEntry, order));
             this.entry = entry;
         }
 
@@ -177,7 +178,7 @@ public final class FileTable {
         @SuppressWarnings("EqualsDoesntCheckParameterClass")
         @Override
         public final boolean equals(final Object other) {
-            return CellProperty.equals(THIS(), other);
+            return equals(THIS(), other);
         }
 
         @Override
@@ -187,10 +188,8 @@ public final class FileTable {
 
         private static class Name extends Property<Name> {
 
-            private static final Comparator<FileEntry> PRIME_ORDER = comparing(FileEntry::name, STRING_ORDER);
-
             Name(final Entry entry) {
-                super(entry, Name.class, PRIME_ORDER);
+                super(entry, Name.class, EntryOrder.BY_TYPE_NAME);
             }
 
             @Override
@@ -201,16 +200,16 @@ public final class FileTable {
 
         private static class Location extends Property<Location> {
 
-            private static final Comparator<FileEntry> PRIME_ORDER = (left, right) -> 0;
+            private final Path location;
 
             Location(final Entry entry) {
-                super(entry, Location.class, PRIME_ORDER);
+                super(entry, Location.class, EntryOrder.BY_PATH);
+                this.location = cwd().relativize(fileEntry().path().getParent());
             }
 
             @Override
             public final String toString() {
-                return Optional.ofNullable(fileEntry().path().getParent())
-                               .map(parent -> cwd().relativize(parent).toString())
+                return Optional.of(location.toString())
                                .filter(not(String::isBlank))
                                .orElse(".");
             }
@@ -221,12 +220,11 @@ public final class FileTable {
             private static final DateTimeFormatter DATE_TIME_FORMATTER =
                     DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
                                      .withLocale(LOCALE);
-            private static final Comparator<FileEntry> ORDER = comparing(FileEntry::lastModified);
 
             private final LocalDateTime dateTime;
 
             LastModified(final Entry entry) {
-                super(entry, LastModified.class, ORDER);
+                super(entry, LastModified.class, EntryOrder.BY_DATE);
                 this.dateTime = localDateTime(fileEntry().lastModified());
             }
 
@@ -238,10 +236,8 @@ public final class FileTable {
 
         private static class Size extends Property<Size> {
 
-            private static final Comparator<FileEntry> ORDER = comparing(FileEntry::size);
-
             Size(final Entry entry) {
-                super(entry, Size.class, ORDER);
+                super(entry, Size.class, EntryOrder.BY_SIZE);
             }
 
             @Override

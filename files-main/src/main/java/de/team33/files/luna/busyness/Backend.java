@@ -14,9 +14,8 @@ public class Backend {
     private static final System.Logger LOGGER = System.getLogger(Backend.class.getCanonicalName());
     private static final UnaryOperator<Path> NORMALIZER = path -> path.toAbsolutePath().normalize();
 
-    private final Component<Path> cwd = new Component<>(executor, Path.of("."), Backend::normalize);
-
     private final Executor executor = new SimpleAsyncExecutor();
+    private final Component<Path> cwd = new Component<>(executor, Path.of("."), Backend::normalize);
 
     private static Path normalize(final Path path) throws Component.SetException {
         final FileEntry entry = FileEntry.resolved(path);

@@ -40,7 +40,8 @@ public abstract class CellProperty<P extends CellProperty<P>> extends SelfReferr
      * @param <P> The final type of {@link CellProperty}.
      */
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public static <P extends CellProperty<P>> boolean equals(final CellProperty<P> property, final Object other) {
+    public static <P extends CellProperty<P>>
+    boolean equals(final CellProperty<P> property, final Object other) {
         return (property == other) ||
                (property.finalClass.isInstance(other) && (0 == property.compareTo(property.finalClass.cast(other))));
     }
