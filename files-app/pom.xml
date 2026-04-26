@@ -9,7 +9,7 @@
         <version>2.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>files-fat</artifactId>
+    <artifactId>files-app</artifactId>
     <packaging>pom</packaging>
 
     <name>Files App Fat Jar</name>
@@ -41,7 +41,7 @@
                             <archive>
                                 <manifest>
                                     <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                                    <mainClass>de.team33.cmd.template.Main</mainClass>
+                                    <mainClass>de.team33.files.luna.Files</mainClass>
                                 </manifest>
                             </archive>
                             <descriptors>

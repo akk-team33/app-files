@@ -39,7 +39,7 @@
 
     <modules>
         <module>files-main</module>
-        <module>files-fat</module>
+        <module>files-app</module>
     </modules>
 
     <dependencyManagement>
