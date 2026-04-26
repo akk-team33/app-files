@@ -45,7 +45,7 @@
                                 </manifest>
                             </archive>
                             <descriptors>
-                                <descriptor>src/main/assembly/fat.xml</descriptor>
+                                <descriptor>src/main/assembly/app.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </execution>
