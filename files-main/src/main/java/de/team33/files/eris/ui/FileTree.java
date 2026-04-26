@@ -62,7 +62,7 @@ public final class FileTree {
 
     private static TreePath map(final Path path) {
         return (null == path) ? new TreePath(ROOT_NODE)
-                              : map(path.getParent()).pathByAddingChild(new FileNode(path));
+                              : map(path.getParent()).pathByAddingChild(FileNode.of(path));
     }
 
     public static FileTree by(final Context context) {
@@ -173,8 +173,7 @@ public final class FileTree {
                                                         .getRootDirectories()
                                                         .spliterator(), false)
                                      .sorted(Comparator.comparing(Path::toString))
-                                     .map(FileNode::new)
-                                     .map(Node.class::cast)
+                                     .map(FileNode::of)
                                      .toList());
         }
 
@@ -210,18 +209,21 @@ public final class FileTree {
 
         private final FileEntry entry;
 
-        private FileNode(final Path path) {
-            this(FileEntry.resolved(path));
-        }
-
         private FileNode(final FileEntry entry) {
             super(() -> LISTER.list(entry)
                               .stream()
                               .filter(FileEntry::isDirectory)
-                              .map(FileNode::new)
-                              .map(Node.class::cast)
+                              .map(FileNode::of)
                               .toList());
             this.entry = entry;
+        }
+
+        private static Node of(final Path path) {
+            return new FileNode(FileEntry.resolved(path));
+        }
+
+        private static Node of(final FileEntry entry) {
+            return new FileNode(entry);
         }
 
         @Override
