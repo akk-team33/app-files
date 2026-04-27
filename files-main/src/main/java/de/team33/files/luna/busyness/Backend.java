@@ -1,22 +1,27 @@
 package de.team33.files.luna.busyness;
 
+import de.team33.files.luna.context.Icons;
 import de.team33.files.luna.context.TableViewConfig;
+import de.team33.files.luna.context.UIContext;
 import de.team33.patterns.execution.metis.SimpleAsyncExecutor;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
+import net.team33.fscalc.ui.rsrc.Ico;
 
+import javax.swing.*;
 import java.nio.file.Path;
 import java.util.concurrent.Executor;
-import java.util.function.UnaryOperator;
 
-public class Backend {
+public class Backend implements UIContext {
 
-    private static final System.Logger LOGGER = System.getLogger(Backend.class.getCanonicalName());
-    private static final UnaryOperator<Path> NORMALIZER = path -> path.toAbsolutePath().normalize();
+    private static final Icons icons = new IconRecord(Ico.CLSDIR,
+                                                      Ico.OPNDIR,
+                                                      Ico.FILE,
+                                                      Ico.UPDIR);
 
     private final Executor executor = new SimpleAsyncExecutor();
-    private final Component<Path> cwd = new Component<>(executor, Path.of("."), Backend::normalize);
+    private final Variable<Path> cwd = new Component<>(executor, Path.of("."), Backend::normalize);
     private final TableViewConfig tableViewConfig = new TableViewConfigImpl();
 
     private static Path normalize(final Path path) throws Component.SetException {
@@ -27,15 +32,30 @@ public class Backend {
         throw new Component.SetException();
     }
 
+    @Override
     public final Executor executor() {
         return executor;
     }
 
+    @Override
+    public final Icons icons() {
+        return icons;
+    }
+
+    @Override
     public final Variable<Path> cwd() {
         return cwd;
     }
 
-    public TableViewConfig tableViewConfig() {
+    @Override
+    public final TableViewConfig tableViewConfig() {
         return tableViewConfig;
+    }
+
+    private record IconRecord(Icon stdFolder,
+                              Icon opnFolder,
+                              Icon stdFile,
+                              Icon upFolder)
+            implements Icons {
     }
 }

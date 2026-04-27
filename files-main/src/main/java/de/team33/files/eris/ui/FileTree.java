@@ -1,8 +1,8 @@
 package de.team33.files.eris.ui;
 
 import de.team33.files.luna.common.EntryOrder;
+import de.team33.files.luna.context.Icons;
 import de.team33.files.luna.context.UIContext;
-import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.expiry.tethys.Recent;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
@@ -252,7 +252,7 @@ public final class FileTree {
     private static final class CellRenderer extends DefaultTreeCellRenderer {
 
         @SuppressWarnings("AssignmentToSuperclassField")
-        private CellRenderer(final FilesIcons icons) {
+        private CellRenderer(final Icons icons) {
             this.closedIcon = icons.stdFolder();
             this.openIcon = icons.opnFolder();
             this.leafIcon = icons.stdFile();

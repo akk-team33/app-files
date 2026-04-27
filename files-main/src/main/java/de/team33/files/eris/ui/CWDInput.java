@@ -1,7 +1,7 @@
 package de.team33.files.eris.ui;
 
+import de.team33.files.luna.context.Icons;
 import de.team33.files.luna.context.UIContext;
-import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.luna.Channel;
 import de.team33.sphinx.metis.JButtons;
@@ -40,7 +40,7 @@ public final class CWDInput {
         return new CWDInput(context);
     }
 
-    private Component newOptions(final FilesIcons icons) {
+    private Component newOptions(final Icons icons) {
         return JButtons.builder()
                        .setIcon(icons.upFolder())
                        .subscribe(Channel.ACTION_PERFORMED, this::onDirUp)

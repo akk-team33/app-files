@@ -1,6 +1,5 @@
 package de.team33.files.luna.context;
 
-import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.serving.alpha.Variable;
 
 import java.nio.file.Path;
@@ -10,7 +9,7 @@ public interface UIContext {
 
     Executor executor();
 
-    FilesIcons icons();
+    Icons icons();
 
     Variable<Path> cwd();
 

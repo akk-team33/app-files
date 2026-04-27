@@ -1,9 +1,9 @@
-package de.team33.files.luna.ui;
+package de.team33.files.luna.context;
 
 import javax.swing.*;
 
 @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
-public interface FilesIcons {
+public interface Icons {
 
     Icon stdFolder();
 
