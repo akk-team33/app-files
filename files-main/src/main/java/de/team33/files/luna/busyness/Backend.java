@@ -1,5 +1,6 @@
 package de.team33.files.luna.busyness;
 
+import de.team33.files.luna.context.TableViewConfig;
 import de.team33.patterns.execution.metis.SimpleAsyncExecutor;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.serving.alpha.Component;
@@ -16,6 +17,7 @@ public class Backend {
 
     private final Executor executor = new SimpleAsyncExecutor();
     private final Component<Path> cwd = new Component<>(executor, Path.of("."), Backend::normalize);
+    private final TableViewConfig tableViewConfig = new TableViewConfigImpl();
 
     private static Path normalize(final Path path) throws Component.SetException {
         final FileEntry entry = FileEntry.resolved(path);
@@ -31,5 +33,9 @@ public class Backend {
 
     public final Variable<Path> cwd() {
         return cwd;
+    }
+
+    public TableViewConfig tableViewConfig() {
+        return tableViewConfig;
     }
 }

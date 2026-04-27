@@ -1,6 +1,7 @@
 package de.team33.files.luna;
 
 import de.team33.files.luna.busyness.Backend;
+import de.team33.files.luna.context.TableViewConfig;
 import de.team33.files.luna.ui.FilesFrame;
 import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.serving.alpha.Variable;
@@ -60,6 +61,11 @@ public class Files extends JFrameApp {
         @Override
         public final Variable<Path> cwd() {
             return backend.cwd();
+        }
+
+        @Override
+        public TableViewConfig tableViewConfig() {
+            return backend.tableViewConfig();
         }
 
         @Override

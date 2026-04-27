@@ -12,7 +12,7 @@ public final class TablePane {
 
     private TablePane(final Context context) {
         this.panel = JPanels.builder(new BorderLayout())
-                            .add(TableMenu.by(context).ui(), BorderLayout.PAGE_START)
+                            .add(TableMenu.by(context.tableViewConfig()).ui(), BorderLayout.PAGE_START)
                             .add(FileTable.by(context).ui(), BorderLayout.CENTER)
                             .build();
     }
@@ -25,6 +25,6 @@ public final class TablePane {
         return panel;
     }
 
-    public interface Context extends TableMenu.Context, FileTable.Context {
+    public interface Context extends FileTable.Context {
     }
 }

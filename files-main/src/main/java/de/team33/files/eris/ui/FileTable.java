@@ -1,6 +1,7 @@
 package de.team33.files.eris.ui;
 
 import de.team33.files.luna.common.EntryOrder;
+import de.team33.files.luna.context.TableViewConfig;
 import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
@@ -11,7 +12,6 @@ import de.team33.sphinx.epsilon.table.RowColumnModel;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
-import javax.swing.event.TableModelEvent;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import java.nio.file.Path;
@@ -59,16 +59,10 @@ public final class FileTable {
                             .setAutoResizeMode(AUTO_RESIZE_OFF)
                             .build();
         this.scrollPane = new JScrollPane(table);
-        resizeColumns();
-        model.addTableModelListener(this::onTableModelChanged);
+        context.tableViewConfig().optColumnWidth().subscribe(INIT, this::resizeColumns);
     }
 
-    private void onTableModelChanged(final TableModelEvent event) {
-        if (TableModelEvent.UPDATE == event.getType()) {
-        }
-    }
-
-    private void resizeColumns() {
+    private void resizeColumns(final Instant ignored) {
         IntStream.range(0, table.getColumnCount())
                  .map(table::convertColumnIndexToModel)
                  .forEach(this::resizeColumn);
@@ -84,7 +78,7 @@ public final class FileTable {
         final int maxWidth = IntStream.range(0, table.getRowCount())
                                       .map(rowIndex -> preferredWidth(colIndex, rowIndex))
                                       .reduce(head.getPreferredSize().width, Math::max);
-        column.setPreferredWidth(maxWidth + 8);
+        column.setPreferredWidth(maxWidth + 12);
     }
 
     private int preferredWidth(final int colIndex, final int rowIndex) {
@@ -167,6 +161,8 @@ public final class FileTable {
         FilesIcons icons();
 
         Variable<Path> cwd();
+
+        TableViewConfig tableViewConfig();
     }
 
     private record Entry(Variable<Path> cwd, FileEntry entry) {
