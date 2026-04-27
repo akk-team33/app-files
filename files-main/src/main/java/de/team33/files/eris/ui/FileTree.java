@@ -1,6 +1,7 @@
 package de.team33.files.eris.ui;
 
 import de.team33.files.luna.common.EntryOrder;
+import de.team33.files.luna.context.UIContext;
 import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.expiry.tethys.Recent;
 import de.team33.patterns.io.adrastea.FileEntry;
@@ -35,7 +36,7 @@ public final class FileTree {
     private final JTree tree;
     private final JScrollPane pane;
 
-    private FileTree(final Context context) {
+    private FileTree(final UIContext context) {
         this.cwd = context.cwd();
         this.tree = JTrees.builder()
                           .setModel(new Model())
@@ -66,7 +67,7 @@ public final class FileTree {
                               : map(path.getParent()).pathByAddingChild(FileNode.of(path));
     }
 
-    public static FileTree by(final Context context) {
+    public static FileTree by(final UIContext context) {
         return new FileTree(context);
     }
 
@@ -90,14 +91,6 @@ public final class FileTree {
 
     public final Component ui() {
         return pane;
-    }
-
-    @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
-    public interface Context {
-
-        FilesIcons icons();
-
-        Variable<Path> cwd();
     }
 
     private static class Model implements TreeModel {

@@ -1,6 +1,7 @@
 package de.team33.files.luna.ui;
 
 import de.team33.files.eris.ui.CWDInput;
+import de.team33.files.luna.context.UIContext;
 import de.team33.sphinx.metis.JFrames;
 
 import javax.swing.*;
@@ -13,7 +14,7 @@ public final class FilesFrame {
 
     private final JFrame frame;
 
-    private FilesFrame(final Context context) {
+    private FilesFrame(final UIContext context) {
         this.frame = JFrames.builder()
                             .setLayout(new BorderLayout())
                             .add(CWDInput.by(context).ui(), BorderLayout.PAGE_START)
@@ -27,15 +28,11 @@ public final class FilesFrame {
         frame.setTitle("%s - Files".formatted(path.getFileName()));
     }
 
-    public static FilesFrame by(final Context context) {
+    public static FilesFrame by(final UIContext context) {
         return new FilesFrame(context);
     }
 
     public final JFrame ui() {
         return frame;
-    }
-
-    @SuppressWarnings({"ClassNameSameAsAncestorName", "InterfaceWithOnlyOneDirectInheritor"})
-    public interface Context extends CWDInput.Context, CenterPane.Context, FilesStatus.Context {
     }
 }

@@ -2,6 +2,7 @@ package de.team33.files.luna;
 
 import de.team33.files.luna.busyness.Backend;
 import de.team33.files.luna.context.TableViewConfig;
+import de.team33.files.luna.context.UIContext;
 import de.team33.files.luna.ui.FilesFrame;
 import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.serving.alpha.Variable;
@@ -16,7 +17,7 @@ public class Files extends JFrameApp {
 
     private final Icons icons = new Icons();
     private final Backend backend = new Backend();
-    private final FilesFrame.Context context = new Context();
+    private final UIContext context = new Context();
 
     public static void main(final String[] args) {
         launch(new Files());
@@ -50,8 +51,7 @@ public class Files extends JFrameApp {
         }
     }
 
-    @SuppressWarnings("ClassNameSameAsAncestorName")
-    private class Context implements FilesFrame.Context {
+    private class Context implements UIContext {
 
         @Override
         public final Executor executor() {
@@ -64,7 +64,7 @@ public class Files extends JFrameApp {
         }
 
         @Override
-        public TableViewConfig tableViewConfig() {
+        public final TableViewConfig tableViewConfig() {
             return backend.tableViewConfig();
         }
 

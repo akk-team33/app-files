@@ -1,5 +1,6 @@
 package de.team33.files.eris.ui;
 
+import de.team33.files.luna.context.UIContext;
 import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.luna.Channel;
@@ -21,7 +22,7 @@ public final class CWDInput {
     private final JTextField textField;
     private final JPanel panel;
 
-    private CWDInput(final Context context) {
+    private CWDInput(final UIContext context) {
         this.cwd = context.cwd();
         this.textField = JTextFields.builder()
                                     .subscribe(Channel.JTF_ACTION_PERFORMED, this::onTextInput)
@@ -35,7 +36,7 @@ public final class CWDInput {
         cwd.subscribe(INIT, this::onSetCWD);
     }
 
-    public static CWDInput by(final Context context) {
+    public static CWDInput by(final UIContext context) {
         return new CWDInput(context);
     }
 
@@ -68,13 +69,5 @@ public final class CWDInput {
 
     public final Component ui() {
         return panel;
-    }
-
-    @SuppressWarnings({"InterfaceMayBeAnnotatedFunctional", "InterfaceWithOnlyOneDirectInheritor"})
-    public interface Context {
-
-        FilesIcons icons();
-
-        Variable<Path> cwd();
     }
 }

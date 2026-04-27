@@ -1,8 +1,7 @@
 package de.team33.files.eris.ui;
 
 import de.team33.files.luna.common.EntryOrder;
-import de.team33.files.luna.context.TableViewConfig;
-import de.team33.files.luna.ui.FilesIcons;
+import de.team33.files.luna.context.UIContext;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
 import de.team33.patterns.serving.alpha.Component;
@@ -24,7 +23,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -47,7 +45,7 @@ public final class FileTable {
     private final JTable table;
     private final JScrollPane scrollPane;
 
-    private FileTable(final Context context) {
+    private FileTable(final UIContext context) {
         this.mode = new Component<>(context.executor(), Mode.FLAT);
         this.columns = new Component<>(context.executor(), List.of(Column.values()));
         this.cwd = context.cwd();
@@ -87,7 +85,7 @@ public final class FileTable {
         return cell.getPreferredSize().width;
     }
 
-    public static FileTable by(final Context context) {
+    public static FileTable by(final UIContext context) {
         return new FileTable(context);
     }
 
@@ -151,18 +149,6 @@ public final class FileTable {
 
         private record Backing<P>(String title, Class<P> type, Function<Entry, P> mapping) {
         }
-    }
-
-    @SuppressWarnings("InterfaceWithOnlyOneDirectInheritor")
-    public interface Context {
-
-        Executor executor();
-
-        FilesIcons icons();
-
-        Variable<Path> cwd();
-
-        TableViewConfig tableViewConfig();
     }
 
     private record Entry(Variable<Path> cwd, FileEntry entry) {
