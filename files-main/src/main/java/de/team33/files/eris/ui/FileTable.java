@@ -1,6 +1,6 @@
 package de.team33.files.eris.ui;
 
-import de.team33.files.luna.order.EntryOrder;
+import de.team33.files.luna.common.EntryOrder;
 import de.team33.files.luna.ui.FilesIcons;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
