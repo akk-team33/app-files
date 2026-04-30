@@ -8,9 +8,11 @@ import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.epsilon.table.CellProperty;
 import de.team33.sphinx.epsilon.table.RowColumnModel;
+import de.team33.sphinx.metis.JLabels;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import java.nio.file.Path;
@@ -49,8 +51,10 @@ public final class FileTable {
         this.mode = new Component<>(context.executor(), Mode.FLAT);
         this.columns = new Component<>(context.executor(), List.of(Column.values()));
         this.cwd = context.cwd();
-        final Model model = new Model();
-        this.table = JTables.builder(model)
+        this.table = JTables.builder(new Model())
+                            .setDefaultRenderer(Property.class, new MyCellRenderer())
+//                            .setup(jTable -> jTable.getTableHeader()
+//                                                   .setDefaultRenderer(new MyHeadRenderer()))
                             .setRowSelectionAllowed(true)
                             .setColumnSelectionAllowed(false)
                             .setAutoCreateRowSorter(true)
@@ -93,10 +97,6 @@ public final class FileTable {
         return mode;
     }
 
-    public Variable<List<Column>> columns() {
-        return columns;
-    }
-
     public JComponent ui() {
         return scrollPane;
     }
@@ -120,10 +120,10 @@ public final class FileTable {
     @SuppressWarnings("ClassNameSameAsAncestorName")
     public enum Column implements RowColumnModel.Column<Entry> {
 
-        NAME(new Backing<>("Name", Property.Name.class, Entry::name)),
-        LOCATION(new Backing<>("Location", Property.Location.class, Entry::location)),
-        LAST_MODIFIED(new Backing<>("Last Modified", Property.LastModified.class, Entry::lastModified)),
-        SIZE(new Backing<>("Size", Property.Size.class, Entry::size));
+        NAME(new Backing<>("Name", Name.class, Entry::name, SwingConstants.LEADING)),
+        LOCATION(new Backing<>("Location", Location.class, Entry::location, SwingConstants.LEADING)),
+        LAST_MODIFIED(new Backing<>("Last Modified", LastModified.class, Entry::lastModified, SwingConstants.LEADING)),
+        SIZE(new Backing<>("Size", Size.class, Entry::size, SwingConstants.TRAILING));
 
         private final Backing<?> backing;
 
@@ -147,33 +147,33 @@ public final class FileTable {
             return backing.mapping.apply(element);
         }
 
-        private record Backing<P>(String title, Class<P> type, Function<Entry, P> mapping) {
+        private record Backing<P>(String title, Class<P> type, Function<Entry, P> mapping, int alignment) {
         }
     }
 
     private record Entry(Variable<Path> cwd, FileEntry entry) {
 
-        private Property.Name name() {
-            return new Property.Name(this);
+        private Name name() {
+            return new Name(this);
         }
 
-        private Property.Location location() {
-            return new Property.Location(this);
+        private Location location() {
+            return new Location(this);
         }
 
-        private Property.LastModified lastModified() {
-            return new Property.LastModified(this);
+        private LastModified lastModified() {
+            return new LastModified(this);
         }
 
-        private Property.Size size() {
-            return new Property.Size(this);
+        private Size size() {
+            return new Size(this);
         }
     }
 
     private abstract static class Property<P extends Property<P>> extends CellProperty<P> {
 
-        private static final Locale LOCALE = Locale.getDefault();
-        private static final ZoneId ZONE_ID = ZoneId.systemDefault();
+        static final Locale LOCALE = Locale.getDefault();
+        static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
         private final Entry entry;
 
@@ -204,65 +204,65 @@ public final class FileTable {
         public final int hashCode() {
             return fileEntry().path().hashCode();
         }
+    }
 
-        private static class Name extends Property<Name> {
+    private static class Name extends Property<Name> {
 
-            Name(final Entry entry) {
-                super(entry, Name.class, EntryOrder.BY_TYPE_NAME);
-            }
-
-            @Override
-            public final String toString() {
-                return fileEntry().name();
-            }
+        Name(final Entry entry) {
+            super(entry, Name.class, EntryOrder.BY_TYPE_NAME);
         }
 
-        private static class Location extends Property<Location> {
+        @Override
+        public final String toString() {
+            return fileEntry().name();
+        }
+    }
 
-            private final Path location;
+    private static class Location extends Property<Location> {
 
-            Location(final Entry entry) {
-                super(entry, Location.class, EntryOrder.BY_PATH);
-                this.location = cwd().relativize(fileEntry().path().getParent());
-            }
+        private final Path location;
 
-            @Override
-            public final String toString() {
-                return Optional.of(location.toString())
-                               .filter(not(String::isBlank))
-                               .orElse(".");
-            }
+        Location(final Entry entry) {
+            super(entry, Location.class, EntryOrder.BY_PATH);
+            this.location = cwd().relativize(fileEntry().path().getParent());
         }
 
-        private static class LastModified extends Property<LastModified> {
+        @Override
+        public final String toString() {
+            return Optional.of(location.toString())
+                           .filter(not(String::isBlank))
+                           .orElse(".");
+        }
+    }
 
-            private static final DateTimeFormatter DATE_TIME_FORMATTER =
-                    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                                     .withLocale(LOCALE);
+    private static class LastModified extends Property<LastModified> {
 
-            private final LocalDateTime dateTime;
+        private static final DateTimeFormatter DATE_TIME_FORMATTER =
+                DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+                                 .withLocale(LOCALE);
 
-            LastModified(final Entry entry) {
-                super(entry, LastModified.class, EntryOrder.BY_DATE);
-                this.dateTime = localDateTime(fileEntry().lastModified());
-            }
+        private final LocalDateTime dateTime;
 
-            @Override
-            public final String toString() {
-                return dateTime.format(DATE_TIME_FORMATTER);
-            }
+        LastModified(final Entry entry) {
+            super(entry, LastModified.class, EntryOrder.BY_DATE);
+            this.dateTime = localDateTime(fileEntry().lastModified());
         }
 
-        private static class Size extends Property<Size> {
+        @Override
+        public final String toString() {
+            return dateTime.format(DATE_TIME_FORMATTER);
+        }
+    }
 
-            Size(final Entry entry) {
-                super(entry, Size.class, EntryOrder.BY_SIZE);
-            }
+    private static class Size extends Property<Size> {
 
-            @Override
-            public final String toString() {
-                return "%,d".formatted(fileEntry().size());
-            }
+        Size(final Entry entry) {
+            super(entry, Size.class, EntryOrder.BY_SIZE);
+        }
+
+        @Override
+        public final String toString() {
+            return "%,d".formatted(fileEntry().size());
         }
     }
 
@@ -294,6 +294,30 @@ public final class FileTable {
         @Override
         protected final List<FileTable.Column> columns() {
             return columns.get();
+        }
+    }
+
+    private class MyCellRenderer implements TableCellRenderer {
+
+        private final TableCellRenderer backing = new DefaultTableCellRenderer();
+
+        @Override
+        public java.awt.Component getTableCellRendererComponent(final JTable table,
+                                                                final Object value,
+                                                                final boolean isSelected,
+                                                                final boolean hasFocus,
+                                                                final int rowIndex,
+                                                                final int colIndex) {
+            final var column = columns.get().get(colIndex);
+            final var stage = backing.getTableCellRendererComponent(
+                    table, value, isSelected, hasFocus, rowIndex, colIndex);
+            if (stage instanceof final JLabel label) {
+                return JLabels.charger(label)
+                              .setHorizontalAlignment(column.backing.alignment)
+                              .charged();
+            } else {
+                return stage;
+            }
         }
     }
 }
