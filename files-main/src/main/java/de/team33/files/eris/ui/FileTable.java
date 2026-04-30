@@ -96,7 +96,7 @@ public final class FileTable {
                 jTable, value, isSelected, hasFocus, rowIndex, colIndex);
         if (stage instanceof final JLabel label) {
             if (0 == colIndex && value instanceof final Property<?> property) {
-                label.setIcon(iconFor(property.entry.entry));
+                label.setIcon(iconFor(property.fileEntry()));
             } else {
                 label.setIcon(null);
             }
