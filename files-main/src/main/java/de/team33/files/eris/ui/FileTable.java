@@ -1,6 +1,7 @@
 package de.team33.files.eris.ui;
 
 import de.team33.files.luna.common.EntryOrder;
+import de.team33.files.luna.context.Icons;
 import de.team33.files.luna.context.UIContext;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
@@ -8,11 +9,9 @@ import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
 import de.team33.sphinx.epsilon.table.CellProperty;
 import de.team33.sphinx.epsilon.table.RowColumnModel;
-import de.team33.sphinx.metis.JLabels;
 import de.team33.sphinx.metis.JTables;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import java.nio.file.Path;
@@ -21,10 +20,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -39,10 +35,14 @@ public final class FileTable {
 
     private static final FileEntry.Lister LISTER = FileEntry.lister(LinkHandling.RESOLVE);
     private static final FileEntry.Streamer STREAMER = FileEntry.streamer(LISTER);
+    private static final TableCellRenderer CELL_RENDERER = new JTable().getDefaultRenderer(Objects.class);
+    private static final TableCellRenderer HEAD_RENDERER = new JTable().getTableHeader().getDefaultRenderer();
+    private static final int HEAD_GAP = 12;
 
     private final Variable<Mode> mode;
     private final Variable<List<Column>> columns;
     private final Variable<Path> cwd;
+    private final Icons icons;
     @SuppressWarnings("FieldCanBeLocal")
     private final JTable table;
     private final JScrollPane scrollPane;
@@ -51,10 +51,11 @@ public final class FileTable {
         this.mode = new Component<>(context.executor(), Mode.FLAT);
         this.columns = new Component<>(context.executor(), List.of(Column.values()));
         this.cwd = context.cwd();
+        this.icons = context.icons();
         this.table = JTables.builder(new Model())
-                            .setDefaultRenderer(Property.class, new MyCellRenderer())
-//                            .setup(jTable -> jTable.getTableHeader()
-//                                                   .setDefaultRenderer(new MyHeadRenderer()))
+                            .setDefaultRenderer(Property.class, this::cellComponent)
+                            .setup(jTable -> jTable.getTableHeader()
+                                                   .setDefaultRenderer(this::headComponent))
                             .setRowSelectionAllowed(true)
                             .setColumnSelectionAllowed(false)
                             .setAutoCreateRowSorter(true)
@@ -62,6 +63,50 @@ public final class FileTable {
                             .build();
         this.scrollPane = new JScrollPane(table);
         context.tableViewConfig().optColumnWidth().subscribe(INIT, this::resizeColumns);
+    }
+
+    private java.awt.Component headComponent(final JTable jTable,
+                                             final Object value,
+                                             final boolean isSelected,
+                                             final boolean hasFocus,
+                                             final int rowIndex,
+                                             final int colIndex) {
+        return headOrCellComponent(HEAD_RENDERER, jTable, value, isSelected, hasFocus, rowIndex, colIndex);
+    }
+
+    private java.awt.Component cellComponent(final JTable jTable,
+                                             final Object value,
+                                             final boolean isSelected,
+                                             final boolean hasFocus,
+                                             final int rowIndex,
+                                             final int colIndex) {
+        return headOrCellComponent(CELL_RENDERER, jTable, value, isSelected, hasFocus, rowIndex, colIndex);
+    }
+
+    private java.awt.Component headOrCellComponent(final TableCellRenderer renderer,
+                                                   final JTable jTable,
+                                                   final Object value,
+                                                   final boolean isSelected,
+                                                   final boolean hasFocus,
+                                                   final int rowIndex,
+                                                   final int colIndex) {
+        final var modelIndex = jTable.convertColumnIndexToModel(colIndex);
+        final var column = columns.get().get(modelIndex);
+        final var stage = renderer.getTableCellRendererComponent(
+                jTable, value, isSelected, hasFocus, rowIndex, colIndex);
+        if (stage instanceof final JLabel label) {
+            if (0 == colIndex && value instanceof final Property<?> property) {
+                label.setIcon(iconFor(property.entry.entry));
+            } else {
+                label.setIcon(null);
+            }
+            label.setHorizontalAlignment(column.backing.alignment);
+        }
+        return stage;
+    }
+
+    private Icon iconFor(final FileEntry entry) {
+        return entry.isDirectory() ? icons.stdFolder() : icons.stdFile();
     }
 
     private void resizeColumns(final Instant ignored) {
@@ -80,7 +125,7 @@ public final class FileTable {
         final int maxWidth = IntStream.range(0, table.getRowCount())
                                       .map(rowIndex -> preferredWidth(colIndex, rowIndex))
                                       .reduce(head.getPreferredSize().width, Math::max);
-        column.setPreferredWidth(maxWidth + 12);
+        column.setPreferredWidth(maxWidth + HEAD_GAP);
     }
 
     private int preferredWidth(final int colIndex, final int rowIndex) {
@@ -294,30 +339,6 @@ public final class FileTable {
         @Override
         protected final List<FileTable.Column> columns() {
             return columns.get();
-        }
-    }
-
-    private class MyCellRenderer implements TableCellRenderer {
-
-        private final TableCellRenderer backing = new DefaultTableCellRenderer();
-
-        @Override
-        public java.awt.Component getTableCellRendererComponent(final JTable table,
-                                                                final Object value,
-                                                                final boolean isSelected,
-                                                                final boolean hasFocus,
-                                                                final int rowIndex,
-                                                                final int colIndex) {
-            final var column = columns.get().get(colIndex);
-            final var stage = backing.getTableCellRendererComponent(
-                    table, value, isSelected, hasFocus, rowIndex, colIndex);
-            if (stage instanceof final JLabel label) {
-                return JLabels.charger(label)
-                              .setHorizontalAlignment(column.backing.alignment)
-                              .charged();
-            } else {
-                return stage;
-            }
         }
     }
 }
