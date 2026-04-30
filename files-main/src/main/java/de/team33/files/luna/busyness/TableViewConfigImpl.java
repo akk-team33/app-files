@@ -8,10 +8,16 @@ import java.time.Instant;
 
 public class TableViewConfigImpl implements TableViewConfig {
 
-    private final Component<Instant> optColumnWidth = new Component<>(Instant.now());
+    private final Variable<Instant> optColumnWidth = new Component<>(Instant.now());
+    private final Variable<Depth> depth = new Component<>(Depth.FLAT);
 
     @Override
     public final Variable<Instant> optColumnWidth() {
         return optColumnWidth;
+    }
+
+    @Override
+    public Variable<Depth> depth() {
+        return depth;
     }
 }

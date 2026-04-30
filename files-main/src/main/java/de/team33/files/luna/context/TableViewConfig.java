@@ -7,4 +7,11 @@ import java.time.Instant;
 public interface TableViewConfig {
 
     Variable<Instant> optColumnWidth();
+
+    Variable<Depth> depth();
+
+    enum Depth {
+        FLAT,
+        DEEP
+    }
 }

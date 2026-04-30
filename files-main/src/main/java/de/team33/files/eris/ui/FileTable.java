@@ -2,6 +2,7 @@ package de.team33.files.eris.ui;
 
 import de.team33.files.eris.ui.FileTableEntry.*;
 import de.team33.files.luna.context.Icons;
+import de.team33.files.luna.context.TableViewConfig;
 import de.team33.files.luna.context.UIContext;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
@@ -27,7 +28,7 @@ import static javax.swing.JTable.AUTO_RESIZE_OFF;
 import static javax.swing.SwingConstants.LEADING;
 import static javax.swing.SwingConstants.TRAILING;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "ClassWithTooManyFields"})
 public final class FileTable {
 
     private static final int HEAD_GAP = 12;
@@ -49,13 +50,15 @@ public final class FileTable {
     @SuppressWarnings("FieldCanBeLocal")
     private final JTable table;
     private final JScrollPane scrollPane;
+    private final Model model;
 
     private FileTable(final UIContext context) {
         this.mode = new Component<>(context.executor(), Mode.FLAT);
         this.columns = new Component<>(context.executor(), List.of(Column.values()));
         this.cwd = context.cwd();
         this.icons = context.icons();
-        this.table = JTables.builder(new Model())
+        this.model = new Model();
+        this.table = JTables.builder(model)
                             .setDefaultRenderer(Property.class, new CellRenderer(CELL_RENDERER))
                             .setup(jTable -> jTable.getTableHeader()
                                                    .setDefaultRenderer(new CellRenderer(HEAD_RENDERER)))
@@ -66,6 +69,15 @@ public final class FileTable {
                             .build();
         this.scrollPane = new JScrollPane(table);
         context.tableViewConfig().optColumnWidth().subscribe(INIT, this::resizeColumns);
+        context.tableViewConfig().depth().subscribe(INIT, this::onSwitchDepth);
+    }
+
+    private void onSwitchDepth(final TableViewConfig.Depth depth) {
+        switch (depth) {
+            case FLAT -> mode.set(Mode.FLAT);
+            case DEEP -> mode.set(Mode.DEEP);
+        }
+        model.fireTableDataChanged();
     }
 
     public static FileTable by(final UIContext context) {
@@ -108,7 +120,7 @@ public final class FileTable {
     public enum Mode {
 
         FLAT(entry -> LISTER.list(entry).stream()),
-        DEEP(STREAMER::stream);
+        DEEP(entry -> STREAMER.stream(entry).skip(1));
 
         private final Function<? super FileEntry, ? extends Stream<FileEntry>> streaming;
 
