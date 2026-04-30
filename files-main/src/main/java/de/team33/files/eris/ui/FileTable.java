@@ -1,13 +1,12 @@
 package de.team33.files.eris.ui;
 
-import de.team33.files.luna.common.EntryOrder;
+import de.team33.files.eris.ui.FileTableEntry.*;
 import de.team33.files.luna.context.Icons;
 import de.team33.files.luna.context.UIContext;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
 import de.team33.patterns.serving.alpha.Component;
 import de.team33.patterns.serving.alpha.Variable;
-import de.team33.sphinx.epsilon.table.CellProperty;
 import de.team33.sphinx.epsilon.table.RowColumnModel;
 import de.team33.sphinx.metis.JTables;
 
@@ -16,19 +15,17 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static de.team33.patterns.serving.alpha.Retrievable.Mode.INIT;
-import static java.util.Comparator.comparing;
-import static java.util.function.Predicate.not;
 import static javax.swing.JTable.AUTO_RESIZE_OFF;
+import static javax.swing.SwingConstants.LEADING;
+import static javax.swing.SwingConstants.TRAILING;
 
 @SuppressWarnings("unused")
 public final class FileTable {
@@ -95,10 +92,12 @@ public final class FileTable {
         final var stage = renderer.getTableCellRendererComponent(
                 jTable, value, isSelected, hasFocus, rowIndex, colIndex);
         if (stage instanceof final JLabel label) {
-            if (0 == colIndex && value instanceof final Property<?> property) {
-                label.setIcon(iconFor(property.fileEntry()));
-            } else {
-                label.setIcon(null);
+            if (value instanceof final Property<?> property) {
+                if (0 == colIndex) {
+                    label.setIcon(iconFor(property.fileEntry()));
+                } else {
+                    label.setIcon(null);
+                }
             }
             label.setHorizontalAlignment(column.backing.alignment);
         }
@@ -163,12 +162,12 @@ public final class FileTable {
     }
 
     @SuppressWarnings("ClassNameSameAsAncestorName")
-    public enum Column implements RowColumnModel.Column<Entry> {
+    public enum Column implements RowColumnModel.Column<FileTableEntry> {
 
-        NAME(new Backing<>("Name", Name.class, Entry::name, SwingConstants.LEADING)),
-        LOCATION(new Backing<>("Location", Location.class, Entry::location, SwingConstants.LEADING)),
-        LAST_MODIFIED(new Backing<>("Last Modified", LastModified.class, Entry::lastModified, SwingConstants.LEADING)),
-        SIZE(new Backing<>("Size", Size.class, Entry::size, SwingConstants.TRAILING));
+        NAME(new Backing<>("Name", Name.class, FileTableEntry::name, LEADING)),
+        LOCATION(new Backing<>("Location", Location.class, FileTableEntry::location, LEADING)),
+        LAST_MODIFIED(new Backing<>("Last Modified", LastModified.class, FileTableEntry::lastModified, LEADING)),
+        SIZE(new Backing<>("Size", Size.class, FileTableEntry::size, TRAILING));
 
         private final Backing<?> backing;
 
@@ -188,132 +187,17 @@ public final class FileTable {
 
         @SuppressWarnings("ClassEscapesDefinedScope")
         @Override
-        public Object map(final Entry element) {
+        public Object map(final FileTableEntry element) {
             return backing.mapping.apply(element);
         }
 
-        private record Backing<P>(String title, Class<P> type, Function<Entry, P> mapping, int alignment) {
+        private record Backing<P>(String title, Class<P> type, Function<FileTableEntry, P> mapping, int alignment) {
         }
     }
 
-    private record Entry(Variable<Path> cwd, FileEntry entry) {
+    private class Model extends RowColumnModel<FileTableEntry> {
 
-        private Name name() {
-            return new Name(this);
-        }
-
-        private Location location() {
-            return new Location(this);
-        }
-
-        private LastModified lastModified() {
-            return new LastModified(this);
-        }
-
-        private Size size() {
-            return new Size(this);
-        }
-    }
-
-    private abstract static class Property<P extends Property<P>> extends CellProperty<P> {
-
-        static final Locale LOCALE = Locale.getDefault();
-        static final ZoneId ZONE_ID = ZoneId.systemDefault();
-
-        private final Entry entry;
-
-        Property(final Entry entry, final Class<P> finalClass, final Comparator<FileEntry> order) {
-            super(finalClass, comparing(Property::fileEntry, order));
-            this.entry = entry;
-        }
-
-        static LocalDateTime localDateTime(final Instant instant) {
-            return LocalDateTime.ofInstant(instant, ZONE_ID);
-        }
-
-        final FileEntry fileEntry() {
-            return entry.entry;
-        }
-
-        final Path cwd() {
-            return entry.cwd.get();
-        }
-
-        @SuppressWarnings("EqualsDoesntCheckParameterClass")
-        @Override
-        public final boolean equals(final Object other) {
-            return equals(THIS(), other);
-        }
-
-        @Override
-        public final int hashCode() {
-            return fileEntry().path().hashCode();
-        }
-    }
-
-    private static class Name extends Property<Name> {
-
-        Name(final Entry entry) {
-            super(entry, Name.class, EntryOrder.BY_TYPE_NAME);
-        }
-
-        @Override
-        public final String toString() {
-            return fileEntry().name();
-        }
-    }
-
-    private static class Location extends Property<Location> {
-
-        private final Path location;
-
-        Location(final Entry entry) {
-            super(entry, Location.class, EntryOrder.BY_PATH);
-            this.location = cwd().relativize(fileEntry().path().getParent());
-        }
-
-        @Override
-        public final String toString() {
-            return Optional.of(location.toString())
-                           .filter(not(String::isBlank))
-                           .orElse(".");
-        }
-    }
-
-    private static class LastModified extends Property<LastModified> {
-
-        private static final DateTimeFormatter DATE_TIME_FORMATTER =
-                DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                                 .withLocale(LOCALE);
-
-        private final LocalDateTime dateTime;
-
-        LastModified(final Entry entry) {
-            super(entry, LastModified.class, EntryOrder.BY_DATE);
-            this.dateTime = localDateTime(fileEntry().lastModified());
-        }
-
-        @Override
-        public final String toString() {
-            return dateTime.format(DATE_TIME_FORMATTER);
-        }
-    }
-
-    private static class Size extends Property<Size> {
-
-        Size(final Entry entry) {
-            super(entry, Size.class, EntryOrder.BY_SIZE);
-        }
-
-        @Override
-        public final String toString() {
-            return "%,d".formatted(fileEntry().size());
-        }
-    }
-
-    private class Model extends RowColumnModel<Entry> {
-
-        private volatile List<Entry> entries = List.of();
+        private volatile List<FileTableEntry> entries = List.of();
 
         Model() {
             cwd.subscribe(INIT, newPath -> onSetPath(newPath, mode.get()));
@@ -324,13 +208,13 @@ public final class FileTable {
         private void onSetPath(final Path newPath, final Mode newMode) {
             this.entries = newMode.stream(newPath)
                                   .map(entry -> entry.isMissing() ? entry.original() : entry)
-                                  .map(entry -> new Entry(cwd, entry))
+                                  .map(entry -> new FileTableEntry(cwd, entry))
                                   .toList();
             fireTableDataChanged();
         }
 
         @Override
-        protected final List<Entry> rows() {
+        protected final List<FileTableEntry> rows() {
             // Already IS immutable ...
             // noinspection AssignmentOrReturnOfFieldWithMutableType
             return entries;
