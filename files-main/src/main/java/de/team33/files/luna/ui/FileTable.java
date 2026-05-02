@@ -1,9 +1,9 @@
-package de.team33.files.eris.ui;
+package de.team33.files.luna.ui;
 
-import de.team33.files.eris.ui.FileTableEntry.*;
 import de.team33.files.luna.context.Icons;
 import de.team33.files.luna.context.TableViewConfig;
 import de.team33.files.luna.context.UIContext;
+import de.team33.files.luna.ui.FileTableEntry.*;
 import de.team33.patterns.io.adrastea.FileEntry;
 import de.team33.patterns.io.adrastea.LinkHandling;
 import de.team33.patterns.serving.alpha.Component;

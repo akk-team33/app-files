@@ -3,7 +3,7 @@
 // (powered by FernFlower decompiler)
 //
 
-package net.team33.fscalc.ui.rsrc;
+package de.team33.files.luna.resources;
 
 import javax.swing.*;
 

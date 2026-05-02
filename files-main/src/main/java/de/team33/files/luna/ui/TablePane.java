@@ -1,6 +1,5 @@
 package de.team33.files.luna.ui;
 
-import de.team33.files.eris.ui.FileTable;
 import de.team33.files.luna.context.UIContext;
 import de.team33.sphinx.metis.JPanels;
 
