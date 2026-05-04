@@ -7,6 +7,7 @@ import java.util.function.Consumer;
  * and receive newly emerging "content".
  *
  * @param <C> The type of “content”.
+ * @see de.team33.patterns.serving.alpha package
  */
 @FunctionalInterface
 public interface Subscribable<C> {

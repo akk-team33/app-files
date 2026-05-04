@@ -6,7 +6,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
-import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.WARNING;
 
 public class Component<C> extends Audience<C> implements Variable<C> {
 
@@ -59,7 +59,7 @@ public class Component<C> extends Audience<C> implements Variable<C> {
         try {
             this.content = normalizer.apply(content);
         } catch (final SetException e) {
-            LOGGER.log(DEBUG, e::getMessage, e);
+            LOGGER.log(WARNING, e::getMessage, e);
         }
         return this.content;
     }
@@ -71,5 +71,16 @@ public class Component<C> extends Audience<C> implements Variable<C> {
 
     public static class SetException extends Exception {
 
+        public SetException(final String message) {
+            super(message);
+        }
+
+        public SetException(final Throwable cause) {
+            super(cause.getMessage(), cause);
+        }
+
+        public SetException(final String message, final Throwable cause) {
+            super(message, cause);
+        }
     }
 }

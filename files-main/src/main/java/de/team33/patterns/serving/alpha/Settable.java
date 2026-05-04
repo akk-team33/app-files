@@ -6,6 +6,7 @@ import java.util.function.Consumer;
  * Represents a service component whose “content” can be redefined.
  *
  * @param <C> The type of “content”.
+ * @see de.team33.patterns.serving.alpha package
  */
 @FunctionalInterface
 public interface Settable<C> extends Consumer<C> {

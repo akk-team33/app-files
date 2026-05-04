@@ -16,7 +16,7 @@ import static java.util.function.Predicate.not;
  *
  * @param <C> The type of “content”.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "SynchronizedMethod"})
 public class Audience<C> implements Subscribable<C> {
 
     private final Executor executor;
@@ -34,7 +34,6 @@ public class Audience<C> implements Subscribable<C> {
         };
     }
 
-    @SuppressWarnings("SynchronizedMethod")
     @Override
     public final synchronized Subscription subscribe(final Consumer<? super C> listener) {
         backing = Collecting.charger(new ArrayList<Consumer<? super C>>(backing.size() + 1))
@@ -44,14 +43,12 @@ public class Audience<C> implements Subscribable<C> {
         return () -> unsubscribe(listener);
     }
 
-    @SuppressWarnings("SynchronizedMethod")
     private synchronized void unsubscribe(final Consumer<? super C> listener) {
         backing = Collecting.charger(new ArrayList<>(backing))
                             .remove(listener)
                             .charged();
     }
 
-    @SuppressWarnings("SynchronizedMethod")
     private synchronized Optional<Runnable> emitter(final C message) {
         return Optional.of(backing)
                        .filter(not(List::isEmpty))

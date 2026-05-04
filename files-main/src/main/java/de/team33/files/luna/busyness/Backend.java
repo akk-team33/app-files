@@ -29,7 +29,7 @@ public class Backend implements UIContext {
         if (entry.isDirectory()) {
             return entry.path();
         }
-        throw new Component.SetException();
+        throw new Component.SetException("Not a directory: " + path);
     }
 
     @Override

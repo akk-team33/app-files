@@ -6,6 +6,7 @@ import java.util.function.Supplier;
  * Represents a service component whose "content" can be determined.
  *
  * @param <C> The type of “content”.
+ * @see de.team33.patterns.serving.alpha package
  */
 @FunctionalInterface
 public interface Gettable<C> extends Supplier<C> {
