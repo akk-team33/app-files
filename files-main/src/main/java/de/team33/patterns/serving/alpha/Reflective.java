@@ -1,11 +1,12 @@
 package de.team33.patterns.serving.alpha;
 
 /**
- * Represents a service component whose "content" can be redefined
- * and that allows interested parties to subscribe and receive newly emerging "content".
+ * Represents a service component that emits state changes when its state
+ * is modified.
+ * <p>
+ * State changes are only emitted after successful transitions.
  *
- * @param <C> The type of “content”.
- * @see de.team33.patterns.serving.alpha package
+ * @param <C> the type of content
  */
 public interface Reflective<C> extends Settable<C>, Subscribable<C> {
 }

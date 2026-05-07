@@ -3,43 +3,43 @@ package de.team33.patterns.serving.alpha;
 import java.util.function.Consumer;
 
 /**
- * Represents a service component whose "content" can be determined
- * and that allows interested parties to subscribe and receive newly emerging "content".
+ * Represents a read-only service component that can also emit state changes
+ * to interested subscribers.
  *
- * @param <C> The type of “content”.
+ * <p>Implementations provide access to the current state as well as
+ * notifications of future state changes.</p>
+ *
+ * @param <C> the type of content
  * @see de.team33.patterns.serving.alpha package
  */
 public interface Retrievable<C> extends Gettable<C>, Subscribable<C> {
 
     /**
-     * Subscribes <em>this</em> service component for (current and) newly emerging "content".
+     * Subscribes with a specific mode controlling initial state delivery.
      *
-     * @param mode     A {@link Mode} that controls the subscription process.
-     * @param listener A {@link Consumer} that will receive (current and) newly emerging "content".
-     * @return A {@link Subscription} that can be used to {@linkplain Subscription#cancel() cancel} receiving
-     * newly emerging "content" or may be ignored.
-     * @see Subscribable#subscribe(Consumer)
+     * @param mode     subscription mode controlling initial notification behavior
+     * @param listener receives current and future state values
+     * @return a subscription handle
      */
     default Subscription subscribe(final Mode mode, final Consumer<? super C> listener) {
         return mode.subscribe(this, listener);
     }
 
     /**
-     * Defines different subscription modes.
+     * Defines subscription initialization behavior.
      */
     enum Mode {
 
         /**
-         * Causes a listener to be instantly notified of the current state of the service component in question.
-         * This will typically cause an initialization of the listening component
+         * Immediately delivers the current state before subscribing to updates.
+         * <p>
+         * The initial state delivery and the subsequent subscription are not atomic
+         * with respect to concurrent state transitions.
          */
         INIT(true),
 
         /**
-         * Causes a {@linkplain Consumer listener} to be notified of the state of the service component in question
-         * for the first time at the next regular event.
-         * <p>
-         * This corresponds to the behavior of {@link Subscribable#subscribe(Consumer)}.
+         * Subscribes only to future state changes.
          */
         NEXT(false);
 
