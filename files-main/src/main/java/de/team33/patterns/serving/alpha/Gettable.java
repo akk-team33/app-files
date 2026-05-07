@@ -1,7 +1,5 @@
 package de.team33.patterns.serving.alpha;
 
-import java.util.function.Supplier;
-
 /**
  * Represents a service component whose "content" can be determined.
  *
@@ -9,13 +7,12 @@ import java.util.function.Supplier;
  * @see de.team33.patterns.serving.alpha package
  */
 @FunctionalInterface
-public interface Gettable<C> extends Supplier<C> {
+public interface Gettable<C> {
 
     /**
      * Returns the "content" of <em>this</em> service component.
      * <p>
      * An implementation is expected to be atomic with respect to <em>this</em> service component.
      */
-    @Override
     C get();
 }

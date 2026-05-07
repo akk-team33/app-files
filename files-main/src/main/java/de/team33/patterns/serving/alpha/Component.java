@@ -3,17 +3,28 @@ package de.team33.patterns.serving.alpha;
 import de.team33.patterns.exceptional.dione.XFunction;
 
 import java.util.concurrent.Executor;
-import java.util.function.Supplier;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 import static java.lang.System.Logger.Level.WARNING;
 
-public class Component<C> extends Audience<C> implements Variable<C> {
+/**
+ * Listener notifications are dispatched asynchronously according to the
+ * configured Executor.
+ * <p>
+ * Consequently, listeners may observe notifications for previous values
+ * after the component state has already advanced further.
+ * <p>
+ * Listeners should therefore treat the event value as the authoritative
+ * snapshot associated with the notification.
+ */
+public class Component<C> implements Variable<C> {
 
     private static final System.Logger LOGGER = System.getLogger(Component.class.getCanonicalName());
 
     private final XFunction<? super C, ? extends C, ? extends SetException> normalizer;
-    private volatile C content;
+    private final Audience<C> audience;
+    private final Mutable<C> mutable;
 
     public Component(final C content) {
         this(Runnable::run, content);
@@ -33,10 +44,10 @@ public class Component<C> extends Audience<C> implements Variable<C> {
 
     public Component(final Executor executor, final C content,
                      final XFunction<? super C, ? extends C, ? extends SetException> normalizer) {
-        super(executor);
+        this.normalizer = normalizer;
+        this.audience = new Audience<>(executor);
         try {
-            this.normalizer = normalizer;
-            this.content = normalizer.apply(content);
+            this.mutable = new MutableSimple<>(normalizer.apply(content));
         } catch (final SetException e) {
             throw new IllegalArgumentException("illegal initial content: '%s'".formatted(content), e);
         }
@@ -44,31 +55,29 @@ public class Component<C> extends Audience<C> implements Variable<C> {
 
     @Override
     public final C get() {
-        return atomic(() -> content);
+        return mutable.get();
     }
 
     @Override
     public final void set(final C content) {
-        if (this.content != content) {
-            fire(atomic(() -> setNormal(content)));
-        }
-    }
-
-    @SuppressWarnings("ParameterHidesMemberVariable")
-    private C setNormal(final C content) {
         try {
-            this.content = normalizer.apply(content);
+            setNormal(normalizer.apply(content));
         } catch (final SetException e) {
             LOGGER.log(WARNING, e::getMessage, e);
         }
-        return this.content;
     }
 
-    @SuppressWarnings("SynchronizedMethod")
-    private synchronized <R> R atomic(final Supplier<R> supplier) {
-        return supplier.get();
+    private void setNormal(final C content) {
+        mutable.set(content);
+        audience.fire(content);
     }
 
+    @Override
+    public final Subscription subscribe(final Consumer<? super C> listener) {
+        return audience.subscribe(listener);
+    }
+
+    @SuppressWarnings("unused")
     public static class SetException extends Exception {
 
         public SetException(final String message) {
