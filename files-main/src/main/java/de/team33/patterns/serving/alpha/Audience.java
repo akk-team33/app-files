@@ -82,6 +82,8 @@ public class Audience<C> implements Subscribable<C> {
 
     /**
      * Sends a given message to all listeners that have {@linkplain #subscribe(Consumer) subscribed}.
+     * <p>
+     * Listener exceptions thrown during asynchronous dispatch are not propagated to the caller.
      */
     public final void fire(final C message) {
         emitter(message).ifPresent(executor::execute);

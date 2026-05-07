@@ -1,11 +1,11 @@
 package de.team33.patterns.serving.alpha;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 class Problems<X extends Throwable> {
 
-    private final List<X> backing = new LinkedList<>();
+    private final List<X> backing = new ArrayList<>(0);
 
     private static <X extends Throwable> X addSuppressed(final X left, final X right) {
         left.addSuppressed(right);
